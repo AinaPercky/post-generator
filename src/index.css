@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Playfair+Display:wght@700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  
+  --color-misy-lime: #d9ed92;
+  --color-misy-green-light: #b5e48c;
+  --color-misy-green: #99d98c;
+  --color-misy-emerald: #76c893;
+  --color-misy-ocean: #52b69a;
+  --color-misy-teal: #34a0a4;
+  --color-misy-bondi: #168aad;
+  --color-misy-cerulean: #1a759f;
+  --color-misy-baltic: #1e6091;
+  --color-misy-yale: #184e77;
+
+  --animate-glow-pulse: glow-pulse 2.5s ease-in-out infinite;
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 20px 2px rgba(255, 0, 0, 0.6), 0 15px 35px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 12px rgba(0,0,0,0.8);
+    }
+    50% {
+      box-shadow: 0 0 40px 10px rgba(255, 77, 77, 0.9), 0 15px 35px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 12px rgba(0,0,0,0.8);
+    }
+  }
+}

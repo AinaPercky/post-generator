@@ -1,0 +1,52 @@
+{
+  "entities": {
+    "MagazineIssue": {
+      "title": "Magazine Issue",
+      "description": "A generated magazine cover issue",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The unique identifier for the issue"
+        },
+        "issueNumber": {
+          "type": "string",
+          "description": "The issue number string"
+        },
+        "headline": {
+          "type": "string",
+          "description": "The headline text on the cover"
+        },
+        "sceneDescription": {
+          "type": "string",
+          "description": "The prompt used to generate the image"
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "The base64 encoded image string or URL"
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "Timestamp of creation"
+        },
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who created the issue"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "The display name of the user who created the issue"
+        }
+      },
+      "required": ["id", "issueNumber", "headline", "sceneDescription", "imageUrl", "createdAt", "userId", "authorName"]
+    }
+  },
+  "firestore": {
+    "/issues/{issueId}": {
+      "schema": {
+        "$ref": "#/entities/MagazineIssue"
+      },
+      "description": "Collection of all generated magazine issues"
+    }
+  }
+}

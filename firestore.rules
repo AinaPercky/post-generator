@@ -1,0 +1,91 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: issues
+    // Document ID: auto-generated
+    // Fields:
+    //   - id: string (required) - UUID
+    //   - issueNumber: string (required, max 50 chars)
+    //   - headline: string (required, max 200 chars)
+    //   - sceneDescription: string (required, max 1000 chars)
+    //   - imageUrl: string (required, max 2000000 chars - base64 can be large)
+    //   - createdAt: number (required)
+    //   - userId: string (required, immutable)
+    //   - authorName: string (required, max 100 chars)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function hasAllAndOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasAll(fields) && request.resource.data.keys().hasOnly(fields);
+    }
+    
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+    
+    function isValidStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    
+    function isValidIssue(data) {
+      return hasAllAndOnlyAllowedFields(['id', 'issueNumber', 'headline', 'sceneDescription', 'imageUrl', 'createdAt', 'userId', 'authorName']) &&
+             isValidStringLength('id', 1, 100) &&
+             isValidStringLength('issueNumber', 1, 50) &&
+             isValidStringLength('headline', 1, 200) &&
+             isValidStringLength('sceneDescription', 1, 1000) &&
+             isValidStringLength('imageUrl', 1, 1048576) &&
+             data.createdAt is number &&
+             isValidStringLength('userId', 1, 100) &&
+             isValidStringLength('authorName', 1, 100);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    
+    match /issues/{issueId} {
+      // Anyone authenticated can read the issues
+      allow read: if isAuthenticated();
+      
+      // Only authenticated users can create, and they must set themselves as the owner
+      allow create: if isAuthenticated() && 
+                    isOwner(request.resource.data.userId) && 
+                    isValidIssue(request.resource.data);
+                    
+      // Only the owner can update their issue, and they cannot change ownership or creation time
+      allow update: if isAuthenticated() && 
+                    isOwner(resource.data.userId) && 
+                    isOwner(request.resource.data.userId) && 
+                    isValidIssue(request.resource.data) &&
+                    areImmutableFieldsUnchanged(['createdAt', 'userId']);
+                    
+      // Only the owner can delete their issue
+      allow delete: if isAuthenticated() && 
+                    isOwner(resource.data.userId);
+    }
+  }
+}

@@ -1,0 +1,546 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { GoogleGenAI } from '@google/genai';
+import { toPng, toCanvas } from 'html-to-image';
+import { Download, Loader2, Save, RefreshCw, Image as ImageIcon, LogIn, LogOut, Upload } from 'lucide-react';
+import { CoverPreview } from './components/CoverPreview';
+import { MagazineLibrary } from './components/MagazineLibrary';
+import { RedPillGenerator } from './components/RedPillGenerator';
+import { MisyFaTsyGenerator } from './components/MisyFaTsyGenerator';
+import { MagazineIssue } from './types';
+import { auth, db, signInWithGoogle, logOut } from './firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+
+// Initialize Gemini API
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | null | undefined;
+    emailVerified: boolean | undefined;
+    isAnonymous: boolean | undefined;
+    tenantId: string | null | undefined;
+    providerInfo: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData.map(provider => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        email: provider.email,
+        photoUrl: provider.photoURL
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState<'magazine' | 'redpill' | 'misyfatsy'>('magazine');
+  const [headline, setHeadline] = useState('');
+  const [sceneDescription, setSceneDescription] = useState('');
+  const [customIssueNumber, setCustomIssueNumber] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloadingPng, setIsDownloadingPng] = useState(false);
+  const [isDownloadingJpeg, setIsDownloadingJpeg] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [issues, setIssues] = useState<MagazineIssue[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
+  const coverRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auth listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsAuthReady(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load issues from Firestore
+  useEffect(() => {
+    if (!isAuthReady || !user) {
+      setIssues([]);
+      return;
+    }
+
+    const q = query(collection(db, 'issues'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const loadedIssues: MagazineIssue[] = [];
+      snapshot.forEach((doc) => {
+        loadedIssues.push(doc.data() as MagazineIssue);
+      });
+      setIssues(loadedIssues);
+    }, (err) => {
+      handleFirestoreError(err, OperationType.LIST, 'issues');
+    });
+
+    return () => unsubscribe();
+  }, [isAuthReady, user]);
+
+  // Calculate next issue number
+  const autoIssueNumber = `N°${issues.length + 1} ${new Date().getFullYear()}`;
+  const displayIssueNumber = customIssueNumber || autoIssueNumber;
+
+  const handleGenerate = async () => {
+    if (!sceneDescription) {
+      setError('Please provide a scene description.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+          parts: [
+            {
+              text: `Realistic documentary photography, natural lighting, cinematic realism, muted colors, mid-shot framing, authentic human expression. IMPORTANT: Do NOT include any text, typography, letters, or words in the generated image. Scene: ${sceneDescription}`,
+            },
+          ],
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: "3:4", // Magazine cover aspect ratio
+          }
+        }
+      });
+
+      let foundImage = false;
+      for (const part of response.candidates?.[0]?.content?.parts || []) {
+        if (part.inlineData) {
+          const base64EncodeString = part.inlineData.data;
+          const imageUrl = `data:${part.inlineData.mimeType || 'image/png'};base64,${base64EncodeString}`;
+          setCurrentImageUrl(imageUrl);
+          foundImage = true;
+          break;
+        }
+      }
+
+      if (!foundImage) {
+        throw new Error("No image generated by the model.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Failed to generate image. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload a valid image file.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setCurrentImageUrl(e.target.result as string);
+        setError(null);
+      }
+    };
+    reader.onerror = () => {
+      setError('Failed to read the uploaded image.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDownload = async () => {
+    if (!coverRef.current) return;
+    try {
+      setIsDownloadingPng(true);
+      setError(null);
+      // Adding a small delay to ensure rendering is complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const dataUrl = await toPng(coverRef.current, { quality: 0.95, cacheBust: true, pixelRatio: 2 });
+      const link = document.createElement('a');
+      link.download = `TAITRA-${displayIssueNumber.replace(/\s+/g, '-')}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err: any) {
+      console.error('Failed to download image', err);
+      setError(`Failed to download PNG: ${err.message || 'Unknown error'}`);
+    } finally {
+      setIsDownloadingPng(false);
+    }
+  };
+
+  const handleDownloadJpeg = async () => {
+    if (!coverRef.current) return;
+    try {
+      setIsDownloadingJpeg(true);
+      setError(null);
+      // Adding a small delay to ensure rendering is complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const canvas = await toCanvas(coverRef.current, { backgroundColor: '#ffffff', cacheBust: true, pixelRatio: 2 });
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+      
+      const link = document.createElement('a');
+      link.download = `TAITRA-${displayIssueNumber.replace(/\s+/g, '-')}.jpg`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err: any) {
+      console.error('Failed to download image', err);
+      setError(`Failed to download JPEG: ${err.message || 'Unknown error'}`);
+    } finally {
+      setIsDownloadingJpeg(false);
+    }
+  };
+
+  const handleSaveToLibrary = async () => {
+    if (!currentImageUrl || !headline) {
+      setError('Please generate an image and enter a headline before saving.');
+      return;
+    }
+
+    if (!user) {
+      setError('Please sign in to save covers to the library.');
+      return;
+    }
+
+    const newIssue: MagazineIssue = {
+      id: crypto.randomUUID(),
+      issueNumber: displayIssueNumber,
+      headline,
+      sceneDescription,
+      imageUrl: currentImageUrl,
+      createdAt: Date.now(),
+      userId: user.uid,
+      authorName: user.displayName || 'Anonymous',
+    };
+
+    try {
+      await setDoc(doc(db, 'issues', newIssue.id), newIssue);
+      // Reset form for next issue
+      setHeadline('');
+      setSceneDescription('');
+      setCustomIssueNumber('');
+      setCurrentImageUrl(null);
+      setError(null);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.CREATE, `issues/${newIssue.id}`);
+    }
+  };
+
+  const handleDeleteIssue = async (id: string) => {
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'issues', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `issues/${id}`);
+    }
+  };
+
+  const handleSelectIssue = (issue: MagazineIssue) => {
+    setHeadline(issue.headline);
+    setSceneDescription(issue.sceneDescription);
+    setCustomIssueNumber(issue.issueNumber);
+    setCurrentImageUrl(issue.imageUrl);
+  };;
+
+  return (
+    <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans">
+      <header className="bg-white border-b border-neutral-200 py-4 px-6 md:px-12 flex items-center justify-between sticky top-0 z-50">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-emerald-800 rounded flex items-center justify-center text-white font-serif font-bold">
+              T
+            </div>
+            <h1 className="text-xl font-semibold tracking-tight text-neutral-800">TAITRA Studio</h1>
+          </div>
+          <div className="hidden md:flex bg-neutral-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('magazine')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'magazine' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
+            >
+              Magazine Cover
+            </button>
+            <button
+              onClick={() => setActiveTab('redpill')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'redpill' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
+            >
+              Red Pill Post
+            </button>
+            <button
+              onClick={() => setActiveTab('misyfatsy')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'misyfatsy' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
+            >
+              MisyFaTsy Studio
+            </button>
+          </div>
+        </div>
+        <div>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-neutral-600 hidden sm:inline-block">
+                {user.displayName}
+              </span>
+              <button
+                onClick={logOut}
+                className="flex items-center gap-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={signInWithGoogle}
+              className="flex items-center gap-2 text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-lg transition-colors"
+            >
+              <LogIn className="w-4 h-4" />
+              Sign In with Google
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Mobile Tab Switcher */}
+      <div className="md:hidden bg-white border-b border-neutral-200 px-4 py-2 flex justify-center">
+        <div className="flex bg-neutral-100 p-1 rounded-lg w-full overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('magazine')}
+            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'magazine' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
+          >
+            Magazine
+          </button>
+          <button
+            onClick={() => setActiveTab('redpill')}
+            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'redpill' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
+          >
+            Red Pill
+          </button>
+          <button
+            onClick={() => setActiveTab('misyfatsy')}
+            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'misyfatsy' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
+          >
+            MisyFaTsy
+          </button>
+        </div>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'redpill' ? (
+          <RedPillGenerator />
+        ) : activeTab === 'misyfatsy' ? (
+          <MisyFaTsyGenerator />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* Left Column: Controls */}
+          <div className="lg:col-span-5 space-y-8">
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-neutral-200">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-emerald-600" />
+                Cover Editor
+              </h2>
+              
+              <div className="space-y-5">
+                <div>
+                  <label htmlFor="issueNumber" className="block text-sm font-medium text-neutral-700 mb-1">
+                    Issue Number (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    id="issueNumber"
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                    placeholder={`Leave blank for auto: ${autoIssueNumber}`}
+                    value={customIssueNumber}
+                    onChange={(e) => setCustomIssueNumber(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="headline" className="block text-sm font-medium text-neutral-700 mb-1">
+                    Main Headline
+                  </label>
+                  <textarea
+                    id="headline"
+                    rows={2}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
+                    placeholder="e.g., Mora kokoa ve ny fiainan'ny lehilahy sa ny an'ny vehivavy?"
+                    value={headline}
+                    onChange={(e) => setHeadline(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="scene" className="block text-sm font-medium text-neutral-700 mb-1">
+                    Background Scene Description
+                  </label>
+                  <textarea
+                    id="scene"
+                    rows={4}
+                    className="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none"
+                    placeholder="e.g., A lone figure walking on a winding path at sunset. Long shadows stretch across the path..."
+                    value={sceneDescription}
+                    onChange={(e) => setSceneDescription(e.target.value)}
+                  />
+                  <p className="text-xs text-neutral-500 mt-2">
+                    Required only if you want to generate an image with AI.
+                  </p>
+                </div>
+
+                {error && (
+                  <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
+                    {error}
+                  </div>
+                )}
+
+                <div className="pt-2 flex flex-col gap-3">
+                  <button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || !sceneDescription}
+                    className="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-medium rounded-xl shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Generating Image...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-5 h-5" />
+                        Generate Cover Image
+                      </>
+                    )}
+                  </button>
+
+                  <div className="relative flex items-center py-2">
+                    <div className="flex-grow border-t border-neutral-200"></div>
+                    <span className="flex-shrink-0 mx-4 text-neutral-400 text-sm">or</span>
+                    <div className="flex-grow border-t border-neutral-200"></div>
+                  </div>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isGenerating}
+                    className="w-full py-3 px-4 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 font-medium rounded-xl shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    <Upload className="w-5 h-5" />
+                    Upload Custom Image
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions for generated cover */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-neutral-200 flex flex-col gap-3">
+              <h3 className="text-sm font-medium text-neutral-700 mb-2">Actions</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleDownload}
+                  disabled={!currentImageUrl || isDownloadingPng}
+                  className="w-full py-2.5 px-4 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isDownloadingPng ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  PNG
+                </button>
+                <button
+                  onClick={handleDownloadJpeg}
+                  disabled={!currentImageUrl || isDownloadingJpeg}
+                  className="w-full py-2.5 px-4 bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isDownloadingJpeg ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  JPEG
+                </button>
+              </div>
+              <button
+                onClick={handleSaveToLibrary}
+                disabled={!currentImageUrl || !headline || !user}
+                title={!user ? "Sign in to save" : ""}
+                className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-black text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                {user ? "Save to Library" : "Sign in to Save"}
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column: Preview */}
+          <div className="lg:col-span-7 flex justify-center items-start">
+            <div className="w-full max-w-md sticky top-24">
+              <div className="mb-3 flex justify-between items-center">
+                <span className="text-sm font-medium text-neutral-500 uppercase tracking-wider">Live Preview</span>
+                <span className="text-sm text-neutral-400">{displayIssueNumber}</span>
+              </div>
+              <div className="rounded-xl overflow-hidden shadow-2xl ring-1 ring-black/5">
+                <CoverPreview
+                  ref={coverRef}
+                  headline={headline}
+                  issueNumber={displayIssueNumber}
+                  imageUrl={currentImageUrl}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Library Section */}
+        <div className="mt-20 pt-10 border-t border-neutral-200">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-semibold text-neutral-800">Community Library</h2>
+            <span className="text-sm text-neutral-500">{issues.length} covers generated</span>
+          </div>
+          <MagazineLibrary 
+            issues={issues} 
+            onSelectIssue={handleSelectIssue}
+            onDeleteIssue={handleDeleteIssue}
+            currentUserId={user?.uid}
+          />
+        </div>
+        </>
+        )}
+      </main>
+    </div>
+  );
+}
