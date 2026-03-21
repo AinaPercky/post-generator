@@ -43,11 +43,10 @@ export function MisyFaTsyGenerator() {
   const previewRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle category change
+  // Handle category change - only update title, not text
   useEffect(() => {
     if (category !== 'custom') {
       setTitle(PRESETS[category].title);
-      setText(PRESETS[category].text);
     }
   }, [category]);
 
@@ -64,7 +63,7 @@ export function MisyFaTsyGenerator() {
     reader.readAsDataURL(file);
   };
 
-  const handleDownload = async (format: 'png' | 'jpeg') => {
+  const handleDownload = async (format: 'png' | 'jpg') => {
     if (!previewRef.current) return;
     
     try {
@@ -74,24 +73,45 @@ export function MisyFaTsyGenerator() {
       // Small delay to ensure rendering is complete
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const options = { 
-        quality: 0.95, 
+      const baseOptions = { 
         cacheBust: true, 
         pixelRatio: 2,
         width: SQUARE_SIZE,
-        height: SQUARE_SIZE,
-        style: {
-          transform: 'scale(1)',
-          transformOrigin: 'top left'
-        }
+        height: SQUARE_SIZE
       };
 
-      const dataUrl = format === 'png' 
-        ? await toPng(previewRef.current, options)
-        : await toJpeg(previewRef.current, options);
+      let dataUrl: string;
+      
+      if (format === 'png') {
+        dataUrl = await toPng(previewRef.current, {
+          ...baseOptions,
+          quality: 0.95
+        });
+      } else {
+        // JPEG with optimized quality and white background
+        dataUrl = await toJpeg(previewRef.current, {
+          ...baseOptions,
+          quality: 0.98,
+          backgroundColor: '#ffffff'
+        });
+      }
         
       const link = document.createElement('a');
-      link.download = `MisyFaTsy-${title.replace(/\s+/g, '-')}.${format}`;
+      const fileExtension = format === 'png' ? 'png' : 'jpg';
+      
+      // Generate professional filename with timestamp
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      
+      const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+      const titleSlug = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
+      link.download = `MisyFaTsy_${titleSlug}_${timestamp}.${fileExtension}`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -242,12 +262,12 @@ export function MisyFaTsyGenerator() {
               PNG HD
             </button>
             <button
-              onClick={() => handleDownload('jpeg')}
+              onClick={() => handleDownload('jpg')}
               disabled={isDownloadingJpg}
               className="w-full py-3 px-4 bg-[#141414] hover:bg-[#1a1a1a] border border-neutral-800 text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {isDownloadingJpg ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 text-misy-ocean" />}
-              JPG
+              {isDownloadingJpg ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 text-sky-400" />}
+              JPG HD
             </button>
           </div>
           <button
@@ -299,12 +319,15 @@ export function MisyFaTsyGenerator() {
                 className="w-full h-full relative overflow-hidden font-sans flex flex-col"
                 style={{ width: `${SQUARE_SIZE}px`, height: `${SQUARE_SIZE}px` }}
               >
-                {/* 1. Background Image */}
+                {/* 1. Background Image with enhanced filters */}
                 {imageUrl ? (
                   <img 
                     src={imageUrl} 
                     alt="Background" 
                     className="absolute inset-0 w-full h-full object-cover"
+                    style={{
+                      filter: 'contrast(1.1) saturate(1.2)'
+                    }}
                     crossOrigin="anonymous"
                   />
                 ) : (
@@ -313,70 +336,178 @@ export function MisyFaTsyGenerator() {
                   </div>
                 )}
 
-                {/* 2. Artistic Gradient Overlay - Stronger on left & bottom */}
+                {/* 2. PRIMARY GRADIENT OVERLAY - Cinematic gradient (controlled by filterIntensity) */}
                 <div 
-                  className="absolute inset-0"
+                  className="absolute inset-0 pointer-events-none transition-opacity duration-300"
                   style={{
-                    background: `linear-gradient(to right, rgba(30, 41, 82, 0.6) 0%, rgba(30, 41, 82, 0.3) 50%, transparent 100%)`,
-                    mixBlendMode: 'multiply'
-                  }}
-                ></div>
-                
-                {/* 3. Bottom gradient overlay for text readability */}
-                <div 
-                  className="absolute bottom-0 left-0 right-0"
-                  style={{
-                    height: '300px',
-                    background: `linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%)`,
-                    mixBlendMode: 'darken'
+                    background: `linear-gradient(
+                      180deg,
+                      rgba(116,0,184,${0.2 + (filterIntensity / 100) * 0.4}) 0%,
+                      rgba(72,191,227,${0.1 + (filterIntensity / 100) * 0.3}) 50%,
+                      rgba(0,0,0,${0.5 + (filterIntensity / 100) * 0.25}) 100%
+                    )`
                   }}
                 ></div>
 
-                {/* 4. Color overlay based on filter intensity */}
+                {/* 2B. DIAGONAL GRADIENT OVERLAY - Additional depth */}
                 <div 
-                  className="absolute inset-0"
+                  className="absolute inset-0 pointer-events-none"
                   style={{
-                    background: `linear-gradient(135deg, var(--color-misy-yale) 0%, var(--color-misy-baltic) 50%)`,
-                    opacity: (filterIntensity / 100) * 0.15,
-                    mixBlendMode: 'overlay'
+                    background: `linear-gradient(
+                      135deg,
+                      rgba(116,0,184,${0.1 + (filterIntensity / 100) * 0.2}) 0%,
+                      rgba(0,0,0,0) 50%,
+                      rgba(72,191,227,${0.08 + (filterIntensity / 100) * 0.15}) 100%
+                    )`
                   }}
                 ></div>
 
-                {/* 5. Decorative Chains (subtle) */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-4">
-                  <LinkIcon className="absolute top-20 right-40 w-64 h-64 text-white transform rotate-45" strokeWidth={0.5} />
-                  <LinkIcon className="absolute bottom-40 right-32 w-48 h-48 text-white transform -rotate-12" strokeWidth={0.5} />
+                {/* 2C. HORIZONTAL GRADIENT OVERLAY - Side lighting */}
+                <div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: `linear-gradient(
+                      90deg,
+                      rgba(116,0,184,${0.15 + (filterIntensity / 100) * 0.25}) 0%,
+                      rgba(0,0,0,0) 40%,
+                      rgba(72,191,227,${0.1 + (filterIntensity / 100) * 0.2}) 100%
+                    )`
+                  }}
+                ></div>
+
+                {/* 3. GRAIN TEXTURE - Cinematic noise effect */}
+                <div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' result='noise'/%3E%3C/filter%3E%3Crect width='400' height='400' fill='%23000' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E")`,
+                    mixBlendMode: 'overlay',
+                    opacity: 0.12
+                  }}
+                ></div>
+
+                {/* 5. LIGHT LEAK OVERLAY - Purple/Blue accent (controlled by filterIntensity) */}
+                <div 
+                  className="absolute -top-20 -right-20 pointer-events-none transition-opacity duration-300"
+                  style={{
+                    width: '400px',
+                    height: '400px',
+                    background: `radial-gradient(circle, rgba(116,0,184,${0.3 + (filterIntensity / 100) * 0.4}) 0%, rgba(72,191,227,${0.15 + (filterIntensity / 100) * 0.35}) 40%, transparent 70%)`,
+                    mixBlendMode: 'screen',
+                    opacity: 0.15 + (filterIntensity / 100) * 0.35,
+                    filter: 'blur(40px)'
+                  }}
+                ></div>
+
+                {/* 5B. SECONDARY LIGHT LEAK - Bottom left corner */}
+                <div 
+                  className="absolute -bottom-20 -left-20 pointer-events-none"
+                  style={{
+                    width: '350px',
+                    height: '350px',
+                    background: `radial-gradient(circle, rgba(72,191,227,${0.2 + (filterIntensity / 100) * 0.3}) 0%, rgba(116,0,184,${0.1 + (filterIntensity / 100) * 0.2}) 40%, transparent 70%)`,
+                    mixBlendMode: 'screen',
+                    opacity: 0.12 + (filterIntensity / 100) * 0.28,
+                    filter: 'blur(35px)'
+                  }}
+                ></div>
+
+                {/* 6. DUST/PARTICLES EFFECT - Subtle floating particles */}
+                <div 
+                  className="absolute inset-0 overflow-hidden pointer-events-none transition-opacity duration-300"
+                  style={{
+                    opacity: 0.05 + (filterIntensity / 100) * 0.04
+                  }}
+                >
+                  <div className="absolute top-10 left-10 w-1 h-1 bg-white rounded-full" style={{animation: 'float 6s ease-in-out infinite'}}></div>
+                  <div className="absolute top-1/4 right-20 w-0.5 h-0.5 bg-white rounded-full" style={{animation: 'float 8s ease-in-out infinite 1s'}}></div>
+                  <div className="absolute bottom-1/3 left-1/4 w-1 h-1 bg-white rounded-full" style={{animation: 'float 7s ease-in-out infinite 2s'}}></div>
+                  <div className="absolute bottom-20 right-1/4 w-0.5 h-0.5 bg-white rounded-full" style={{animation: 'float 9s ease-in-out infinite 1.5s'}}></div>
+                  <div className="absolute top-1/3 right-1/4 w-1 h-1 bg-blue-300 rounded-full" style={{animation: 'float 6.5s ease-in-out infinite 0.5s', opacity: 0.6}}></div>
+                  <div className="absolute bottom-1/4 left-1/3 w-0.5 h-0.5 bg-purple-300 rounded-full" style={{animation: 'float 7.5s ease-in-out infinite 3s', opacity: 0.5}}></div>
                 </div>
 
-                {/* 4. Content Container - Positioned layout matching image style */}
-                
-                {/* Title - Top Left, Gray & Muted */}
-                <div className="absolute top-6 left-8 right-8">
-                  <h1 className="text-gray-400 font-bold tracking-tight uppercase leading-tight"
-                      style={{ 
-                        fontSize: '36px',
-                        textShadow: '0 2px 8px rgba(0,0,0,0.4)',
-                        opacity: 0.7
-                      }}>
+                {/* 6. Badge - Top Left */}
+                <div className="absolute top-6 left-6 z-20">
+                  <div 
+                    style={{
+                      background: `linear-gradient(135deg, rgb(116,0,184) 0%, rgb(72,191,227) 100%)`,
+                      borderRadius: '999px',
+                      padding: '6px 14px',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      color: 'white',
+                      letterSpacing: '0.5px'
+                    }}
+                  >
+                    Misy Fa Tsy
+                  </div>
+                </div>
+
+                {/* 7. Decorative Gradient Line */}
+                <div className="absolute top-24 left-8 z-20">
+                  <div 
+                    style={{
+                      height: '3px',
+                      width: '60px',
+                      background: `linear-gradient(90deg, rgb(116,0,184) 0%, rgb(128,255,219) 100%)`
+                    }}
+                  ></div>
+                </div>
+
+                {/* 8. TITLE - Top Left, Below decorative line */}
+                <div className="absolute top-32 left-8 right-8 z-20">
+                  <h1 
+                    style={{ 
+                      fontSize: '42px',
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      color: 'white',
+                      letterSpacing: '-1px',
+                      lineHeight: '1.2',
+                      textShadow: '0 4px 20px rgba(0,0,0,0.6), 0 0 12px rgba(128,255,219,0.2)'
+                    }}
+                  >
                     {title}
                   </h1>
                 </div>
 
-                {/* Main Content Band - Positioned on left-center area */}
-                <div className="absolute bottom-24 left-8 right-16 z-10">
-                  {/* "MISY FA TSY..." Label */}
-                  <div className="bg-misy-baltic text-white font-bold px-5 py-2 text-lg tracking-wider shadow-lg mb-3 inline-block">
-                    MISY FA TSY...
-                  </div>
+                {/* 9. MAIN TEXT CONTAINER - Glassmorphism */}
+                <div className="absolute bottom-20 left-6 right-6 z-20" style={{ maxWidth: 'calc(100% - 48px)' }}>
+                  {/* Container with glassmorphism */}
+                  <div 
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.4)',
+                      backdropFilter: 'blur(8px)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      maxWidth: 'calc(100% - 32px)'
+                    }}
+                  >
+                    {/* Badge label */}
+                    <div style={{
+                      fontSize: '12px',
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      color: 'rgb(72,191,227)',
+                      letterSpacing: '1px',
+                      marginBottom: '8px'
+                    }}>
+                      ✦ Misy Fa Tsy...
+                    </div>
 
-                  {/* Text Content - Below label */}
-                  <div className="max-w-2xl">
-                    <p className="text-white font-medium leading-tight italic"
-                       style={{ 
-                         fontSize: '38px',
-                         textShadow: '0 3px 15px rgba(0,0,0,0.7)',
-                         wordWrap: 'break-word'
-                       }}>
+                    {/* Main text content */}
+                    <p 
+                      style={{ 
+                        fontSize: '32px',
+                        fontWeight: 600,
+                        color: 'white',
+                        lineHeight: '1.3',
+                        textShadow: '0 0 12px rgba(128,255,219,0.4), 0 2px 8px rgba(0,0,0,0.5)',
+                        wordWrap: 'break-word'
+                      }}
+                    >
                       {text}
                     </p>
                   </div>
@@ -385,26 +516,19 @@ export function MisyFaTsyGenerator() {
                 {/* Subtle Vignette Effect */}
                 <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]"></div>
                 {/* Subtle Neon Border */}
-                <div className="absolute inset-0 pointer-events-none border-[1px] border-white/10 mix-blend-overlay"></div>
+                <div className="absolute inset-0 pointer-events-none border border-white/10 mix-blend-overlay"></div>
+
+                {/* Floating animation keyframes */}
+                <style>{`
+                  @keyframes float {
+                    0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0; }
+                    10% { opacity: 0.1; }
+                    50% { transform: translateY(-20px) translateX(10px); opacity: 0.1; }
+                    90% { opacity: 0; }
+                  }
+                `}</style>
               </div>
             </div>
-          </div>
-        </div>
-        
-        {/* Gallery of examples */}
-        <div className="w-full mt-8">
-          <h3 className="text-sm font-medium text-neutral-500 uppercase tracking-wider mb-4">Galerie d'exemples</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(PRESETS).filter(([k]) => k !== 'toe-karena').map(([key, preset]) => (
-              <button
-                key={key}
-                onClick={() => setCategory(key as Category)}
-                className={`text-left p-4 rounded-xl border transition-all ${category === key ? 'bg-[#1a1a1a] border-misy-teal' : 'bg-[#0a0a0a] border-neutral-800 hover:border-neutral-600'}`}
-              >
-                <h4 className="text-white font-bold text-sm mb-1 truncate">{preset.title}</h4>
-                <p className="text-neutral-500 text-xs line-clamp-2">{preset.text}</p>
-              </button>
-            ))}
           </div>
         </div>
       </div>

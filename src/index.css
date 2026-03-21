@@ -16,6 +16,18 @@
   --color-misy-baltic: #1e6091;
   --color-misy-yale: #184e77;
 
+  /* Cinematic Gradient Color System */
+  --royal-violet: #7400b8ff;
+  --indigo-bloom: #6930c3ff;
+  --slate-blue: #5e60ceff;
+  --cloudy-sky: #5390d9ff;
+  --fresh-sky: #4ea8deff;
+  --sky-surge: #48bfe3ff;
+  --sky-blue-light: #56cfe1ff;
+  --pearl-aqua: #64dfdfff;
+  --turquoise: #72efddff;
+  --aquamarine: #80ffdbff;
+
   --animate-glow-pulse: glow-pulse 2.5s ease-in-out infinite;
   @keyframes glow-pulse {
     0%, 100% {
