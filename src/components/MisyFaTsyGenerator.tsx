@@ -33,10 +33,12 @@ export function MisyFaTsyGenerator() {
   const [text, setText] = useState(PRESETS.teknolojia.text);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [filterIntensity, setFilterIntensity] = useState(80);
-  const [aspectRatio, setAspectRatio] = useState<'1200x628' | '1080x1080'>('1200x628');
   const [isDownloadingPng, setIsDownloadingPng] = useState(false);
   const [isDownloadingJpg, setIsDownloadingJpg] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  
+  // Fixed square format: 1080x1080
+  const SQUARE_SIZE = 1080;
   
   const previewRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -76,9 +78,8 @@ export function MisyFaTsyGenerator() {
         quality: 0.95, 
         cacheBust: true, 
         pixelRatio: 2,
-        // Ensure we capture the full intended size regardless of scale
-        width: aspectRatio === '1200x628' ? 1200 : 1080,
-        height: aspectRatio === '1200x628' ? 628 : 1080,
+        width: SQUARE_SIZE,
+        height: SQUARE_SIZE,
         style: {
           transform: 'scale(1)',
           transformOrigin: 'top left'
@@ -114,11 +115,6 @@ export function MisyFaTsyGenerator() {
   const randomizeFilter = () => {
     setFilterIntensity(Math.floor(Math.random() * 60) + 40); // Random between 40 and 100
   };
-
-  // Calculate dimensions for preview scaling
-  const isWide = aspectRatio === '1200x628';
-  const targetWidth = isWide ? 1200 : 1080;
-  const targetHeight = isWide ? 628 : 1080;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -200,7 +196,7 @@ export function MisyFaTsyGenerator() {
             {/* Filter Intensity */}
             <div>
               <div className="flex justify-between mb-2">
-                <label className="text-sm font-medium text-neutral-400">Intensité du filtre artistique</label>
+                <label className="text-sm font-medium text-neutral-400">Intensité du filtre bleu</label>
                 <span className="text-sm text-misy-teal font-mono">{filterIntensity}%</span>
               </div>
               <input
@@ -211,26 +207,17 @@ export function MisyFaTsyGenerator() {
                 onChange={(e) => setFilterIntensity(Number(e.target.value))}
                 className="w-full accent-misy-teal"
               />
+              <p className="text-xs text-neutral-500 mt-1">Contrôle l'intensité de la teinte bleue de l'image</p>
             </div>
 
-            {/* Format Toggle */}
+            {/* Format - Fixed Square */}
             <div>
               <label className="block text-sm font-medium text-neutral-400 mb-2">Format</label>
-              <div className="flex bg-[#141414] rounded-xl p-1 border border-neutral-800">
-                <button
-                  onClick={() => setAspectRatio('1200x628')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${aspectRatio === '1200x628' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
-                >
-                  Facebook (1200×628)
-                </button>
-                <button
-                  onClick={() => setAspectRatio('1080x1080')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${aspectRatio === '1080x1080' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'}`}
-                >
-                  Carré (1080×1080)
-                </button>
+              <div className="w-full py-3 px-4 bg-[#141414] border border-neutral-800 rounded-xl text-white text-center font-medium">
+                Carré - 1080 × 1080 px
               </div>
             </div>
+            
             
             <button
               onClick={randomizeFilter}
@@ -280,33 +267,37 @@ export function MisyFaTsyGenerator() {
             <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
             Live Preview
           </span>
-          <span className="text-sm text-neutral-400 font-mono">{targetWidth} × {targetHeight}</span>
+          <span className="text-sm text-neutral-400 font-mono">{SQUARE_SIZE} × {SQUARE_SIZE}</span>
         </div>
 
-        {/* Scaled container for preview */}
-        <div className="w-full bg-[#0a0a0a] rounded-2xl border border-neutral-800 overflow-hidden flex items-center justify-center p-4 md:p-8 min-h-[500px]">
+        {/* Square container for preview */}
+        <div className="w-full bg-[#0a0a0a] rounded-2xl border border-neutral-800 flex items-center justify-center p-4 md:p-8">
+          {/* Wrapper that maintains aspect ratio and fits content */}
           <div 
-            className="relative shadow-2xl transition-all duration-500 ease-in-out"
+            className="relative w-full shadow-2xl"
             style={{ 
-              width: '100%', 
-              maxWidth: '800px',
-              aspectRatio: isWide ? '1200/628' : '1/1'
+              maxWidth: '700px',
+              aspectRatio: '1 / 1',
+              background: 'black'
             }}
           >
-            {/* The actual canvas that will be exported. We scale it down visually but keep its native resolution for export */}
+            {/* Scaled content wrapper - scales to fit parent */}
             <div 
-              className="absolute top-0 left-0 origin-top-left overflow-hidden bg-black"
               style={{ 
-                width: `${targetWidth}px`, 
-                height: `${targetHeight}px`,
-                transform: `scale(min(1, 100% / ${targetWidth}))`, // Responsive scaling
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: `${SQUARE_SIZE}px`, 
+                height: `${SQUARE_SIZE}px`,
+                transform: `scale(${700 / SQUARE_SIZE})`,
+                transformOrigin: 'top left'
               }}
             >
               {/* This wrapper is what gets exported */}
               <div 
                 ref={previewRef}
-                className="w-full h-full relative overflow-hidden font-sans"
-                style={{ width: `${targetWidth}px`, height: `${targetHeight}px` }}
+                className="w-full h-full relative overflow-hidden font-sans flex flex-col"
+                style={{ width: `${SQUARE_SIZE}px`, height: `${SQUARE_SIZE}px` }}
               >
                 {/* 1. Background Image */}
                 {imageUrl ? (
@@ -322,71 +313,76 @@ export function MisyFaTsyGenerator() {
                   </div>
                 )}
 
-                {/* 2. Artistic Gradient Overlay */}
+                {/* 2. Artistic Gradient Overlay - Stronger on left & bottom */}
                 <div 
-                  className="absolute inset-0 mix-blend-multiply"
+                  className="absolute inset-0"
                   style={{
-                    background: `linear-gradient(135deg, var(--color-misy-yale) 0%, var(--color-misy-baltic) 40%, var(--color-misy-teal) 100%)`,
-                    opacity: 0.8 + (filterIntensity / 100) * 0.2 // Base opacity + slider
+                    background: `linear-gradient(to right, rgba(30, 41, 82, 0.6) 0%, rgba(30, 41, 82, 0.3) 50%, transparent 100%)`,
+                    mixBlendMode: 'multiply'
                   }}
                 ></div>
                 
+                {/* 3. Bottom gradient overlay for text readability */}
                 <div 
-                  className="absolute inset-0 mix-blend-overlay"
+                  className="absolute bottom-0 left-0 right-0"
                   style={{
-                    background: `linear-gradient(to bottom right, var(--color-misy-lime) 0%, transparent 60%)`,
-                    opacity: (filterIntensity / 100) * 0.8
+                    height: '300px',
+                    background: `linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%)`,
+                    mixBlendMode: 'darken'
                   }}
                 ></div>
 
-                {/* 3. Decorative Chains (Vector graphics) */}
-                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
-                  <LinkIcon className="absolute top-10 right-20 w-64 h-64 text-white transform rotate-45" strokeWidth={1} />
-                  <LinkIcon className="absolute bottom-20 right-40 w-48 h-48 text-white transform -rotate-12" strokeWidth={1} />
-                  <LinkIcon className="absolute top-1/2 left-1/4 w-32 h-32 text-white transform rotate-90" strokeWidth={1} />
+                {/* 4. Color overlay based on filter intensity */}
+                <div 
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(135deg, var(--color-misy-yale) 0%, var(--color-misy-baltic) 50%)`,
+                    opacity: (filterIntensity / 100) * 0.15,
+                    mixBlendMode: 'overlay'
+                  }}
+                ></div>
+
+                {/* 5. Decorative Chains (subtle) */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-4">
+                  <LinkIcon className="absolute top-20 right-40 w-64 h-64 text-white transform rotate-45" strokeWidth={0.5} />
+                  <LinkIcon className="absolute bottom-40 right-32 w-48 h-48 text-white transform -rotate-12" strokeWidth={0.5} />
                 </div>
 
-                {/* 4. Content Container */}
-                <div className="absolute inset-0 flex flex-col p-12 md:p-16 lg:p-20 justify-center">
-                  
-                  {/* Title */}
-                  <div className="mb-auto">
-                    <h1 className="text-white font-bold tracking-tight uppercase"
-                        style={{ 
-                          fontSize: isWide ? '48px' : '60px',
-                          textShadow: '0 4px 20px rgba(0,0,0,0.5)'
-                        }}>
-                      {title}
-                    </h1>
-                  </div>
-
-                  {/* Main Content Band */}
-                  <div className="relative w-full max-w-[90%] mt-8">
-                    {/* Glassmorphism Band */}
-                    <div className="absolute inset-0 bg-white/10 backdrop-blur-md border-l-8 border-misy-teal rounded-r-2xl shadow-2xl"></div>
-                    
-                    {/* "MISY FA TSY..." Label */}
-                    <div className="absolute -top-6 left-0 bg-misy-baltic text-white font-bold px-6 py-2 text-xl tracking-wider shadow-lg">
-                      MISY FA TSY...
-                    </div>
-
-                    {/* Text Content */}
-                    <div className="relative p-8 md:p-10 lg:p-12">
-                      <p className="text-white font-medium leading-snug italic"
-                         style={{ 
-                           fontSize: isWide ? '36px' : '42px',
-                           textShadow: '0 2px 10px rgba(0,0,0,0.3)'
-                         }}>
-                        {text}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Bottom spacing */}
-                  <div className="mt-auto"></div>
+                {/* 4. Content Container - Positioned layout matching image style */}
+                
+                {/* Title - Top Left, Gray & Muted */}
+                <div className="absolute top-6 left-8 right-8">
+                  <h1 className="text-gray-400 font-bold tracking-tight uppercase leading-tight"
+                      style={{ 
+                        fontSize: '36px',
+                        textShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                        opacity: 0.7
+                      }}>
+                    {title}
+                  </h1>
                 </div>
 
-                {/* Subtle Polaroid/Vignette Effect */}
+                {/* Main Content Band - Positioned on left-center area */}
+                <div className="absolute bottom-24 left-8 right-16 z-10">
+                  {/* "MISY FA TSY..." Label */}
+                  <div className="bg-misy-baltic text-white font-bold px-5 py-2 text-lg tracking-wider shadow-lg mb-3 inline-block">
+                    MISY FA TSY...
+                  </div>
+
+                  {/* Text Content - Below label */}
+                  <div className="max-w-2xl">
+                    <p className="text-white font-medium leading-tight italic"
+                       style={{ 
+                         fontSize: '38px',
+                         textShadow: '0 3px 15px rgba(0,0,0,0.7)',
+                         wordWrap: 'break-word'
+                       }}>
+                      {text}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Subtle Vignette Effect */}
                 <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.8)]"></div>
                 {/* Subtle Neon Border */}
                 <div className="absolute inset-0 pointer-events-none border-[1px] border-white/10 mix-blend-overlay"></div>
