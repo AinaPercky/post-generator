@@ -1,13 +1,25 @@
-import React, { useState, useRef } from 'react';
-import { Upload, Download, Loader2, Wand2, Type, LayoutTemplate, Settings, AlertTriangle, Check, X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Upload, Download, Loader2, Wand2, Type, LayoutTemplate, Settings, AlertTriangle, Check, X, Save, Trash2 } from 'lucide-react';
 import { toPng, toJpeg } from 'html-to-image';
 import { GoogleGenAI } from '@google/genai';
+import { auth } from '../firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { SavedPost } from '../types';
+import { savePost, getPostsByType, deletePost } from '../lib/postService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 type TemplateType = 'hero' | 'split' | 'card' | 'quote' | 'warning' | 'versus';
 
 export function RedPillGenerator() {
+  // Supabase/Auth states
+  const [user, setUser] = useState<User | null>(null);
+  const [savedPosts, setSavedPosts] = useState<SavedPost[]>([]);
+  const [loadingSavedPosts, setLoadingSavedPosts] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Generator states
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageUrl2, setImageUrl2] = useState<string | null>(null);
   const [title, setTitle] = useState('THE HARSH TRUTH');
@@ -36,6 +48,95 @@ export function RedPillGenerator() {
   const previewRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef2 = useRef<HTMLInputElement>(null);
+
+  // Auth listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Load saved Red Pill posts on mount
+  useEffect(() => {
+    loadSavedPosts();
+  }, []);
+
+  const loadSavedPosts = async () => {
+    try {
+      setLoadingSavedPosts(true);
+      const posts = await getPostsByType('redpill', { limit: 20 });
+      setSavedPosts(posts);
+    } catch (error) {
+      console.error('Error loading saved posts:', error);
+    } finally {
+      setLoadingSavedPosts(false);
+    }
+  };
+
+  const handleSaveToLibrary = async () => {
+    if (!title) {
+      setSaveError('Please enter a title before saving');
+      return;
+    }
+
+    if (!user) {
+      setSaveError('Please sign in to save posts');
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      // Convert preview to image
+      if (!previewRef.current) throw new Error('Preview not available');
+      const imageData = await toPng(previewRef.current);
+
+      const newPost: SavedPost = {
+        type: 'redpill',
+        title: title,
+        imageUrl: imageData,
+        userId: user.uid,
+        authorName: user.displayName || 'Anonymous',
+        metadata: {
+          content: content,
+          punchline: punchline,
+          template: template,
+        }
+      };
+
+      const savedPost = await savePost(newPost);
+      if (savedPost) {
+        setSavedPosts([savedPost, ...savedPosts]);
+        setSaveError(null);
+      }
+    } catch (error) {
+      console.error('Failed to save:', error);
+      setSaveError('Failed to save post');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteSavedPost = async (postId: string | undefined) => {
+    if (!postId || !confirm('Delete this post?')) return;
+
+    try {
+      await deletePost(postId);
+      setSavedPosts(savedPosts.filter(p => p.id !== postId));
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      setSaveError('Failed to delete post');
+    }
+  };
+
+  const handleLoadPost = (post: SavedPost) => {
+    setTitle(post.title);
+    if (post.metadata?.content) setContent(post.metadata.content as string);
+    if (post.metadata?.punchline) setPunchline(post.metadata.punchline as string);
+    if (post.metadata?.template) setTemplate(post.metadata.template as TemplateType);
+    // Note: image_url is the rendered PNG, not the source image
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -552,23 +653,51 @@ export function RedPillGenerator() {
         </div>
 
         {/* Export */}
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleDownload('png')}
+              disabled={isDownloading || !imageUrl}
+              className="flex-1 py-4 px-4 bg-[#ff2e2e] hover:bg-[#e62929] text-white font-bold rounded-xl shadow-[0_0_20px_rgba(255,46,46,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wide text-sm"
+            >
+              {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+              PNG
+            </button>
+            <button
+              onClick={() => handleDownload('jpg')}
+              disabled={isDownloading || !imageUrl}
+              className="flex-1 py-4 px-4 bg-[#ff2e2e] hover:bg-[#e62929] text-white font-bold rounded-xl shadow-[0_0_20px_rgba(255,46,46,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wide text-sm"
+            >
+              {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+              JPG
+            </button>
+          </div>
+          
+          {/* Save to Library */}
           <button
-            onClick={() => handleDownload('png')}
-            disabled={isDownloading || !imageUrl}
-            className="flex-1 py-4 px-4 bg-[#ff2e2e] hover:bg-[#e62929] text-white font-bold rounded-xl shadow-[0_0_20px_rgba(255,46,46,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wide text-sm"
+            onClick={handleSaveToLibrary}
+            disabled={isSaving || !title || !user}
+            title={!user ? "Sign in to save" : ""}
+            className="w-full py-4 px-4 bg-green-700 hover:bg-green-800 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wide text-sm"
           >
-            {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-            PNG
+            {isSaving ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                {user ? 'Save to Library' : 'Sign in to Save'}
+              </>
+            )}
           </button>
-          <button
-            onClick={() => handleDownload('jpg')}
-            disabled={isDownloading || !imageUrl}
-            className="flex-1 py-4 px-4 bg-[#ff2e2e] hover:bg-[#e62929] text-white font-bold rounded-xl shadow-[0_0_20px_rgba(255,46,46,0.3)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase tracking-wide text-sm"
-          >
-            {isDownloading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-            JPG
-          </button>
+          
+          {saveError && (
+            <div className="p-3 bg-red-900/30 border border-red-900 text-red-200 text-xs rounded-lg">
+              {saveError}
+            </div>
+          )}
         </div>
       </div>
 
@@ -973,6 +1102,62 @@ export function RedPillGenerator() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Library Section */}
+      <div className="lg:col-span-12 mt-8 pt-8 border-t border-neutral-800">
+        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+          My Saved Red Pill Posts
+          {savedPosts.length > 0 && <span className="text-sm font-normal text-neutral-400">({savedPosts.length})</span>}
+        </h3>
+        
+        {loadingSavedPosts && (
+          <div className="text-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto text-neutral-500" />
+          </div>
+        )}
+        
+        {!loadingSavedPosts && savedPosts.length === 0 && (
+          <div className="text-center py-8 text-neutral-500">
+            <p>No saved posts yet. Create and save your first Red Pill post!</p>
+          </div>
+        )}
+        
+        {!loadingSavedPosts && savedPosts.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {savedPosts.map((post) => (
+              <div key={post.id} className="group relative">
+                <div 
+                  className="relative bg-[#141414] rounded-lg overflow-hidden aspect-square cursor-pointer hover:opacity-75 transition-opacity border border-neutral-800"
+                  onClick={() => handleLoadPost(post)}
+                >
+                  <img 
+                    src={post.imageUrl} 
+                    alt={post.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                    <div className="text-white text-sm font-bold truncate">{post.title}</div>
+                  </div>
+                </div>
+                <div className="mt-2 flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="text-xs text-neutral-400 truncate">{post.authorName}</p>
+                  </div>
+                  {user?.uid === post.userId && (
+                    <button
+                      onClick={() => handleDeleteSavedPost(post.id)}
+                      className="text-neutral-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

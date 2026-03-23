@@ -1,19 +1,78 @@
-import React from 'react';
-import { MagazineIssue } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Trash2, Download, Loader2 } from 'lucide-react';
+import { SavedPost } from '../types';
+import { getPostsByType, deletePost } from '../lib/postService';
 import { CoverPreview } from './CoverPreview';
 
 interface MagazineLibraryProps {
-  issues: MagazineIssue[];
-  onSelectIssue: (issue: MagazineIssue) => void;
-  onDeleteIssue: (id: string) => void;
+  onSelectIssue: (post: SavedPost) => void;
   currentUserId?: string;
 }
 
-export function MagazineLibrary({ issues, onSelectIssue, onDeleteIssue, currentUserId }: MagazineLibraryProps) {
+export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibraryProps) {
+  const [issues, setIssues] = useState<SavedPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load magazines from Supabase on mount
+  useEffect(() => {
+    loadIssues();
+  }, []);
+
+  const loadIssues = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const posts = await getPostsByType('magazine', { limit: 100 });
+      setIssues(posts);
+    } catch (err) {
+      console.error('Error loading magazines:', err);
+      setError('Failed to load magazines');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string | undefined) => {
+    if (!id) return;
+    if (!confirm('Are you sure you want to delete this magazine?')) return;
+
+    try {
+      await deletePost(id);
+      setIssues(issues.filter(issue => issue.id !== id));
+    } catch (err) {
+      console.error('Error deleting magazine:', err);
+      setError('Failed to delete magazine');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-500" />
+        <p className="text-neutral-500 mt-2">Loading magazines...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-500">{error}</p>
+        <button
+          onClick={loadIssues}
+          className="mt-4 px-4 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-900 rounded-lg transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   if (issues.length === 0) {
     return (
       <div className="text-center py-12 text-neutral-500">
-        No past issues found. Generate your first cover!
+        <p>No past issues found. Generate your first cover!</p>
       </div>
     );
   }
@@ -27,23 +86,24 @@ export function MagazineLibrary({ issues, onSelectIssue, onDeleteIssue, currentU
             onClick={() => onSelectIssue(issue)}
           >
             <CoverPreview
-              headline={issue.headline}
-              issueNumber={issue.issueNumber}
+              headline={issue.title}
+              issueNumber={issue.metadata?.issueNumber as string || 'N/A'}
               imageUrl={issue.imageUrl}
-              className="shadow-md text-[0.5rem]" // Scale down text for thumbnail
+              className="shadow-md text-[0.5rem]"
             />
           </div>
           <div className="flex justify-between items-center px-1">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium text-neutral-700">{issue.issueNumber}</span>
+            <div className="flex flex-col flex-1">
+              <span className="text-sm font-medium text-neutral-700">{issue.metadata?.issueNumber || 'Issue'}</span>
               <span className="text-xs text-neutral-500">by {issue.authorName || 'Anonymous'}</span>
             </div>
             {currentUserId === issue.userId && (
               <button
-                onClick={() => onDeleteIssue(issue.id)}
-                className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => handleDelete(issue.id)}
+                className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                title="Delete"
               >
-                Delete
+                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>

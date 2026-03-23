@@ -6,64 +6,13 @@ import { CoverPreview } from './components/CoverPreview';
 import { MagazineLibrary } from './components/MagazineLibrary';
 import { RedPillGenerator } from './components/RedPillGenerator';
 import { MisyFaTsyGenerator } from './components/MisyFaTsyGenerator';
-import { MagazineIssue } from './types';
-import { auth, db, signInWithGoogle, logOut } from './firebase';
+import { SavedPost } from './types';
+import { auth, signInWithGoogle, logOut } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { savePost } from './lib/postService';
 
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-    tenantId: string | null | undefined;
-    providerInfo: {
-      providerId: string;
-      displayName: string | null;
-      email: string | null;
-      photoUrl: string | null;
-    }[];
-  }
-}
-
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'magazine' | 'redpill' | 'misyfatsy'>('magazine');
@@ -74,7 +23,7 @@ export default function App() {
   const [isDownloadingPng, setIsDownloadingPng] = useState(false);
   const [isDownloadingJpeg, setIsDownloadingJpeg] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
-  const [issues, setIssues] = useState<MagazineIssue[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -91,29 +40,8 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Load issues from Firestore
-  useEffect(() => {
-    if (!isAuthReady || !user) {
-      setIssues([]);
-      return;
-    }
-
-    const q = query(collection(db, 'issues'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const loadedIssues: MagazineIssue[] = [];
-      snapshot.forEach((doc) => {
-        loadedIssues.push(doc.data() as MagazineIssue);
-      });
-      setIssues(loadedIssues);
-    }, (err) => {
-      handleFirestoreError(err, OperationType.LIST, 'issues');
-    });
-
-    return () => unsubscribe();
-  }, [isAuthReady, user]);
-
-  // Calculate next issue number
-  const autoIssueNumber = `N°${issues.length + 1} ${new Date().getFullYear()}`;
+  // Calculate next issue number (simple counter, will be managed by Supabase)
+  const autoIssueNumber = `N°1 ${new Date().getFullYear()}`;
   const displayIssueNumber = customIssueNumber || autoIssueNumber;
 
   const handleGenerate = async () => {
@@ -239,19 +167,21 @@ export default function App() {
       return;
     }
 
-    const newIssue: MagazineIssue = {
-      id: crypto.randomUUID(),
-      issueNumber: displayIssueNumber,
-      headline,
-      sceneDescription,
-      imageUrl: currentImageUrl,
-      createdAt: Date.now(),
-      userId: user.uid,
-      authorName: user.displayName || 'Anonymous',
-    };
-
+    setIsSaving(true);
     try {
-      await setDoc(doc(db, 'issues', newIssue.id), newIssue);
+      const newPost: SavedPost = {
+        type: 'magazine',
+        title: headline,
+        imageUrl: currentImageUrl,
+        userId: user.uid,
+        authorName: user.displayName || 'Anonymous',
+        metadata: {
+          issueNumber: displayIssueNumber,
+          sceneDescription: sceneDescription
+        }
+      };
+
+      await savePost(newPost);
       // Reset form for next issue
       setHeadline('');
       setSceneDescription('');
@@ -259,25 +189,19 @@ export default function App() {
       setCurrentImageUrl(null);
       setError(null);
     } catch (err) {
-      handleFirestoreError(err, OperationType.CREATE, `issues/${newIssue.id}`);
+      console.error('Failed to save magazine:', err);
+      setError('Failed to save magazine to library');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleDeleteIssue = async (id: string) => {
-    if (!user) return;
-    try {
-      await deleteDoc(doc(db, 'issues', id));
-    } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, `issues/${id}`);
-    }
+  const handleSelectIssue = (post: SavedPost) => {
+    setHeadline(post.title);
+    setSceneDescription(post.metadata?.sceneDescription as string || '');
+    setCustomIssueNumber(post.metadata?.issueNumber as string || '');
+    setCurrentImageUrl(post.imageUrl);
   };
-
-  const handleSelectIssue = (issue: MagazineIssue) => {
-    setHeadline(issue.headline);
-    setSceneDescription(issue.sceneDescription);
-    setCustomIssueNumber(issue.issueNumber);
-    setCurrentImageUrl(issue.imageUrl);
-  };;
 
   return (
     <div className="min-h-screen bg-neutral-50 text-neutral-900 font-sans">
@@ -496,12 +420,21 @@ export default function App() {
               </div>
               <button
                 onClick={handleSaveToLibrary}
-                disabled={!currentImageUrl || !headline || !user}
+                disabled={!currentImageUrl || !headline || !user || isSaving}
                 title={!user ? "Sign in to save" : ""}
                 className="w-full py-2.5 px-4 bg-neutral-900 hover:bg-black text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Save className="w-4 h-4" />
-                {user ? "Save to Library" : "Sign in to Save"}
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    {user ? "Save to Library" : "Sign in to Save"}
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -527,14 +460,9 @@ export default function App() {
 
         {/* Library Section */}
         <div className="mt-20 pt-10 border-t border-neutral-200">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-semibold text-neutral-800">Community Library</h2>
-            <span className="text-sm text-neutral-500">{issues.length} covers generated</span>
-          </div>
+          <h2 className="text-2xl font-semibold text-neutral-800 mb-8">Community Library</h2>
           <MagazineLibrary 
-            issues={issues} 
             onSelectIssue={handleSelectIssue}
-            onDeleteIssue={handleDeleteIssue}
             currentUserId={user?.uid}
           />
         </div>
