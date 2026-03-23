@@ -52,13 +52,32 @@ const toCamelCase = (data: any): SavedPost => ({
   authorName: data.author_name,
 });
 
+const sanitizePostForSave = (post: SavedPost): SavedPost => {
+  if (!post.userId || isUuid(post.userId)) {
+    return post;
+  }
+
+  console.warn('Ignoring non-UUID userId for Supabase save and preserving it in metadata.firebaseUid instead.', post.userId);
+
+  return {
+    ...post,
+    userId: undefined,
+    metadata: {
+      ...(post.metadata || {}),
+      firebaseUid: post.userId,
+    },
+  };
+};
+
 // CREATE - Créer un nouveau post (Magazine, RedPill, ou MisyFaTsy)
 export async function savePost(post: SavedPost): Promise<SavedPost | null> {
   try {
-    const { data, error } = await supabase.from(TABLE_NAME).insert([toInsertPayload(post)]).select().single();
+    const sanitizedPost = sanitizePostForSave(post);
+    const payload = toInsertPayload(sanitizedPost);
+    const { data, error } = await supabase.from(TABLE_NAME).insert([payload]).select().single();
 
     if (error) {
-      console.error('Error saving post:', error.message, toInsertPayload(post));
+      console.error('Error saving post:', error.message, payload);
       throw new Error(error.message);
     }
     return toCamelCase(data);
@@ -118,9 +137,10 @@ export async function getPostById(id: string): Promise<SavedPost | null> {
 
 export async function updatePost(id: string, updates: Partial<SavedPost>): Promise<SavedPost | null> {
   try {
+    const payload = toInsertPayload(sanitizePostForSave(updates as SavedPost));
     const { data, error } = await supabase
       .from(TABLE_NAME)
-      .update({ ...toInsertPayload(updates as SavedPost) })
+      .update(payload)
       .eq('id', id)
       .select()
       .single();
