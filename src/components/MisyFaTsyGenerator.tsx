@@ -122,9 +122,9 @@ export function MisyFaTsyGenerator() {
         type: 'misyfatsy',
         title: title,
         imageUrl: imageData,
-        userId: user.uid,
         authorName: user.displayName || 'Anonymous',
         metadata: {
+          firebaseUid: user.uid,
           text: text,
           category: category,
           filterIntensity: filterIntensity

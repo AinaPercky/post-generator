@@ -96,9 +96,9 @@ export function RedPillGenerator() {
         type: 'redpill',
         title: title,
         imageUrl: imageData,
-        userId: user.uid,
         authorName: user.displayName || 'Anonymous',
         metadata: {
+          firebaseUid: user.uid,
           content: content,
           punchline: punchline,
           template: template,

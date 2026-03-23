@@ -44,6 +44,16 @@ export default function App() {
   const autoIssueNumber = `N°1 ${new Date().getFullYear()}`;
   const displayIssueNumber = customIssueNumber || autoIssueNumber;
 
+  const handleSignIn = async () => {
+    const result = await signInWithGoogle();
+
+    if (!result.ok) {
+      setError(result.message);
+    } else {
+      setError(null);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!sceneDescription) {
       setError('Please provide a scene description.');
@@ -173,9 +183,9 @@ export default function App() {
         type: 'magazine',
         title: headline,
         imageUrl: currentImageUrl,
-        userId: user.uid,
         authorName: user.displayName || 'Anonymous',
         metadata: {
+          firebaseUid: user.uid,
           issueNumber: displayIssueNumber,
           sceneDescription: sceneDescription
         }
@@ -250,7 +260,7 @@ export default function App() {
             </div>
           ) : (
             <button
-              onClick={signInWithGoogle}
+              onClick={handleSignIn}
               className="flex items-center gap-2 text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-lg transition-colors"
             >
               <LogIn className="w-4 h-4" />
