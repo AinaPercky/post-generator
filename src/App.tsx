@@ -9,7 +9,7 @@ import { MisyFaTsyGenerator } from './components/MisyFaTsyGenerator';
 import { SavedPost } from './types';
 import { auth, signInWithGoogle, logOut } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { savePost } from './lib/postService';
+import { savePost, updatePost } from './lib/postService';
 
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -27,6 +27,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   const coverRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -166,6 +167,15 @@ export default function App() {
     }
   };
 
+
+  const createMagazinePost = async (post: SavedPost) => {
+    await savePost(post);
+  };
+
+  const updateMagazinePost = async (postId: string, post: SavedPost) => {
+    await updatePost(postId, post);
+  };
+
   const handleSaveToLibrary = async () => {
     if (!currentImageUrl || !headline) {
       setError('Please generate an image and enter a headline before saving.');
@@ -191,12 +201,17 @@ export default function App() {
         }
       };
 
-      await savePost(newPost);
+      if (editingPostId) {
+        await updateMagazinePost(editingPostId, newPost);
+      } else {
+        await createMagazinePost(newPost);
+      }
       // Reset form for next issue
       setHeadline('');
       setSceneDescription('');
       setCustomIssueNumber('');
       setCurrentImageUrl(null);
+      setEditingPostId(null);
       setError(null);
     } catch (err: any) {
       console.error('Failed to save magazine:', err);
@@ -207,6 +222,7 @@ export default function App() {
   };
 
   const handleSelectIssue = (post: SavedPost) => {
+    setEditingPostId(post.id || null);
     setHeadline(post.title);
     setSceneDescription(post.metadata?.sceneDescription as string || '');
     setCustomIssueNumber(post.metadata?.issueNumber as string || '');
@@ -442,7 +458,7 @@ export default function App() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    {user ? "Save to Library" : "Sign in to Save"}
+                    {user ? (editingPostId ? "Update Post" : "Save to Library") : "Sign in to Save"}
                   </>
                 )}
               </button>

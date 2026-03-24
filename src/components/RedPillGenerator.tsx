@@ -5,7 +5,7 @@ import { GoogleGenAI } from '@google/genai';
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
-import { savePost, getPostsByType, deletePost } from '../lib/postService';
+import { savePost, updatePost, getPostsByType, deletePost } from '../lib/postService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -18,6 +18,7 @@ export function RedPillGenerator() {
   const [loadingSavedPosts, setLoadingSavedPosts] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   // Generator states
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -74,6 +75,21 @@ export function RedPillGenerator() {
     }
   };
 
+
+  const createRedPillPost = async (post: SavedPost) => {
+    const createdPost = await savePost(post);
+    if (createdPost) {
+      setSavedPosts([createdPost, ...savedPosts]);
+    }
+  };
+
+  const updateRedPillPost = async (postId: string, post: SavedPost) => {
+    const updatedPost = await updatePost(postId, post);
+    if (updatedPost) {
+      setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
+    }
+  };
+
   const handleSaveToLibrary = async () => {
     if (!title) {
       setSaveError('Please enter a title before saving');
@@ -105,11 +121,13 @@ export function RedPillGenerator() {
         }
       };
 
-      const savedPost = await savePost(newPost);
-      if (savedPost) {
-        setSavedPosts([savedPost, ...savedPosts]);
-        setSaveError(null);
+      if (editingPostId) {
+        await updateRedPillPost(editingPostId, newPost);
+      } else {
+        await createRedPillPost(newPost);
       }
+      setEditingPostId(null);
+      setSaveError(null);
     } catch (error) {
       console.error('Failed to save:', error);
       setSaveError('Failed to save post');
@@ -131,6 +149,7 @@ export function RedPillGenerator() {
   };
 
   const handleLoadPost = (post: SavedPost) => {
+    setEditingPostId(post.id || null);
     setTitle(post.title);
     if (post.metadata?.content) setContent(post.metadata.content as string);
     if (post.metadata?.punchline) setPunchline(post.metadata.punchline as string);
@@ -688,7 +707,7 @@ export function RedPillGenerator() {
             ) : (
               <>
                 <Save className="w-5 h-5" />
-                {user ? 'Save to Library' : 'Sign in to Save'}
+                {user ? (editingPostId ? 'Update Post' : 'Save to Library') : 'Sign in to Save'}
               </>
             )}
           </button>

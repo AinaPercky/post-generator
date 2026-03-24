@@ -4,7 +4,7 @@ import { Upload, Download, RefreshCw, Link as LinkIcon, Wand2, Image as ImageIco
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
-import { savePost, getPostsByType, deletePost } from '../lib/postService';
+import { savePost, updatePost, getPostsByType, deletePost } from '../lib/postService';
 
 const PRESETS = {
   teknolojia: {
@@ -38,6 +38,7 @@ export function MisyFaTsyGenerator() {
   const [loadingSavedPosts, setLoadingSavedPosts] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   // Generator states
   const [category, setCategory] = useState<Category>('teknolojia');
@@ -100,6 +101,21 @@ export function MisyFaTsyGenerator() {
     reader.readAsDataURL(file);
   };
 
+
+  const createMisyFaTsyPost = async (post: SavedPost) => {
+    const createdPost = await savePost(post);
+    if (createdPost) {
+      setSavedPosts([createdPost, ...savedPosts]);
+    }
+  };
+
+  const updateMisyFaTsyPost = async (postId: string, post: SavedPost) => {
+    const updatedPost = await updatePost(postId, post);
+    if (updatedPost) {
+      setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
+    }
+  };
+
   const handleSaveToLibrary = async () => {
     if (!title) {
       setSaveError('Veuillez entrer un titre avant d\'enregistrer');
@@ -131,11 +147,13 @@ export function MisyFaTsyGenerator() {
         }
       };
 
-      const savedPost = await savePost(newPost);
-      if (savedPost) {
-        setSavedPosts([savedPost, ...savedPosts]);
-        setSaveError(null);
+      if (editingPostId) {
+        await updateMisyFaTsyPost(editingPostId, newPost);
+      } else {
+        await createMisyFaTsyPost(newPost);
       }
+      setEditingPostId(null);
+      setSaveError(null);
     } catch (error) {
       console.error('Failed to save:', error);
       setSaveError('Échec de l\'enregistrement');
@@ -157,6 +175,7 @@ export function MisyFaTsyGenerator() {
   };
 
   const handleLoadPost = (post: SavedPost) => {
+    setEditingPostId(post.id || null);
     setTitle(post.title);
     if (post.metadata?.text) setText(post.metadata.text as string);
     if (post.metadata?.category) setCategory(post.metadata.category as Category);
@@ -393,7 +412,7 @@ export function MisyFaTsyGenerator() {
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                {user ? 'Enregistrer' : 'Se connecter'}
+                {user ? (editingPostId ? 'Mettre à jour' : 'Enregistrer') : 'Se connecter'}
               </>
             )}
           </button>
