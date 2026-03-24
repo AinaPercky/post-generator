@@ -1,4 +1,4 @@
-import { supabase } from '../supabase';
+import { ensureSupabaseSession, supabase } from '../supabase';
 import { SavedPost, PostType } from '../types';
 
 const TABLE_NAME = 'saved_posts';
@@ -16,7 +16,7 @@ const withOwnerMetadata = (post: SavedPost) => {
   return metadata;
 };
 
-const toInsertPayload = (post: SavedPost) => {
+const toInsertPayload = (post: SavedPost, supabaseUserId?: string) => {
   const payload: Record<string, unknown> = {
     type: post.type,
     title: post.title,
@@ -33,6 +33,8 @@ const toInsertPayload = (post: SavedPost) => {
 
   if (isUuid(post.userId)) {
     payload.user_id = post.userId;
+  } else if (supabaseUserId) {
+    payload.user_id = supabaseUserId;
   }
 
   return payload;
@@ -72,8 +74,9 @@ const sanitizePostForSave = (post: SavedPost): SavedPost => {
 // CREATE - Créer un nouveau post (Magazine, RedPill, ou MisyFaTsy)
 export async function savePost(post: SavedPost): Promise<SavedPost | null> {
   try {
+    const session = await ensureSupabaseSession();
     const sanitizedPost = sanitizePostForSave(post);
-    const payload = toInsertPayload(sanitizedPost);
+    const payload = toInsertPayload(sanitizedPost, session?.user?.id);
     const { data, error } = await supabase.from(TABLE_NAME).insert([payload]).select().single();
 
     if (error) {
@@ -137,7 +140,8 @@ export async function getPostById(id: string): Promise<SavedPost | null> {
 
 export async function updatePost(id: string, updates: Partial<SavedPost>): Promise<SavedPost | null> {
   try {
-    const payload = toInsertPayload(sanitizePostForSave(updates as SavedPost));
+    const session = await ensureSupabaseSession();
+    const payload = toInsertPayload(sanitizePostForSave(updates as SavedPost), session?.user?.id);
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .update(payload)

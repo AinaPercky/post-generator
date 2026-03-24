@@ -10,4 +10,28 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+export const ensureSupabaseSession = async () => {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(`Failed to fetch Supabase session: ${sessionError.message}`);
+  }
+
+  if (session) {
+    return session;
+  }
+
+  const { data, error } = await supabase.auth.signInAnonymously();
+  if (error) {
+    throw new Error(
+      `Supabase anonymous sign-in failed: ${error.message}. Enable Anonymous Sign-Ins in Supabase Auth or connect with Supabase Auth before saving posts.`
+    );
+  }
+
+  return data.session;
+};
+
 export default supabase;
