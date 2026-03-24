@@ -1,4 +1,4 @@
-import { getSupabaseSession, supabase } from '../supabase';
+import { supabase } from '../supabase';
 import { SavedPost, PostType } from '../types';
 
 const TABLE_NAME = 'saved_posts';
@@ -16,14 +16,14 @@ const withOwnerMetadata = (post: SavedPost) => {
   return metadata;
 };
 
-const toInsertPayload = (post: SavedPost, supabaseUserId?: string) => {
+const toInsertPayload = (post: SavedPost) => {
   const payload: Record<string, unknown> = {
     type: post.type,
     title: post.title,
-    description: post.description,
+    description: post.description || '',
     image_url: post.imageUrl,
     metadata: withOwnerMetadata(post),
-    author_name: post.authorName,
+    author_name: post.authorName || 'Anonyme',
     updated_at: new Date().toISOString(),
   };
 
@@ -33,8 +33,6 @@ const toInsertPayload = (post: SavedPost, supabaseUserId?: string) => {
 
   if (isUuid(post.userId)) {
     payload.user_id = post.userId;
-  } else if (supabaseUserId) {
-    payload.user_id = supabaseUserId;
   }
 
   return payload;
@@ -42,7 +40,7 @@ const toInsertPayload = (post: SavedPost, supabaseUserId?: string) => {
 
 const mapSupabaseWriteError = (errorMessage: string) => {
   if (errorMessage.includes('row-level security policy')) {
-    return 'Supabase blocked the save because no RLS policy allows this insert for your current auth context. Add an INSERT policy for anon/authenticated users, or sign in with Supabase Auth and set user_id = auth.uid().';
+    return 'Supabase blocked the save due to RLS. In Supabase Policies, create an INSERT policy on saved_posts (temporary option: TO public WITH CHECK (true)).';
   }
 
   if (errorMessage.includes('JWT') || errorMessage.includes('401')) {
@@ -86,9 +84,8 @@ const sanitizePostForSave = (post: SavedPost): SavedPost => {
 // CREATE - Créer un nouveau post (Magazine, RedPill, ou MisyFaTsy)
 export async function savePost(post: SavedPost): Promise<SavedPost | null> {
   try {
-    const session = await getSupabaseSession();
     const sanitizedPost = sanitizePostForSave(post);
-    const payload = toInsertPayload(sanitizedPost, session?.user?.id);
+    const payload = toInsertPayload(sanitizedPost);
     const { data, error } = await supabase.from(TABLE_NAME).insert([payload]).select().single();
 
     if (error) {
@@ -153,8 +150,7 @@ export async function getPostById(id: string): Promise<SavedPost | null> {
 
 export async function updatePost(id: string, updates: Partial<SavedPost>): Promise<SavedPost | null> {
   try {
-    const session = await getSupabaseSession();
-    const payload = toInsertPayload(sanitizePostForSave(updates as SavedPost), session?.user?.id);
+    const payload = toInsertPayload(sanitizePostForSave(updates as SavedPost));
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .update(payload)
