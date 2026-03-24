@@ -1,4 +1,4 @@
-import { ensureSupabaseSession, supabase } from '../supabase';
+import { getSupabaseSession, supabase } from '../supabase';
 import { SavedPost, PostType } from '../types';
 
 const TABLE_NAME = 'saved_posts';
@@ -40,6 +40,18 @@ const toInsertPayload = (post: SavedPost, supabaseUserId?: string) => {
   return payload;
 };
 
+const mapSupabaseWriteError = (errorMessage: string) => {
+  if (errorMessage.includes('row-level security policy')) {
+    return 'Supabase blocked the save because no RLS policy allows this insert for your current auth context. Add an INSERT policy for anon/authenticated users, or sign in with Supabase Auth and set user_id = auth.uid().';
+  }
+
+  if (errorMessage.includes('JWT') || errorMessage.includes('401')) {
+    return 'Supabase authentication is missing or invalid. Verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, and ensure your RLS policies allow this operation.';
+  }
+
+  return errorMessage;
+};
+
 // Helper to convert snake_case from Supabase to camelCase
 const toCamelCase = (data: any): SavedPost => ({
   id: data.id,
@@ -74,14 +86,15 @@ const sanitizePostForSave = (post: SavedPost): SavedPost => {
 // CREATE - Créer un nouveau post (Magazine, RedPill, ou MisyFaTsy)
 export async function savePost(post: SavedPost): Promise<SavedPost | null> {
   try {
-    const session = await ensureSupabaseSession();
+    const session = await getSupabaseSession();
     const sanitizedPost = sanitizePostForSave(post);
     const payload = toInsertPayload(sanitizedPost, session?.user?.id);
     const { data, error } = await supabase.from(TABLE_NAME).insert([payload]).select().single();
 
     if (error) {
+      const friendlyError = mapSupabaseWriteError(error.message);
       console.error('Error saving post:', error.message, payload);
-      throw new Error(error.message);
+      throw new Error(friendlyError);
     }
     return toCamelCase(data);
   } catch (error) {
@@ -140,7 +153,7 @@ export async function getPostById(id: string): Promise<SavedPost | null> {
 
 export async function updatePost(id: string, updates: Partial<SavedPost>): Promise<SavedPost | null> {
   try {
-    const session = await ensureSupabaseSession();
+    const session = await getSupabaseSession();
     const payload = toInsertPayload(sanitizePostForSave(updates as SavedPost), session?.user?.id);
     const { data, error } = await supabase
       .from(TABLE_NAME)
@@ -151,7 +164,7 @@ export async function updatePost(id: string, updates: Partial<SavedPost>): Promi
 
     if (error) {
       console.error('Error updating post:', error.message);
-      throw new Error(error.message);
+      throw new Error(mapSupabaseWriteError(error.message));
     }
     return data ? toCamelCase(data) : null;
   } catch (error) {

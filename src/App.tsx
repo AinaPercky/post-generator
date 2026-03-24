@@ -198,9 +198,9 @@ export default function App() {
       setCustomIssueNumber('');
       setCurrentImageUrl(null);
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save magazine:', err);
-      setError('Failed to save magazine to library');
+      setError(err?.message || 'Failed to save magazine to library');
     } finally {
       setIsSaving(false);
     }
