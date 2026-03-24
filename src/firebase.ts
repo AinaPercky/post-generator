@@ -4,7 +4,6 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
   type AuthError,
 } from 'firebase/auth';
@@ -28,11 +27,6 @@ const getAuthorizedDomainHelp = () => {
   const currentHost = window.location.hostname;
   return `Add ${currentHost} to Firebase Authentication > Settings > Authorized domains, then retry Google sign-in.`;
 };
-
-const shouldFallbackToRedirect = (error: Partial<AuthError>) =>
-  error.code === 'auth/popup-blocked' ||
-  error.code === 'auth/popup-closed-by-user' ||
-  error.code === 'auth/cancelled-popup-request';
 
 export const getFirebaseAuthErrorMessage = (error: unknown) => {
   const authError = error as Partial<AuthError>;
@@ -72,19 +66,6 @@ export const signInWithGoogle = async () => {
     await signInWithPopup(auth, googleProvider);
     return { ok: true as const };
   } catch (error) {
-    const authError = error as Partial<AuthError>;
-
-    if (shouldFallbackToRedirect(authError)) {
-      try {
-        await signInWithRedirect(auth, googleProvider);
-        return { ok: true as const };
-      } catch (redirectError) {
-        const message = getFirebaseAuthErrorMessage(redirectError);
-        console.error('Error signing in with Google using redirect fallback', redirectError);
-        return { ok: false as const, message };
-      }
-    }
-
     const message = getFirebaseAuthErrorMessage(error);
     console.error('Error signing in with Google', error);
     return { ok: false as const, message };
