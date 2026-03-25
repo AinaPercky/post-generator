@@ -112,12 +112,11 @@ export function MisyFaTsyGenerator() {
   const updateMisyFaTsyPost = async (postId: string, post: SavedPost) => {
     const updatedPost = await updatePost(postId, post);
 
-    if (updatedPost) {
-      setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
-      return;
+    if (!updatedPost) {
+      throw new Error('Impossible de mettre à jour ce post. Il a peut-être été supprimé ou bloqué par les politiques RLS.');
     }
 
-    await createMisyFaTsyPost(post);
+    setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
   };
 
   const handleSaveToLibrary = async () => {
@@ -158,9 +157,9 @@ export function MisyFaTsyGenerator() {
       }
       setEditingPostId(null);
       setSaveError(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save:', error);
-      setSaveError('Échec de l\'enregistrement');
+      setSaveError(error?.message || 'Échec de l\'enregistrement');
     } finally {
       setIsSaving(false);
     }

@@ -176,7 +176,7 @@ export default function App() {
     const updatedPost = await updatePost(postId, post);
 
     if (!updatedPost) {
-      await createMagazinePost(post);
+      throw new Error('Unable to update this post. It may have been deleted or blocked by row-level security policies.');
     }
   };
 

@@ -86,12 +86,11 @@ export function RedPillGenerator() {
   const updateRedPillPost = async (postId: string, post: SavedPost) => {
     const updatedPost = await updatePost(postId, post);
 
-    if (updatedPost) {
-      setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
-      return;
+    if (!updatedPost) {
+      throw new Error('Unable to update this post. It may have been deleted or blocked by row-level security policies.');
     }
 
-    await createRedPillPost(post);
+    setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
   };
 
   const handleSaveToLibrary = async () => {
@@ -132,9 +131,9 @@ export function RedPillGenerator() {
       }
       setEditingPostId(null);
       setSaveError(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save:', error);
-      setSaveError('Failed to save post');
+      setSaveError(error?.message || 'Failed to save post');
     } finally {
       setIsSaving(false);
     }
