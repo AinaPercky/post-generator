@@ -180,6 +180,7 @@ export function MisyFaTsyGenerator() {
   const handleLoadPost = (post: SavedPost) => {
     const canEditPost = Boolean(user?.uid && post.userId && user.uid === post.userId);
     setEditingPostId(canEditPost ? post.id || null : null);
+    setImageUrl(post.imageUrl);
     setTitle(post.title);
     if (post.metadata?.text) setText(post.metadata.text as string);
     if (post.metadata?.category) setCategory(post.metadata.category as Category);
