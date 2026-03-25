@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Download, Loader2 } from 'lucide-react';
 import { SavedPost } from '../types';
-import { getPostsByType, deletePost } from '../lib/postService';
+import { getPostsByType, deletePost, subscribeToPostChanges } from '../lib/postService';
 import { CoverPreview } from './CoverPreview';
 
 interface MagazineLibraryProps {
@@ -14,9 +14,17 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load magazines from Supabase on mount
+  // Load magazines from Supabase on mount + subscribe to realtime updates
   useEffect(() => {
     loadIssues();
+
+    const subscription = subscribeToPostChanges('magazine', (posts) => {
+      setIssues(posts);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadIssues = async () => {
@@ -39,7 +47,7 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
 
     try {
       await deletePost(id);
-      setIssues(issues.filter(issue => issue.id !== id));
+      await loadIssues();
     } catch (err) {
       console.error('Error deleting magazine:', err);
       setError('Failed to delete magazine');

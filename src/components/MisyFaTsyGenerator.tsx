@@ -170,7 +170,7 @@ export function MisyFaTsyGenerator() {
 
     try {
       await deletePost(postId);
-      setSavedPosts(savedPosts.filter(p => p.id !== postId));
+      await loadSavedPosts();
     } catch (error) {
       console.error('Error deleting post:', error);
       setSaveError('Échec de la suppression');

@@ -175,12 +175,21 @@ export async function updatePost(id: string, updates: Partial<SavedPost>): Promi
 
 export async function deletePost(id: string): Promise<boolean> {
   try {
-    const { error } = await supabase.from(TABLE_NAME).delete().eq('id', id);
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .delete()
+      .eq('id', id)
+      .select('id');
 
     if (error) {
       console.error('Error deleting post:', error.message);
       throw new Error(error.message);
     }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error('Delete was not applied. The post may be protected by RLS policies or already removed.');
+    }
+
     return true;
   } catch (error) {
     console.error('Delete post failed:', error);
