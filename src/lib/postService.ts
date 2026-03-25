@@ -187,7 +187,21 @@ export async function deletePost(id: string): Promise<boolean> {
     }
 
     if (!Array.isArray(data) || data.length === 0) {
-      throw new Error('Delete was not applied. The post may be protected by RLS policies or already removed.');
+      const { data: existing, error: fetchError } = await supabase
+        .from(TABLE_NAME)
+        .select('id')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (fetchError) {
+        throw new Error(fetchError.message);
+      }
+
+      if (!existing) {
+        return true;
+      }
+
+      throw new Error('Delete was blocked by Supabase RLS. Add a DELETE policy for saved_posts (temporary: TO public USING (true)).');
     }
 
     return true;

@@ -173,7 +173,7 @@ export function MisyFaTsyGenerator() {
       await loadSavedPosts();
     } catch (error) {
       console.error('Error deleting post:', error);
-      setSaveError('Échec de la suppression');
+      setSaveError(error instanceof Error ? error.message : 'Échec de la suppression');
     }
   };
 

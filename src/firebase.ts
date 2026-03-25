@@ -3,7 +3,7 @@ import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
   signOut,
   type AuthError,
 } from 'firebase/auth';
@@ -63,7 +63,7 @@ export const analytics = analyticsInstance;
 
 export const signInWithGoogle = async () => {
   try {
-    await signInWithPopup(auth, googleProvider);
+    await signInWithRedirect(auth, googleProvider);
     return { ok: true as const };
   } catch (error) {
     const message = getFirebaseAuthErrorMessage(error);

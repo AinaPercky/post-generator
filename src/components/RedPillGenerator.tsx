@@ -147,7 +147,7 @@ export function RedPillGenerator() {
       await loadSavedPosts();
     } catch (error) {
       console.error('Error deleting post:', error);
-      setSaveError('Failed to delete post');
+      setSaveError(error instanceof Error ? error.message : 'Failed to delete post');
     }
   };
 

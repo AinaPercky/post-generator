@@ -50,7 +50,7 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
       await loadIssues();
     } catch (err) {
       console.error('Error deleting magazine:', err);
-      setError('Failed to delete magazine');
+      setError(err instanceof Error ? err.message : 'Failed to delete magazine');
     }
   };
 
