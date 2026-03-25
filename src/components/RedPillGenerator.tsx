@@ -865,7 +865,7 @@ export function RedPillGenerator() {
                     <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent w-3/4"></div>
                   )}
                   {template === 'card' && (
-                    <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
+                    <div className="absolute inset-0 bg-black/10"></div>
                   )}
                   {template === 'quote' && (
                     <div className="absolute inset-0 bg-black/50"></div>
@@ -989,7 +989,7 @@ export function RedPillGenerator() {
                 <div className="h-full w-full relative">
                   <div className="absolute left-0 right-0 flex justify-center transition-all duration-500"
                        style={{ top: `${contentPositionY}%`, transform: `translateY(-${contentPositionY}%)` }}>
-                    <div className="w-full max-w-[85%] bg-black/80 backdrop-blur-md border border-neutral-800/80 p-8 flex flex-col items-center text-center shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+                    <div className="w-full max-w-[85%] bg-black/50 border border-neutral-600/50 p-8 flex flex-col items-center text-center shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
                       {!enableRedPillTitle && (
                         <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-widest mb-6 pb-6 border-b border-neutral-800 w-full drop-shadow-md">
                           {renderHighlightedText(title)}
@@ -1049,7 +1049,7 @@ export function RedPillGenerator() {
                   
                   <div className="absolute left-4 right-4 transition-all duration-500"
                        style={{ top: `${contentPositionY}%`, transform: `translateY(-${contentPositionY}%)` }}>
-                    <div className="bg-black/95 p-6 border-l-4 border-[#ff2e2e] shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+                    <div className="bg-black/60 p-6 border-l-4 border-[#ff2e2e] shadow-[0_10px_30px_rgba(0,0,0,0.55)]">
                       <p className="text-white font-bold leading-snug drop-shadow-md" style={{ fontSize: `${bodyFontSize}px` }}>
                         {renderBodyText(content)}
                       </p>
@@ -1059,7 +1059,7 @@ export function RedPillGenerator() {
                   {enablePunchline && (
                     <div className="absolute left-8 transition-all duration-500"
                          style={{ top: `${punchlinePositionY}%`, transform: `translateY(-${punchlinePositionY}%)` }}>
-                      <div className="inline-flex items-center gap-3 bg-black/80 border border-[#ff2e2e]/60 px-6 py-2 rounded-sm shadow-[0_0_15px_rgba(255,46,46,0.3)]">
+                      <div className="inline-flex items-center gap-3 bg-black/55 border border-[#ff2e2e]/60 px-6 py-2 rounded-sm shadow-[0_0_15px_rgba(255,46,46,0.3)]">
                         <AlertTriangle className="w-5 h-5 text-[#ff2e2e] animate-pulse" />
                         <p className="text-xs md:text-sm font-black text-[#ff2e2e] uppercase tracking-[0.2em] drop-shadow-[0_0_8px_rgba(255,46,46,0.5)]">
                           {punchline}
