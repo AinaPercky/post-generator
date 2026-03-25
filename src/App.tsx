@@ -9,7 +9,7 @@ import { MisyFaTsyGenerator } from './components/MisyFaTsyGenerator';
 import { SavedPost } from './types';
 import { auth, signInWithGoogle, logOut } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { savePost } from './lib/postService';
+import { savePost, updatePost } from './lib/postService';
 
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -27,6 +27,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   const coverRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,6 +44,16 @@ export default function App() {
   // Calculate next issue number (simple counter, will be managed by Supabase)
   const autoIssueNumber = `N°1 ${new Date().getFullYear()}`;
   const displayIssueNumber = customIssueNumber || autoIssueNumber;
+
+  const handleSignIn = async () => {
+    const result = await signInWithGoogle();
+
+    if (!result.ok) {
+      setError(result.message);
+    } else {
+      setError(null);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!sceneDescription) {
@@ -156,6 +167,19 @@ export default function App() {
     }
   };
 
+
+  const createMagazinePost = async (post: SavedPost) => {
+    await savePost(post);
+  };
+
+  const updateMagazinePost = async (postId: string, post: SavedPost) => {
+    const updatedPost = await updatePost(postId, post);
+
+    if (!updatedPost) {
+      throw new Error('Unable to update this post. It may have been deleted or blocked by row-level security policies.');
+    }
+  };
+
   const handleSaveToLibrary = async () => {
     if (!currentImageUrl || !headline) {
       setError('Please generate an image and enter a headline before saving.');
@@ -173,30 +197,37 @@ export default function App() {
         type: 'magazine',
         title: headline,
         imageUrl: currentImageUrl,
-        userId: user.uid,
         authorName: user.displayName || 'Anonymous',
         metadata: {
+          firebaseUid: user.uid,
           issueNumber: displayIssueNumber,
           sceneDescription: sceneDescription
         }
       };
 
-      await savePost(newPost);
+      if (editingPostId) {
+        await updateMagazinePost(editingPostId, newPost);
+      } else {
+        await createMagazinePost(newPost);
+      }
       // Reset form for next issue
       setHeadline('');
       setSceneDescription('');
       setCustomIssueNumber('');
       setCurrentImageUrl(null);
+      setEditingPostId(null);
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save magazine:', err);
-      setError('Failed to save magazine to library');
+      setError(err?.message || 'Failed to save magazine to library');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleSelectIssue = (post: SavedPost) => {
+    const canEditPost = Boolean(user?.uid && post.userId && user.uid === post.userId);
+    setEditingPostId(canEditPost ? post.id || null : null);
     setHeadline(post.title);
     setSceneDescription(post.metadata?.sceneDescription as string || '');
     setCustomIssueNumber(post.metadata?.issueNumber as string || '');
@@ -250,7 +281,7 @@ export default function App() {
             </div>
           ) : (
             <button
-              onClick={signInWithGoogle}
+              onClick={handleSignIn}
               className="flex items-center gap-2 text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-lg transition-colors"
             >
               <LogIn className="w-4 h-4" />
@@ -432,7 +463,7 @@ export default function App() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    {user ? "Save to Library" : "Sign in to Save"}
+                    {user ? (editingPostId ? "Update Post" : "Save to Library") : "Sign in to Save"}
                   </>
                 )}
               </button>

@@ -5,7 +5,7 @@ import { GoogleGenAI } from '@google/genai';
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
-import { savePost, getPostsByType, deletePost } from '../lib/postService';
+import { savePost, updatePost, getPostsByType, deletePost } from '../lib/postService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -18,6 +18,7 @@ export function RedPillGenerator() {
   const [loadingSavedPosts, setLoadingSavedPosts] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   // Generator states
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -74,6 +75,24 @@ export function RedPillGenerator() {
     }
   };
 
+
+  const createRedPillPost = async (post: SavedPost) => {
+    const createdPost = await savePost(post);
+    if (createdPost) {
+      setSavedPosts([createdPost, ...savedPosts]);
+    }
+  };
+
+  const updateRedPillPost = async (postId: string, post: SavedPost) => {
+    const updatedPost = await updatePost(postId, post);
+
+    if (!updatedPost) {
+      throw new Error('Unable to update this post. It may have been deleted or blocked by row-level security policies.');
+    }
+
+    setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
+  };
+
   const handleSaveToLibrary = async () => {
     if (!title) {
       setSaveError('Please enter a title before saving');
@@ -96,26 +115,36 @@ export function RedPillGenerator() {
         type: 'redpill',
         title: title,
         imageUrl: imageData,
-        userId: user.uid,
         authorName: user.displayName || 'Anonymous',
         metadata: {
+          firebaseUid: user.uid,
           content: content,
           punchline: punchline,
           template: template,
         }
       };
 
-      const savedPost = await savePost(newPost);
-      if (savedPost) {
-        setSavedPosts([savedPost, ...savedPosts]);
-        setSaveError(null);
+      if (editingPostId) {
+        await updateRedPillPost(editingPostId, newPost);
+      } else {
+        await createRedPillPost(newPost);
       }
-    } catch (error) {
+      setEditingPostId(null);
+      setSaveError(null);
+    } catch (error: any) {
       console.error('Failed to save:', error);
-      setSaveError('Failed to save post');
+      setSaveError(error?.message || 'Failed to save post');
     } finally {
       setIsSaving(false);
     }
+  };
+
+
+  const canCurrentUserDeletePost = (post: SavedPost) => {
+    if (!user?.uid) return false;
+
+    const metadataOwnerId = post.metadata?.firebaseUid as string | undefined;
+    return post.userId === user.uid || metadataOwnerId === user.uid;
   };
 
   const handleDeleteSavedPost = async (postId: string | undefined) => {
@@ -123,14 +152,17 @@ export function RedPillGenerator() {
 
     try {
       await deletePost(postId);
-      setSavedPosts(savedPosts.filter(p => p.id !== postId));
+      await loadSavedPosts();
     } catch (error) {
       console.error('Error deleting post:', error);
-      setSaveError('Failed to delete post');
+      setSaveError(error instanceof Error ? error.message : 'Failed to delete post');
     }
   };
 
   const handleLoadPost = (post: SavedPost) => {
+    const canEditPost = Boolean(user?.uid && post.userId && user.uid === post.userId);
+    setEditingPostId(canEditPost ? post.id || null : null);
+    setImageUrl(post.imageUrl);
     setTitle(post.title);
     if (post.metadata?.content) setContent(post.metadata.content as string);
     if (post.metadata?.punchline) setPunchline(post.metadata.punchline as string);
@@ -688,7 +720,7 @@ export function RedPillGenerator() {
             ) : (
               <>
                 <Save className="w-5 h-5" />
-                {user ? 'Save to Library' : 'Sign in to Save'}
+                {user ? (editingPostId ? 'Update Post' : 'Save to Library') : 'Sign in to Save'}
               </>
             )}
           </button>
@@ -1144,7 +1176,7 @@ export function RedPillGenerator() {
                   <div className="flex-1">
                     <p className="text-xs text-neutral-400 truncate">{post.authorName}</p>
                   </div>
-                  {user?.uid === post.userId && (
+                  {canCurrentUserDeletePost(post) && (
                     <button
                       onClick={() => handleDeleteSavedPost(post.id)}
                       className="text-neutral-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"

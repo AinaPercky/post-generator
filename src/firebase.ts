@@ -1,6 +1,13 @@
 import { initializeApp } from 'firebase/app';
 import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  signOut,
+  type AuthError,
+} from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -11,6 +18,35 @@ const firebaseConfig = {
   messagingSenderId: '55453519528',
   appId: '1:55453519528:web:6550fe1ac77a3e02d4fc9d',
   measurementId: 'G-DLFY4398C2',
+};
+
+const getAuthorizedDomainHelp = () => {
+  if (typeof window === 'undefined') {
+    return 'Add your application domain to Firebase Authentication > Settings > Authorized domains.';
+  }
+
+  const currentHost = window.location.hostname;
+  return `Add ${currentHost} to Firebase Authentication > Settings > Authorized domains, then retry Google sign-in.`;
+};
+
+
+const shouldFallbackToRedirect = (error: Partial<AuthError>) =>
+  error.code === 'auth/popup-blocked' ||
+  error.code === 'auth/popup-closed-by-user' ||
+  error.code === 'auth/cancelled-popup-request';
+
+export const getFirebaseAuthErrorMessage = (error: unknown) => {
+  const authError = error as Partial<AuthError>;
+
+  if (authError.code === 'auth/unauthorized-domain') {
+    return getAuthorizedDomainHelp();
+  }
+
+  if (authError.code === 'auth/popup-blocked') {
+    return 'The browser blocked the Google sign-in popup. Please allow popups and try again.';
+  }
+
+  return 'Unable to sign in with Google right now. Please try again.';
 };
 
 export const app = initializeApp(firebaseConfig);
@@ -35,8 +71,24 @@ export const analytics = analyticsInstance;
 export const signInWithGoogle = async () => {
   try {
     await signInWithPopup(auth, googleProvider);
+    return { ok: true as const };
   } catch (error) {
+    const authError = error as Partial<AuthError>;
+
+    if (shouldFallbackToRedirect(authError)) {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return { ok: true as const };
+      } catch (redirectError) {
+        const message = getFirebaseAuthErrorMessage(redirectError);
+        console.error('Error signing in with Google using redirect fallback', redirectError);
+        return { ok: false as const, message };
+      }
+    }
+
+    const message = getFirebaseAuthErrorMessage(error);
     console.error('Error signing in with Google', error);
+    return { ok: false as const, message };
   }
 };
 
