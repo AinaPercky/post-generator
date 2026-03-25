@@ -165,6 +165,14 @@ export function MisyFaTsyGenerator() {
     }
   };
 
+
+  const canCurrentUserDeletePost = (post: SavedPost) => {
+    if (!user?.uid) return false;
+
+    const metadataOwnerId = post.metadata?.firebaseUid as string | undefined;
+    return post.userId === user.uid || metadataOwnerId === user.uid;
+  };
+
   const handleDeleteSavedPost = async (postId: string | undefined) => {
     if (!postId || !confirm('Supprimer ce post?')) return;
 
@@ -723,7 +731,7 @@ export function MisyFaTsyGenerator() {
                   <div className="flex-1">
                     <p className="text-xs text-neutral-400 truncate">{post.authorName}</p>
                   </div>
-                  {user?.uid === post.userId && (
+                  {canCurrentUserDeletePost(post) && (
                     <button
                       onClick={() => handleDeleteSavedPost(post.id)}
                       className="text-neutral-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"

@@ -41,6 +41,14 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
     }
   };
 
+
+  const canCurrentUserDeleteIssue = (issue: SavedPost) => {
+    if (!currentUserId) return false;
+
+    const metadataOwnerId = issue.metadata?.firebaseUid as string | undefined;
+    return issue.userId === currentUserId || metadataOwnerId === currentUserId;
+  };
+
   const handleDelete = async (id: string | undefined) => {
     if (!id) return;
     if (!confirm('Are you sure you want to delete this magazine?')) return;
@@ -105,7 +113,7 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
               <span className="text-sm font-medium text-neutral-700">{issue.metadata?.issueNumber || 'Issue'}</span>
               <span className="text-xs text-neutral-500">by {issue.authorName || 'Anonymous'}</span>
             </div>
-            {currentUserId === issue.userId && (
+            {canCurrentUserDeleteIssue(issue) && (
               <button
                 onClick={() => handleDelete(issue.id)}
                 className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1"
