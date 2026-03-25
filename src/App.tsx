@@ -226,7 +226,8 @@ export default function App() {
   };
 
   const handleSelectIssue = (post: SavedPost) => {
-    setEditingPostId(post.id || null);
+    const canEditPost = Boolean(user?.uid && post.userId && user.uid === post.userId);
+    setEditingPostId(canEditPost ? post.id || null : null);
     setHeadline(post.title);
     setSceneDescription(post.metadata?.sceneDescription as string || '');
     setCustomIssueNumber(post.metadata?.issueNumber as string || '');

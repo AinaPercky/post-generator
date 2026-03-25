@@ -152,7 +152,8 @@ export function RedPillGenerator() {
   };
 
   const handleLoadPost = (post: SavedPost) => {
-    setEditingPostId(post.id || null);
+    const canEditPost = Boolean(user?.uid && post.userId && user.uid === post.userId);
+    setEditingPostId(canEditPost ? post.id || null : null);
     setTitle(post.title);
     if (post.metadata?.content) setContent(post.metadata.content as string);
     if (post.metadata?.punchline) setPunchline(post.metadata.punchline as string);

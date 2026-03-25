@@ -178,7 +178,8 @@ export function MisyFaTsyGenerator() {
   };
 
   const handleLoadPost = (post: SavedPost) => {
-    setEditingPostId(post.id || null);
+    const canEditPost = Boolean(user?.uid && post.userId && user.uid === post.userId);
+    setEditingPostId(canEditPost ? post.id || null : null);
     setTitle(post.title);
     if (post.metadata?.text) setText(post.metadata.text as string);
     if (post.metadata?.category) setCategory(post.metadata.category as Category);
