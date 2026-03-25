@@ -85,9 +85,13 @@ export function RedPillGenerator() {
 
   const updateRedPillPost = async (postId: string, post: SavedPost) => {
     const updatedPost = await updatePost(postId, post);
+
     if (updatedPost) {
       setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
+      return;
     }
+
+    await createRedPillPost(post);
   };
 
   const handleSaveToLibrary = async () => {

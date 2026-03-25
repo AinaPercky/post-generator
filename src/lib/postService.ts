@@ -156,13 +156,18 @@ export async function updatePost(id: string, updates: Partial<SavedPost>): Promi
       .update(payload)
       .eq('id', id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error updating post:', error.message);
       throw new Error(mapSupabaseWriteError(error.message));
     }
-    return data ? toCamelCase(data) : null;
+
+    if (!data) {
+      return null;
+    }
+
+    return toCamelCase(data);
   } catch (error) {
     console.error('Update post failed:', error);
     throw error;

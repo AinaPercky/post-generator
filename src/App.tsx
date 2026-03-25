@@ -173,7 +173,11 @@ export default function App() {
   };
 
   const updateMagazinePost = async (postId: string, post: SavedPost) => {
-    await updatePost(postId, post);
+    const updatedPost = await updatePost(postId, post);
+
+    if (!updatedPost) {
+      await createMagazinePost(post);
+    }
   };
 
   const handleSaveToLibrary = async () => {

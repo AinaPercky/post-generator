@@ -111,9 +111,13 @@ export function MisyFaTsyGenerator() {
 
   const updateMisyFaTsyPost = async (postId: string, post: SavedPost) => {
     const updatedPost = await updatePost(postId, post);
+
     if (updatedPost) {
       setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
+      return;
     }
+
+    await createMisyFaTsyPost(post);
   };
 
   const handleSaveToLibrary = async () => {

@@ -8,5 +8,16 @@
       "source": "/__/auth/:path*",
       "destination": "https://post-generator-bf2cd.firebaseapp.com/__/auth/:path*"
     }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin-allow-popups"
+        }
+      ]
+    }
   ]
 }
