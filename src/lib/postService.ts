@@ -64,6 +64,35 @@ const toCamelCase = (data: any): SavedPost => ({
   authorName: data.author_name,
 });
 
+
+const isSoftDeleted = (post: SavedPost) => Boolean(post.metadata?.deleted);
+
+const softDeletePost = async (id: string): Promise<boolean> => {
+  const { data: existing, error: existingError } = await supabase
+    .from(TABLE_NAME)
+    .select('metadata')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (existingError || !existing) {
+    return false;
+  }
+
+  const metadata = {
+    ...(existing.metadata || {}),
+    deleted: true,
+    deletedAt: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .update({ metadata, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select('id');
+
+  return !error && Array.isArray(data) && data.length > 0;
+};
+
 const sanitizePostForSave = (post: SavedPost): SavedPost => {
   if (!post.userId || isUuid(post.userId)) {
     return post;
@@ -126,7 +155,7 @@ export async function getPostsByType(
       console.error('Error fetching posts:', error.message);
       throw new Error(error.message);
     }
-    return (data as any[])?.map(toCamelCase) || [];
+    return ((data as any[])?.map(toCamelCase) || []).filter((post) => !isSoftDeleted(post));
   } catch (error) {
     console.error('Fetch posts failed:', error);
     throw error;
@@ -141,7 +170,12 @@ export async function getPostById(id: string): Promise<SavedPost | null> {
       console.error('Error fetching post:', error.message);
       throw new Error(error.message);
     }
-    return data ? toCamelCase(data) : null;
+    if (!data) {
+      return null;
+    }
+
+    const post = toCamelCase(data);
+    return isSoftDeleted(post) ? null : post;
   } catch (error) {
     console.error('Get post failed:', error);
     throw error;
@@ -181,30 +215,38 @@ export async function deletePost(id: string): Promise<boolean> {
       .eq('id', id)
       .select('id');
 
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return true;
+    }
+
     if (error) {
-      console.error('Error deleting post:', error.message);
-      throw new Error(error.message);
+      console.warn('Hard delete failed, attempting soft delete fallback:', error.message);
     }
 
-    if (!Array.isArray(data) || data.length === 0) {
-      const { data: existing, error: fetchError } = await supabase
-        .from(TABLE_NAME)
-        .select('id')
-        .eq('id', id)
-        .maybeSingle();
-
-      if (fetchError) {
-        throw new Error(fetchError.message);
-      }
-
-      if (!existing) {
-        return true;
-      }
-
-      throw new Error('Delete was blocked by Supabase RLS. Add a DELETE policy for saved_posts (temporary: TO public USING (true)).');
+    const softDeleted = await softDeletePost(id);
+    if (softDeleted) {
+      return true;
     }
 
-    return true;
+    if (error) {
+      throw new Error('Delete was blocked by Supabase RLS. Configure a DELETE policy or allow soft-delete updates on metadata.');
+    }
+
+    const { data: existing, error: fetchError } = await supabase
+      .from(TABLE_NAME)
+      .select('id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw new Error(fetchError.message);
+    }
+
+    if (!existing) {
+      return true;
+    }
+
+    throw new Error('Delete was not applied. Configure DELETE policy or enable update policy for soft delete fallback.');
   } catch (error) {
     console.error('Delete post failed:', error);
     throw error;
