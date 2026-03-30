@@ -86,6 +86,16 @@ export default function App() {
     }
   };
 
+  const handleSignIn = async () => {
+    const result = await signInWithGoogle();
+
+    if (!result.ok) {
+      setError(result.message);
+    } else {
+      setError(null);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!sceneDescription) {
       setError('Please provide a scene description.');
