@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, Download, Loader2 } from 'lucide-react';
 import { SavedPost } from '../types';
-import { getPostsByType, deletePost } from '../lib/postService';
+import { getPostsByType, deletePost, subscribeToPostChanges } from '../lib/postService';
 import { CoverPreview } from './CoverPreview';
 
 interface MagazineLibraryProps {
@@ -14,9 +14,17 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load magazines from Supabase on mount
+  // Load magazines from Supabase on mount + subscribe to realtime updates
   useEffect(() => {
     loadIssues();
+
+    const subscription = subscribeToPostChanges('magazine', (posts) => {
+      setIssues(posts);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadIssues = async () => {
@@ -33,16 +41,24 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
     }
   };
 
+
+  const canCurrentUserDeleteIssue = (issue: SavedPost) => {
+    if (!currentUserId) return false;
+
+    const metadataOwnerId = issue.metadata?.firebaseUid as string | undefined;
+    return issue.userId === currentUserId || metadataOwnerId === currentUserId;
+  };
+
   const handleDelete = async (id: string | undefined) => {
     if (!id) return;
     if (!confirm('Are you sure you want to delete this magazine?')) return;
 
     try {
       await deletePost(id);
-      setIssues(issues.filter(issue => issue.id !== id));
+      await loadIssues();
     } catch (err) {
       console.error('Error deleting magazine:', err);
-      setError('Failed to delete magazine');
+      setError(err instanceof Error ? err.message : 'Failed to delete magazine');
     }
   };
 
@@ -97,7 +113,7 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
               <span className="text-sm font-medium text-neutral-700">{issue.metadata?.issueNumber || 'Issue'}</span>
               <span className="text-xs text-neutral-500">by {issue.authorName || 'Anonymous'}</span>
             </div>
-            {currentUserId === issue.userId && (
+            {canCurrentUserDeleteIssue(issue) && (
               <button
                 onClick={() => handleDelete(issue.id)}
                 className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1"
