@@ -76,17 +76,7 @@ export default function App() {
   const selectedIssueNumber = extractIssueNumber(customIssueNumber) || nextIssueNumber;
   const displayIssueNumber = formatIssueNumber(selectedIssueNumber);
 
-  const handleSignIn = async () => {
-    const result = await signInWithGoogle();
-
-    if (!result.ok) {
-      setError(result.message);
-    } else {
-      setError(null);
-    }
-  };
-
-  const handleSignIn = async () => {
+  const handleGoogleSignIn = async () => {
     const result = await signInWithGoogle();
 
     if (!result.ok) {
@@ -327,7 +317,7 @@ export default function App() {
             </div>
           ) : (
             <button
-              onClick={handleSignIn}
+              onClick={handleGoogleSignIn}
               className="flex items-center gap-2 text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-lg transition-colors"
             >
               <LogIn className="w-4 h-4" />
