@@ -4,7 +4,7 @@ import { Upload, Download, RefreshCw, Link as LinkIcon, Wand2, Image as ImageIco
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
-import { savePost, getPostsByType, deletePost } from '../lib/postService';
+import { savePost, updatePost, getPostsByType, deletePost } from '../lib/postService';
 
 const PRESETS = {
   teknolojia: {
@@ -38,6 +38,7 @@ export function MisyFaTsyGenerator() {
   const [loadingSavedPosts, setLoadingSavedPosts] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   // Generator states
   const [category, setCategory] = useState<Category>('teknolojia');
@@ -100,6 +101,24 @@ export function MisyFaTsyGenerator() {
     reader.readAsDataURL(file);
   };
 
+
+  const createMisyFaTsyPost = async (post: SavedPost) => {
+    const createdPost = await savePost(post);
+    if (createdPost) {
+      setSavedPosts([createdPost, ...savedPosts]);
+    }
+  };
+
+  const updateMisyFaTsyPost = async (postId: string, post: SavedPost) => {
+    const updatedPost = await updatePost(postId, post);
+
+    if (!updatedPost) {
+      throw new Error('Impossible de mettre à jour ce post. Il a peut-être été supprimé ou bloqué par les politiques RLS.');
+    }
+
+    setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
+  };
+
   const handleSaveToLibrary = async () => {
     if (!title) {
       setSaveError('Veuillez entrer un titre avant d\'enregistrer');
@@ -122,26 +141,36 @@ export function MisyFaTsyGenerator() {
         type: 'misyfatsy',
         title: title,
         imageUrl: imageData,
-        userId: user.uid,
         authorName: user.displayName || 'Anonymous',
         metadata: {
+          firebaseUid: user.uid,
           text: text,
           category: category,
           filterIntensity: filterIntensity
         }
       };
 
-      const savedPost = await savePost(newPost);
-      if (savedPost) {
-        setSavedPosts([savedPost, ...savedPosts]);
-        setSaveError(null);
+      if (editingPostId) {
+        await updateMisyFaTsyPost(editingPostId, newPost);
+      } else {
+        await createMisyFaTsyPost(newPost);
       }
-    } catch (error) {
+      setEditingPostId(null);
+      setSaveError(null);
+    } catch (error: any) {
       console.error('Failed to save:', error);
-      setSaveError('Échec de l\'enregistrement');
+      setSaveError(error?.message || 'Échec de l\'enregistrement');
     } finally {
       setIsSaving(false);
     }
+  };
+
+
+  const canCurrentUserDeletePost = (post: SavedPost) => {
+    if (!user?.uid) return false;
+
+    const metadataOwnerId = post.metadata?.firebaseUid as string | undefined;
+    return post.userId === user.uid || metadataOwnerId === user.uid;
   };
 
   const handleDeleteSavedPost = async (postId: string | undefined) => {
@@ -149,14 +178,17 @@ export function MisyFaTsyGenerator() {
 
     try {
       await deletePost(postId);
-      setSavedPosts(savedPosts.filter(p => p.id !== postId));
+      await loadSavedPosts();
     } catch (error) {
       console.error('Error deleting post:', error);
-      setSaveError('Échec de la suppression');
+      setSaveError(error instanceof Error ? error.message : 'Échec de la suppression');
     }
   };
 
   const handleLoadPost = (post: SavedPost) => {
+    const canEditPost = Boolean(user?.uid && post.userId && user.uid === post.userId);
+    setEditingPostId(canEditPost ? post.id || null : null);
+    setImageUrl(post.imageUrl);
     setTitle(post.title);
     if (post.metadata?.text) setText(post.metadata.text as string);
     if (post.metadata?.category) setCategory(post.metadata.category as Category);
@@ -393,7 +425,7 @@ export function MisyFaTsyGenerator() {
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                {user ? 'Enregistrer' : 'Se connecter'}
+                {user ? (editingPostId ? 'Mettre à jour' : 'Enregistrer') : 'Se connecter'}
               </>
             )}
           </button>
@@ -699,7 +731,7 @@ export function MisyFaTsyGenerator() {
                   <div className="flex-1">
                     <p className="text-xs text-neutral-400 truncate">{post.authorName}</p>
                   </div>
-                  {user?.uid === post.userId && (
+                  {canCurrentUserDeletePost(post) && (
                     <button
                       onClick={() => handleDeleteSavedPost(post.id)}
                       className="text-neutral-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"

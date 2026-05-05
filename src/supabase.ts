@@ -10,4 +10,17 @@ if (!supabaseUrl || !supabaseKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+export const getSupabaseSession = async () => {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(`Failed to fetch Supabase session: ${sessionError.message}`);
+  }
+
+  return session;
+};
+
 export default supabase;
