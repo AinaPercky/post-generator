@@ -6,7 +6,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-
 
 const isUuid = (value?: string): value is string => Boolean(value && UUID_REGEX.test(value));
 
-const withOwnerMetadata = (post: SavedPost) => {
+const withOwnerMetadata = (post: Partial<SavedPost>) => {
   const metadata = { ...(post.metadata || {}) };
 
   if (post.userId && !isUuid(post.userId)) {
@@ -33,6 +33,26 @@ const toInsertPayload = (post: SavedPost) => {
 
   if (isUuid(post.userId)) {
     payload.user_id = post.userId;
+  }
+
+  return payload;
+};
+
+
+const toUpdatePayload = (updates: Partial<SavedPost>) => {
+  const payload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (updates.type !== undefined) payload.type = updates.type;
+  if (updates.title !== undefined) payload.title = updates.title;
+  if (updates.description !== undefined) payload.description = updates.description;
+  if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl;
+  if (updates.metadata !== undefined) payload.metadata = withOwnerMetadata(updates);
+  if (updates.authorName !== undefined) payload.author_name = updates.authorName;
+
+  if (isUuid(updates.userId)) {
+    payload.user_id = updates.userId;
   }
 
   return payload;
@@ -93,7 +113,7 @@ const softDeletePost = async (id: string): Promise<boolean> => {
   return !error && Array.isArray(data) && data.length > 0;
 };
 
-const sanitizePostForSave = (post: SavedPost): SavedPost => {
+const sanitizePostForSave = (post: Partial<SavedPost>): Partial<SavedPost> => {
   if (!post.userId || isUuid(post.userId)) {
     return post;
   }
@@ -113,7 +133,7 @@ const sanitizePostForSave = (post: SavedPost): SavedPost => {
 // CREATE - Créer un nouveau post (Magazine, RedPill, ou MisyFaTsy)
 export async function savePost(post: SavedPost): Promise<SavedPost | null> {
   try {
-    const sanitizedPost = sanitizePostForSave(post);
+    const sanitizedPost = sanitizePostForSave(post) as SavedPost;
     const payload = toInsertPayload(sanitizedPost);
     const { data, error } = await supabase.from(TABLE_NAME).insert([payload]).select().single();
 
@@ -184,7 +204,7 @@ export async function getPostById(id: string): Promise<SavedPost | null> {
 
 export async function updatePost(id: string, updates: Partial<SavedPost>): Promise<SavedPost | null> {
   try {
-    const payload = toInsertPayload(sanitizePostForSave(updates as SavedPost));
+    const payload = toUpdatePayload(sanitizePostForSave(updates));
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .update(payload)
