@@ -1,8 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Trash2, Download, Loader2 } from 'lucide-react';
 import { SavedPost } from '../types';
-import { getPostsByType, deletePost } from '../lib/postService';
+import { getPostsByType, deletePost, subscribeToPostChanges } from '../lib/postService';
 import { CoverPreview } from './CoverPreview';
+
+
+const extractIssueNumber = (issueValue?: string) => {
+  if (!issueValue) return null;
+
+  const match = issueValue.match(/\d+/);
+  if (!match) return null;
+
+  const issueNumber = Number(match[0]);
+  return Number.isFinite(issueNumber) ? issueNumber : null;
+};
+
+const sortIssuesByIssueNumber = (posts: SavedPost[]) => {
+  return [...posts].sort((a, b) => {
+    const issueNumberA = extractIssueNumber(a.metadata?.issueNumber as string | undefined);
+    const issueNumberB = extractIssueNumber(b.metadata?.issueNumber as string | undefined);
+
+    if (issueNumberA !== null && issueNumberB !== null && issueNumberA !== issueNumberB) {
+      return issueNumberB - issueNumberA;
+    }
+
+    if (issueNumberA !== null) return -1;
+    if (issueNumberB !== null) return 1;
+
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  });
+};
 
 interface MagazineLibraryProps {
   onSelectIssue: (post: SavedPost) => void;
@@ -13,10 +40,19 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
   const [issues, setIssues] = useState<SavedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const sortedIssues = useMemo(() => sortIssuesByIssueNumber(issues), [issues]);
 
-  // Load magazines from Supabase on mount
+  // Load magazines from Supabase on mount + subscribe to realtime updates
   useEffect(() => {
     loadIssues();
+
+    const subscription = subscribeToPostChanges('magazine', (posts) => {
+      setIssues(posts);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadIssues = async () => {
@@ -33,16 +69,24 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
     }
   };
 
+
+  const canCurrentUserDeleteIssue = (issue: SavedPost) => {
+    if (!currentUserId) return false;
+
+    const metadataOwnerId = issue.metadata?.firebaseUid as string | undefined;
+    return issue.userId === currentUserId || metadataOwnerId === currentUserId;
+  };
+
   const handleDelete = async (id: string | undefined) => {
     if (!id) return;
     if (!confirm('Are you sure you want to delete this magazine?')) return;
 
     try {
       await deletePost(id);
-      setIssues(issues.filter(issue => issue.id !== id));
+      await loadIssues();
     } catch (err) {
       console.error('Error deleting magazine:', err);
-      setError('Failed to delete magazine');
+      setError(err instanceof Error ? err.message : 'Failed to delete magazine');
     }
   };
 
@@ -79,7 +123,7 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {issues.map((issue) => (
+      {sortedIssues.map((issue) => (
         <div key={issue.id} className="group relative flex flex-col gap-2">
           <div 
             className="cursor-pointer transition-transform hover:scale-[1.02]"
@@ -97,7 +141,7 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
               <span className="text-sm font-medium text-neutral-700">{issue.metadata?.issueNumber || 'Issue'}</span>
               <span className="text-xs text-neutral-500">by {issue.authorName || 'Anonymous'}</span>
             </div>
-            {currentUserId === issue.userId && (
+            {canCurrentUserDeleteIssue(issue) && (
               <button
                 onClick={() => handleDelete(issue.id)}
                 className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1"
