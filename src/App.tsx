@@ -9,7 +9,7 @@ import { MisyFaTsyGenerator } from './components/MisyFaTsyGenerator';
 import { SavedPost } from './types';
 import { auth, signInWithGoogle, logOut } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { savePost } from './lib/postService';
+import { savePost, updatePost, getPostsByType, shiftMagazineIssueNumbersFrom } from './lib/postService';
 
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -27,6 +27,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [nextIssueNumber, setNextIssueNumber] = useState(1);
 
   const coverRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,9 +42,49 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Calculate next issue number (simple counter, will be managed by Supabase)
-  const autoIssueNumber = `N°1 ${new Date().getFullYear()}`;
-  const displayIssueNumber = customIssueNumber || autoIssueNumber;
+
+  const currentYear = new Date().getFullYear();
+
+  const extractIssueNumber = (issueValue?: string) => {
+    if (!issueValue) return null;
+    const match = issueValue.match(/\d+/);
+
+    if (!match) return null;
+
+    const parsedNumber = Number(match[0]);
+    return Number.isFinite(parsedNumber) ? parsedNumber : null;
+  };
+
+  const formatIssueNumber = (issueNumber: number) => `N°${issueNumber} ${currentYear}`;
+
+  useEffect(() => {
+    const loadNextIssueNumber = async () => {
+      try {
+        const latestMagazines = await getPostsByType('magazine', { limit: 1 });
+        const latestIssueText = latestMagazines[0]?.metadata?.issueNumber as string | undefined;
+        const latestIssueNumber = extractIssueNumber(latestIssueText);
+        setNextIssueNumber((latestIssueNumber || 0) + 1);
+      } catch (loadError) {
+        console.error('Failed to load latest issue number:', loadError);
+      }
+    };
+
+    loadNextIssueNumber();
+  }, []);
+
+  const autoIssueNumber = formatIssueNumber(nextIssueNumber);
+  const selectedIssueNumber = extractIssueNumber(customIssueNumber) || nextIssueNumber;
+  const displayIssueNumber = formatIssueNumber(selectedIssueNumber);
+
+  const handleGoogleSignIn = async () => {
+    const result = await signInWithGoogle();
+
+    if (!result.ok) {
+      setError(result.message);
+    } else {
+      setError(null);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!sceneDescription) {
@@ -156,6 +198,19 @@ export default function App() {
     }
   };
 
+
+  const createMagazinePost = async (post: SavedPost) => {
+    return savePost(post);
+  };
+
+  const updateMagazinePost = async (postId: string, post: SavedPost) => {
+    const updatedPost = await updatePost(postId, post);
+
+    if (!updatedPost) {
+      throw new Error('Unable to update this post. It may have been deleted or blocked by row-level security policies.');
+    }
+  };
+
   const handleSaveToLibrary = async () => {
     if (!currentImageUrl || !headline) {
       setError('Please generate an image and enter a headline before saving.');
@@ -173,33 +228,46 @@ export default function App() {
         type: 'magazine',
         title: headline,
         imageUrl: currentImageUrl,
-        userId: user.uid,
         authorName: user.displayName || 'Anonymous',
         metadata: {
+          firebaseUid: user.uid,
           issueNumber: displayIssueNumber,
           sceneDescription: sceneDescription
         }
       };
 
-      await savePost(newPost);
+      const chosenIssueNumber = extractIssueNumber(customIssueNumber) || nextIssueNumber;
+
+      if (editingPostId) {
+        await updateMagazinePost(editingPostId, newPost);
+      } else {
+        await shiftMagazineIssueNumbersFrom(chosenIssueNumber);
+        await createMagazinePost(newPost);
+        setNextIssueNumber((prev) => Math.max(prev + 1, chosenIssueNumber + 1));
+      }
       // Reset form for next issue
       setHeadline('');
       setSceneDescription('');
       setCustomIssueNumber('');
       setCurrentImageUrl(null);
+      setEditingPostId(null);
       setError(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save magazine:', err);
-      setError('Failed to save magazine to library');
+      setError(err?.message || 'Failed to save magazine to library');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleSelectIssue = (post: SavedPost) => {
+    const canEditPost = Boolean(user?.uid && post.userId && user.uid === post.userId);
+    setEditingPostId(canEditPost ? post.id || null : null);
     setHeadline(post.title);
     setSceneDescription(post.metadata?.sceneDescription as string || '');
-    setCustomIssueNumber(post.metadata?.issueNumber as string || '');
+    const selectedIssue = post.metadata?.issueNumber as string | undefined;
+    const issueNumber = extractIssueNumber(selectedIssue);
+    setCustomIssueNumber(issueNumber ? String(issueNumber) : '');
     setCurrentImageUrl(post.imageUrl);
   };
 
@@ -250,7 +318,7 @@ export default function App() {
             </div>
           ) : (
             <button
-              onClick={signInWithGoogle}
+              onClick={handleGoogleSignIn}
               className="flex items-center gap-2 text-sm font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-lg transition-colors"
             >
               <LogIn className="w-4 h-4" />
@@ -307,12 +375,12 @@ export default function App() {
                     Issue Number (Optional)
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     id="issueNumber"
                     className="w-full px-4 py-2 border border-neutral-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                    placeholder={`Leave blank for auto: ${autoIssueNumber}`}
+                    placeholder={`Leave blank for auto: ${nextIssueNumber}`}
                     value={customIssueNumber}
-                    onChange={(e) => setCustomIssueNumber(e.target.value)}
+                    onChange={(e) => setCustomIssueNumber(e.target.value.replace(/[^0-9]/g, ''))}
                   />
                 </div>
 
@@ -432,7 +500,7 @@ export default function App() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    {user ? "Save to Library" : "Sign in to Save"}
+                    {user ? (editingPostId ? "Update Post" : "Save to Library") : "Sign in to Save"}
                   </>
                 )}
               </button>
