@@ -87,6 +87,20 @@ const toCamelCase = (data: any): SavedPost => ({
 
 const isSoftDeleted = (post: SavedPost) => Boolean(post.metadata?.deleted);
 
+
+const extractIssueNumber = (issueValue?: string) => {
+  if (!issueValue) return null;
+  const match = issueValue.match(/\d+/);
+  if (!match) return null;
+  const parsed = Number(match[0]);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const formatIssueNumber = (issueNumber: number, year?: number) => {
+  if (!year) return `N°${issueNumber}`;
+  return `N°${issueNumber} ${year}`;
+};
+
 const softDeletePost = async (id: string): Promise<boolean> => {
   const { data: existing, error: existingError } = await supabase
     .from(TABLE_NAME)
@@ -294,4 +308,31 @@ export function subscribeToPostChanges(
     .subscribe();
 
   return subscription;
+}
+
+
+export async function shiftMagazineIssueNumbersFrom(startIssueNumber: number): Promise<void> {
+  const magazines = await getPostsByType('magazine', { limit: 500 });
+  const impacted = magazines
+    .map((post) => {
+      const issueNumber = extractIssueNumber(post.metadata?.issueNumber as string | undefined);
+      return { post, issueNumber };
+    })
+    .filter((entry): entry is { post: SavedPost; issueNumber: number } => entry.issueNumber !== null && entry.issueNumber >= startIssueNumber)
+    .sort((a, b) => b.issueNumber - a.issueNumber);
+
+  await Promise.all(
+    impacted.map(({ post, issueNumber }) => {
+      const currentIssueText = post.metadata?.issueNumber as string | undefined;
+      const yearMatch = currentIssueText?.match(/(19|20)\d{2}/);
+      const year = yearMatch ? Number(yearMatch[0]) : undefined;
+
+      return updatePost(post.id as string, {
+        metadata: {
+          ...(post.metadata || {}),
+          issueNumber: formatIssueNumber(issueNumber + 1, year),
+        },
+      });
+    })
+  );
 }

@@ -9,7 +9,7 @@ import { MisyFaTsyGenerator } from './components/MisyFaTsyGenerator';
 import { SavedPost } from './types';
 import { auth, signInWithGoogle, logOut } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { savePost, updatePost, getPostsByType } from './lib/postService';
+import { savePost, updatePost, getPostsByType, shiftMagazineIssueNumbersFrom } from './lib/postService';
 
 // Initialize Gemini API
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -241,8 +241,9 @@ export default function App() {
       if (editingPostId) {
         await updateMagazinePost(editingPostId, newPost);
       } else {
+        await shiftMagazineIssueNumbersFrom(chosenIssueNumber);
         await createMagazinePost(newPost);
-        setNextIssueNumber(chosenIssueNumber + 1);
+        setNextIssueNumber((prev) => Math.max(prev + 1, chosenIssueNumber + 1));
       }
       // Reset form for next issue
       setHeadline('');
