@@ -1,8 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Trash2, Download, Loader2 } from 'lucide-react';
 import { SavedPost } from '../types';
 import { getPostsByType, deletePost, subscribeToPostChanges } from '../lib/postService';
 import { CoverPreview } from './CoverPreview';
+
+
+const extractIssueNumber = (issueValue?: string) => {
+  if (!issueValue) return null;
+
+  const match = issueValue.match(/\d+/);
+  if (!match) return null;
+
+  const issueNumber = Number(match[0]);
+  return Number.isFinite(issueNumber) ? issueNumber : null;
+};
+
+const sortIssuesByIssueNumber = (posts: SavedPost[]) => {
+  return [...posts].sort((a, b) => {
+    const issueNumberA = extractIssueNumber(a.metadata?.issueNumber as string | undefined);
+    const issueNumberB = extractIssueNumber(b.metadata?.issueNumber as string | undefined);
+
+    if (issueNumberA !== null && issueNumberB !== null && issueNumberA !== issueNumberB) {
+      return issueNumberB - issueNumberA;
+    }
+
+    if (issueNumberA !== null) return -1;
+    if (issueNumberB !== null) return 1;
+
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  });
+};
 
 interface MagazineLibraryProps {
   onSelectIssue: (post: SavedPost) => void;
@@ -13,6 +40,7 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
   const [issues, setIssues] = useState<SavedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const sortedIssues = useMemo(() => sortIssuesByIssueNumber(issues), [issues]);
 
   // Load magazines from Supabase on mount + subscribe to realtime updates
   useEffect(() => {
@@ -95,7 +123,7 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {issues.map((issue) => (
+      {sortedIssues.map((issue) => (
         <div key={issue.id} className="group relative flex flex-col gap-2">
           <div 
             className="cursor-pointer transition-transform hover:scale-[1.02]"

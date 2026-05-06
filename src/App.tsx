@@ -60,10 +60,12 @@ export default function App() {
   useEffect(() => {
     const loadNextIssueNumber = async () => {
       try {
-        const latestMagazines = await getPostsByType('magazine', { limit: 1 });
-        const latestIssueText = latestMagazines[0]?.metadata?.issueNumber as string | undefined;
-        const latestIssueNumber = extractIssueNumber(latestIssueText);
-        setNextIssueNumber((latestIssueNumber || 0) + 1);
+        const latestMagazines = await getPostsByType('magazine', { limit: 500 });
+        const latestIssueNumber = latestMagazines.reduce((highestIssueNumber, magazine) => {
+          const issueNumber = extractIssueNumber(magazine.metadata?.issueNumber as string | undefined);
+          return Math.max(highestIssueNumber, issueNumber || 0);
+        }, 0);
+        setNextIssueNumber(latestIssueNumber + 1);
       } catch (loadError) {
         console.error('Failed to load latest issue number:', loadError);
       }
