@@ -52,6 +52,21 @@ export function MisyFaTsyGenerator() {
   
   // Fixed square format: 1080x1080
   const SQUARE_SIZE = 1080;
+
+const buildMisyFaTsyExportText = (posts: SavedPost[]) => {
+  return posts
+    .map((post, index) => {
+      const text = (post.metadata?.text as string | undefined) || '';
+      const category = (post.metadata?.category as string | undefined) || 'N/A';
+
+      return [
+        `#${index + 1} ${post.title}`,
+        `Catégorie: ${category}`,
+        `Texte: ${text}`,
+      ].join('\n');
+    })
+    .join('\n\n---\n\n');
+};
   
   const previewRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,7 +87,7 @@ export function MisyFaTsyGenerator() {
   const loadSavedPosts = async () => {
     try {
       setLoadingSavedPosts(true);
-      const posts = await getPostsByType('misyfatsy', { limit: 20 });
+      const posts = await getPostsByType('misyfatsy', { limit: 1000 });
       setSavedPosts(posts);
     } catch (error) {
       console.error('Error loading saved posts:', error);
@@ -183,6 +198,21 @@ export function MisyFaTsyGenerator() {
       console.error('Error deleting post:', error);
       setSaveError(error instanceof Error ? error.message : 'Échec de la suppression');
     }
+  };
+
+
+  const handleExportTxt = () => {
+    const exportText = buildMisyFaTsyExportText(savedPosts);
+    const blob = new Blob([`\uFEFF${exportText}`], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `misy-fa-tsy-posts-${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
   const handleLoadPost = (post: SavedPost) => {
@@ -693,10 +723,21 @@ export function MisyFaTsyGenerator() {
 
       {/* Library Section */}
       <div className="lg:col-span-12 mt-8 pt-8 border-t border-neutral-800">
-        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-          Mes créations MisyFaTsy enregistrées
-          {savedPosts.length > 0 && <span className="text-sm font-normal text-neutral-400">({savedPosts.length})</span>}
-        </h3>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            Mes créations MisyFaTsy enregistrées
+            {savedPosts.length > 0 && <span className="text-sm font-normal text-neutral-400">({savedPosts.length})</span>}
+          </h3>
+          {savedPosts.length > 0 && (
+            <button
+              onClick={handleExportTxt}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-misy-lime/50 bg-misy-lime/10 px-4 py-2 text-sm font-medium text-misy-lime transition-colors hover:bg-misy-lime/20"
+            >
+              <Download className="h-4 w-4" />
+              Export TXT
+            </button>
+          )}
+        </div>
         
         {loadingSavedPosts && (
           <div className="text-center py-8">
