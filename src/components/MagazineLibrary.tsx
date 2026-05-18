@@ -1,8 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Trash2, Download, Loader2 } from 'lucide-react';
 import { SavedPost } from '../types';
-import { getPostsByType, deletePost } from '../lib/postService';
+import { getPostsByType, deletePost, subscribeToPostChanges } from '../lib/postService';
 import { CoverPreview } from './CoverPreview';
+
+
+const extractIssueNumber = (issueValue?: string) => {
+  if (!issueValue) return null;
+
+  const match = issueValue.match(/\d+/);
+  if (!match) return null;
+
+  const issueNumber = Number(match[0]);
+  return Number.isFinite(issueNumber) ? issueNumber : null;
+};
+
+
+const buildMagazineExportText = (posts: SavedPost[]) => {
+  return posts
+    .map((post) => {
+      const issueNumber = (post.metadata?.issueNumber as string | undefined) || 'Issue';
+      return `${issueNumber} - ${post.title}`;
+    })
+    .join('\n');
+};
+
+const sortIssuesByIssueNumber = (posts: SavedPost[]) => {
+  return [...posts].sort((a, b) => {
+    const issueNumberA = extractIssueNumber(a.metadata?.issueNumber as string | undefined);
+    const issueNumberB = extractIssueNumber(b.metadata?.issueNumber as string | undefined);
+
+    if (issueNumberA !== null && issueNumberB !== null && issueNumberA !== issueNumberB) {
+      return issueNumberB - issueNumberA;
+    }
+
+    if (issueNumberA !== null) return -1;
+    if (issueNumberB !== null) return 1;
+
+    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  });
+};
 
 interface MagazineLibraryProps {
   onSelectIssue: (post: SavedPost) => void;
@@ -13,17 +50,26 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
   const [issues, setIssues] = useState<SavedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const sortedIssues = useMemo(() => sortIssuesByIssueNumber(issues), [issues]);
 
-  // Load magazines from Supabase on mount
+  // Load magazines from Supabase on mount + subscribe to realtime updates
   useEffect(() => {
     loadIssues();
+
+    const subscription = subscribeToPostChanges('magazine', (posts) => {
+      setIssues(posts);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadIssues = async () => {
     try {
       setLoading(true);
       setError(null);
-      const posts = await getPostsByType('magazine', { limit: 100 });
+      const posts = await getPostsByType('magazine', { limit: 1000 });
       setIssues(posts);
     } catch (err) {
       console.error('Error loading magazines:', err);
@@ -33,17 +79,40 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
     }
   };
 
+
+  const canCurrentUserDeleteIssue = (issue: SavedPost) => {
+    if (!currentUserId) return false;
+
+    const metadataOwnerId = issue.metadata?.firebaseUid as string | undefined;
+    return issue.userId === currentUserId || metadataOwnerId === currentUserId;
+  };
+
   const handleDelete = async (id: string | undefined) => {
     if (!id) return;
     if (!confirm('Are you sure you want to delete this magazine?')) return;
 
     try {
       await deletePost(id);
-      setIssues(issues.filter(issue => issue.id !== id));
+      await loadIssues();
     } catch (err) {
       console.error('Error deleting magazine:', err);
-      setError('Failed to delete magazine');
+      setError(err instanceof Error ? err.message : 'Failed to delete magazine');
     }
+  };
+
+
+  const handleExportTxt = () => {
+    const exportText = buildMagazineExportText(sortedIssues);
+    const blob = new Blob([`\uFEFF${exportText}`], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `taitra-magazines-${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -78,37 +147,48 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {issues.map((issue) => (
-        <div key={issue.id} className="group relative flex flex-col gap-2">
-          <div 
-            className="cursor-pointer transition-transform hover:scale-[1.02]"
-            onClick={() => onSelectIssue(issue)}
-          >
-            <CoverPreview
-              headline={issue.title}
-              issueNumber={issue.metadata?.issueNumber as string || 'N/A'}
-              imageUrl={issue.imageUrl}
-              className="shadow-md text-[0.5rem]"
-            />
-          </div>
-          <div className="flex justify-between items-center px-1">
-            <div className="flex flex-col flex-1">
-              <span className="text-sm font-medium text-neutral-700">{issue.metadata?.issueNumber || 'Issue'}</span>
-              <span className="text-xs text-neutral-500">by {issue.authorName || 'Anonymous'}</span>
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-end">
+        <button
+          onClick={handleExportTxt}
+          className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50"
+        >
+          <Download className="h-4 w-4" />
+          Export TXT
+        </button>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {sortedIssues.map((issue) => (
+          <div key={issue.id} className="group relative flex flex-col gap-2">
+            <div
+              className="cursor-pointer transition-transform hover:scale-[1.02]"
+              onClick={() => onSelectIssue(issue)}
+            >
+              <CoverPreview
+                headline={issue.title}
+                issueNumber={issue.metadata?.issueNumber as string || 'N/A'}
+                imageUrl={issue.imageUrl}
+                className="shadow-md text-[0.5rem]"
+              />
             </div>
-            {currentUserId === issue.userId && (
-              <button
-                onClick={() => handleDelete(issue.id)}
-                className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                title="Delete"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
+            <div className="flex justify-between items-center px-1">
+              <div className="flex flex-col flex-1">
+                <span className="text-sm font-medium text-neutral-700">{issue.metadata?.issueNumber || 'Issue'}</span>
+                <span className="text-xs text-neutral-500">by {issue.authorName || 'Anonymous'}</span>
+              </div>
+              {canCurrentUserDeleteIssue(issue) && (
+                <button
+                  onClick={() => handleDelete(issue.id)}
+                  className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

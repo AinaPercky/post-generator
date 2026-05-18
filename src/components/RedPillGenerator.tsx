@@ -5,9 +5,26 @@ import { GoogleGenAI } from '@google/genai';
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
-import { savePost, getPostsByType, deletePost } from '../lib/postService';
+import { savePost, updatePost, getPostsByType, deletePost } from '../lib/postService';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const buildRedPillExportText = (posts: SavedPost[]) => {
+  return posts
+    .map((post, index) => {
+      const content = (post.metadata?.content as string | undefined) || '';
+      const punchline = (post.metadata?.punchline as string | undefined) || '';
+      const template = (post.metadata?.template as string | undefined) || 'N/A';
+
+      return [
+        `#${index + 1} ${post.title}`,
+        `Content: ${content}`,
+        `Punchline: ${punchline}`,
+        `Template: ${template}`,
+      ].join('\n');
+    })
+    .join('\n\n---\n\n');
+};
 
 type TemplateType = 'hero' | 'split' | 'card' | 'quote' | 'warning' | 'versus';
 
@@ -18,6 +35,7 @@ export function RedPillGenerator() {
   const [loadingSavedPosts, setLoadingSavedPosts] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   // Generator states
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -65,13 +83,31 @@ export function RedPillGenerator() {
   const loadSavedPosts = async () => {
     try {
       setLoadingSavedPosts(true);
-      const posts = await getPostsByType('redpill', { limit: 20 });
+      const posts = await getPostsByType('redpill', { limit: 1000 });
       setSavedPosts(posts);
     } catch (error) {
       console.error('Error loading saved posts:', error);
     } finally {
       setLoadingSavedPosts(false);
     }
+  };
+
+
+  const createRedPillPost = async (post: SavedPost) => {
+    const createdPost = await savePost(post);
+    if (createdPost) {
+      setSavedPosts([createdPost, ...savedPosts]);
+    }
+  };
+
+  const updateRedPillPost = async (postId: string, post: SavedPost) => {
+    const updatedPost = await updatePost(postId, post);
+
+    if (!updatedPost) {
+      throw new Error('Unable to update this post. It may have been deleted or blocked by row-level security policies.');
+    }
+
+    setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
   };
 
   const handleSaveToLibrary = async () => {
@@ -96,26 +132,36 @@ export function RedPillGenerator() {
         type: 'redpill',
         title: title,
         imageUrl: imageData,
-        userId: user.uid,
         authorName: user.displayName || 'Anonymous',
         metadata: {
+          firebaseUid: user.uid,
           content: content,
           punchline: punchline,
           template: template,
         }
       };
 
-      const savedPost = await savePost(newPost);
-      if (savedPost) {
-        setSavedPosts([savedPost, ...savedPosts]);
-        setSaveError(null);
+      if (editingPostId) {
+        await updateRedPillPost(editingPostId, newPost);
+      } else {
+        await createRedPillPost(newPost);
       }
-    } catch (error) {
+      setEditingPostId(null);
+      setSaveError(null);
+    } catch (error: any) {
       console.error('Failed to save:', error);
-      setSaveError('Failed to save post');
+      setSaveError(error?.message || 'Failed to save post');
     } finally {
       setIsSaving(false);
     }
+  };
+
+
+  const canCurrentUserDeletePost = (post: SavedPost) => {
+    if (!user?.uid) return false;
+
+    const metadataOwnerId = post.metadata?.firebaseUid as string | undefined;
+    return post.userId === user.uid || metadataOwnerId === user.uid;
   };
 
   const handleDeleteSavedPost = async (postId: string | undefined) => {
@@ -123,14 +169,32 @@ export function RedPillGenerator() {
 
     try {
       await deletePost(postId);
-      setSavedPosts(savedPosts.filter(p => p.id !== postId));
+      await loadSavedPosts();
     } catch (error) {
       console.error('Error deleting post:', error);
-      setSaveError('Failed to delete post');
+      setSaveError(error instanceof Error ? error.message : 'Failed to delete post');
     }
   };
 
+
+  const handleExportTxt = () => {
+    const exportText = buildRedPillExportText(savedPosts);
+    const blob = new Blob([`\uFEFF${exportText}`], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = `red-pill-posts-${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   const handleLoadPost = (post: SavedPost) => {
+    const canEditPost = Boolean(user?.uid && post.userId && user.uid === post.userId);
+    setEditingPostId(canEditPost ? post.id || null : null);
+    setImageUrl(post.imageUrl);
     setTitle(post.title);
     if (post.metadata?.content) setContent(post.metadata.content as string);
     if (post.metadata?.punchline) setPunchline(post.metadata.punchline as string);
@@ -688,7 +752,7 @@ export function RedPillGenerator() {
             ) : (
               <>
                 <Save className="w-5 h-5" />
-                {user ? 'Save to Library' : 'Sign in to Save'}
+                {user ? (editingPostId ? 'Update Post' : 'Save to Library') : 'Sign in to Save'}
               </>
             )}
           </button>
@@ -833,7 +897,7 @@ export function RedPillGenerator() {
                     <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent w-3/4"></div>
                   )}
                   {template === 'card' && (
-                    <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"></div>
+                    <div className="absolute inset-0 bg-black/10"></div>
                   )}
                   {template === 'quote' && (
                     <div className="absolute inset-0 bg-black/50"></div>
@@ -957,7 +1021,7 @@ export function RedPillGenerator() {
                 <div className="h-full w-full relative">
                   <div className="absolute left-0 right-0 flex justify-center transition-all duration-500"
                        style={{ top: `${contentPositionY}%`, transform: `translateY(-${contentPositionY}%)` }}>
-                    <div className="w-full max-w-[85%] bg-black/80 backdrop-blur-md border border-neutral-800/80 p-8 flex flex-col items-center text-center shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+                    <div className="w-full max-w-[85%] bg-black/50 border border-neutral-600/50 p-8 flex flex-col items-center text-center shadow-[0_20px_50px_rgba(0,0,0,0.55)]">
                       {!enableRedPillTitle && (
                         <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-widest mb-6 pb-6 border-b border-neutral-800 w-full drop-shadow-md">
                           {renderHighlightedText(title)}
@@ -1017,7 +1081,7 @@ export function RedPillGenerator() {
                   
                   <div className="absolute left-4 right-4 transition-all duration-500"
                        style={{ top: `${contentPositionY}%`, transform: `translateY(-${contentPositionY}%)` }}>
-                    <div className="bg-black/95 p-6 border-l-4 border-[#ff2e2e] shadow-[0_10px_30px_rgba(0,0,0,0.8)]">
+                    <div className="bg-black/60 p-6 border-l-4 border-[#ff2e2e] shadow-[0_10px_30px_rgba(0,0,0,0.55)]">
                       <p className="text-white font-bold leading-snug drop-shadow-md" style={{ fontSize: `${bodyFontSize}px` }}>
                         {renderBodyText(content)}
                       </p>
@@ -1027,7 +1091,7 @@ export function RedPillGenerator() {
                   {enablePunchline && (
                     <div className="absolute left-8 transition-all duration-500"
                          style={{ top: `${punchlinePositionY}%`, transform: `translateY(-${punchlinePositionY}%)` }}>
-                      <div className="inline-flex items-center gap-3 bg-black/80 border border-[#ff2e2e]/60 px-6 py-2 rounded-sm shadow-[0_0_15px_rgba(255,46,46,0.3)]">
+                      <div className="inline-flex items-center gap-3 bg-black/55 border border-[#ff2e2e]/60 px-6 py-2 rounded-sm shadow-[0_0_15px_rgba(255,46,46,0.3)]">
                         <AlertTriangle className="w-5 h-5 text-[#ff2e2e] animate-pulse" />
                         <p className="text-xs md:text-sm font-black text-[#ff2e2e] uppercase tracking-[0.2em] drop-shadow-[0_0_8px_rgba(255,46,46,0.5)]">
                           {punchline}
@@ -1106,10 +1170,21 @@ export function RedPillGenerator() {
 
       {/* Library Section */}
       <div className="lg:col-span-12 mt-8 pt-8 border-t border-neutral-800">
-        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-          My Saved Red Pill Posts
-          {savedPosts.length > 0 && <span className="text-sm font-normal text-neutral-400">({savedPosts.length})</span>}
-        </h3>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            My Saved Red Pill Posts
+            {savedPosts.length > 0 && <span className="text-sm font-normal text-neutral-400">({savedPosts.length})</span>}
+          </h3>
+          {savedPosts.length > 0 && (
+            <button
+              onClick={handleExportTxt}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-900/60 bg-red-950/40 px-4 py-2 text-sm font-medium text-red-100 transition-colors hover:bg-red-900/50"
+            >
+              <Download className="h-4 w-4" />
+              Export TXT
+            </button>
+          )}
+        </div>
         
         {loadingSavedPosts && (
           <div className="text-center py-8">
@@ -1144,7 +1219,7 @@ export function RedPillGenerator() {
                   <div className="flex-1">
                     <p className="text-xs text-neutral-400 truncate">{post.authorName}</p>
                   </div>
-                  {user?.uid === post.userId && (
+                  {canCurrentUserDeletePost(post) && (
                     <button
                       onClick={() => handleDeleteSavedPost(post.id)}
                       className="text-neutral-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
