@@ -32,6 +32,7 @@ export interface RedPillPost extends SavedPost {
   type: 'redpill';
   metadata?: {
     template?: 'hero' | 'split' | 'card' | 'quote' | 'warning' | 'versus';
+    categoryId?: 'reminder' | 'error-of' | 'harsh-truth';
     content?: string;
     punchline?: string;
     [key: string]: unknown;

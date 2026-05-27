@@ -6,6 +6,7 @@ import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
 import { savePost, updatePost, getPostsByType, deletePost } from '../lib/postService';
+import { RED_PILL_CATEGORIES, getCategoryById } from '../lib/redpillCategories';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -15,9 +16,12 @@ const buildRedPillExportText = (posts: SavedPost[]) => {
       const content = (post.metadata?.content as string | undefined) || '';
       const punchline = (post.metadata?.punchline as string | undefined) || '';
       const template = (post.metadata?.template as string | undefined) || 'N/A';
+      const categoryId = (post.metadata?.categoryId as string | undefined) || '';
+      const category = categoryId ? getCategoryById(categoryId) : null;
 
       return [
         `#${index + 1} ${post.title}`,
+        `Category: ${category?.name || 'N/A'}`,
         `Content: ${content}`,
         `Punchline: ${punchline}`,
         `Template: ${template}`,
@@ -40,7 +44,8 @@ export function RedPillGenerator() {
   // Generator states
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageUrl2, setImageUrl2] = useState<string | null>(null);
-  const [title, setTitle] = useState('THE HARSH TRUTH');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('harsh-truth');
+  const [title, setTitle] = useState(getCategoryById('harsh-truth')?.defaultTitle || 'THE HARSH TRUTH');
   const [content, setContent] = useState('Most people are sleepwalking through life, trading their potential for temporary comfort.');
   const [punchline, setPunchline] = useState('WAKE UP.');
   const [template, setTemplate] = useState<TemplateType>('hero');
@@ -110,6 +115,15 @@ export function RedPillGenerator() {
     setSavedPosts(savedPosts.map((savedPost) => (savedPost.id === postId ? updatedPost : savedPost)));
   };
 
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    const category = getCategoryById(categoryId);
+    if (category) {
+      setTemplate(category.template as TemplateType);
+      setTitle(category.defaultTitle);
+    }
+  };
+
   const handleSaveToLibrary = async () => {
     if (!title) {
       setSaveError('Please enter a title before saving');
@@ -138,6 +152,7 @@ export function RedPillGenerator() {
           content: content,
           punchline: punchline,
           template: template,
+          categoryId: selectedCategoryId,
         }
       };
 
@@ -199,6 +214,7 @@ export function RedPillGenerator() {
     if (post.metadata?.content) setContent(post.metadata.content as string);
     if (post.metadata?.punchline) setPunchline(post.metadata.punchline as string);
     if (post.metadata?.template) setTemplate(post.metadata.template as TemplateType);
+    if (post.metadata?.categoryId) setSelectedCategoryId(post.metadata.categoryId as string);
     // Note: image_url is the rendered PNG, not the source image
   };
 
@@ -697,8 +713,37 @@ export function RedPillGenerator() {
         {/* Templates */}
         <div className="bg-[#141414] p-5 rounded-xl border border-neutral-800">
           <h3 className="text-sm font-medium text-neutral-300 mb-3 flex items-center gap-2">
-            <LayoutTemplate className="w-4 h-4" /> Layout Style
+            <LayoutTemplate className="w-4 h-4" /> Category & Layout
           </h3>
+          
+          {/* Category Selection */}
+          <div className="mb-4">
+            <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Category</label>
+            <select
+              value={selectedCategoryId}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="w-full px-3 py-2 bg-[#0a0a0a] border border-neutral-700 text-white rounded-lg text-sm focus:outline-none focus:border-[#ff2e2e]"
+            >
+              {RED_PILL_CATEGORIES.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            
+            {/* Category Info */}
+            {getCategoryById(selectedCategoryId) && (
+              <div className="mt-3 p-3 bg-[#0a0a0a] border border-neutral-700 rounded-lg">
+                <p className="text-xs text-neutral-300 mb-2">{getCategoryById(selectedCategoryId)?.description}</p>
+                <div className="text-xs text-neutral-500">
+                  <span className="text-[#ff2e2e] font-medium">Keywords:</span> {getCategoryById(selectedCategoryId)?.keywords.join(', ')}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Template Selection */}
+          <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Layout Style</label>
           <div className="grid grid-cols-2 gap-2">
             {(['hero', 'split', 'card', 'quote', 'warning', 'versus'] as TemplateType[]).map((t) => (
               <button
