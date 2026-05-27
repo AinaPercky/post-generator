@@ -6,7 +6,7 @@ import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
 import { savePost, updatePost, getPostsByType, deletePost } from '../lib/postService';
-import { RED_PILL_CATEGORIES, getCategoryById } from '../lib/redpillCategories';
+import { RED_PILL_CATEGORIES, getCategoryById, getCategoryByTemplate } from '../lib/redpillCategories';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -28,12 +28,14 @@ const buildRedPillExportText = (posts: SavedPost[]) => {
       const content = (post.metadata?.content as string | undefined) || '';
       const punchline = (post.metadata?.punchline as string | undefined) || '';
       const template = (post.metadata?.template as string | undefined) || 'N/A';
-      const categoryId = (post.metadata?.categoryId as string | undefined) || '';
-      const category = categoryId ? getCategoryById(categoryId) : null;
+      
+      const mappedCategory = getCategoryByTemplate(template);
+      const title = mappedCategory ? mappedCategory.name : post.title;
+      const categoryName = mappedCategory ? mappedCategory.name : 'N/A';
 
       return [
-        `#${index + 1} ${post.title}`,
-        `Category: ${category?.name || 'N/A'}`,
+        `#${index + 1} ${title}`,
+        `Category: ${categoryName}`,
         `Content: ${content}`,
         `Punchline: ${punchline}`,
         `Template: ${template}`,
@@ -58,8 +60,8 @@ export function RedPillGenerator() {
   // Generator states
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageUrl2, setImageUrl2] = useState<string | null>(null);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('harsh-truth');
-  const [title, setTitle] = useState(getCategoryById('harsh-truth')?.defaultTitle || 'THE HARSH TRUTH');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('error-of');
+  const [title, setTitle] = useState(getCategoryById('error-of')?.defaultTitle || 'L\'ERREUR DE...');
   const [content, setContent] = useState('Most people are sleepwalking through life, trading their potential for temporary comfort.');
   const [punchline, setPunchline] = useState('WAKE UP.');
   const [template, setTemplate] = useState<TemplateType>('hero');
