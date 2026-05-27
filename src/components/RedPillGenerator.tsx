@@ -10,8 +10,20 @@ import { RED_PILL_CATEGORIES, getCategoryById } from '../lib/redpillCategories';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+const RED_PILL_TABLE_PREFIX = `Voici le tableau rectifié selon les définitions exactes et la configuration de vos modèles (*Templates*) :
+
+| Catégorie | Description | En quoi cela consiste | Mots-clés | Exemple Typique |
+| --- | --- | --- | --- | --- |
+| **1. Piqûre de rappel** <br><br>*(Template: card)* | Analyse factuelle, scientifique et comportementale. | Présenter des données chiffrées, des statistiques, des résultats de sondages ou des phénomènes sociologiques/psychologiques pour décoder le monde réel. | *Statistiques, hypergamie, sociologie, sondage, psychologie, chiffres.* | L'évolution du taux de divorce initié à 75% par les femmes ou les dynamiques de sélection sur les applications de rencontre. |
+| **2. L'erreur de...** <br><br>*(Template: hero)* | Étude de cas sur des figures masculines (réelles ou fiction). | Analyser la faille stratégique ou l'angle mort d'un personnage historique, scientifique ou de la pop culture face à sa partenaire. | *Piédestal, sacrifice, aveuglement, soumission, trahison, compromission.* | **Évariste Galois :** Perdre la vie à 20 ans dans un duel absurde par obsession pour Stéphanie du Motel. |
+| **3. La dure vérité** *(Harsh Truth)* <br><br>*(Template: warning)* | Guide stratégique, conseils concrets et préventions. | Délivrer des directives claires sur ce qu'il faut faire et ne pas faire. Prévenir l'homme contre les pièges de la psychologie féminine et protéger son cadre. | *Mission, autorité, détachement, cadre, discipline, protection.* | Cesser de chercher la validation par l'argent ou les sacrifices, et baser sa puissance uniquement sur ses propres objectifs de vie. |
+
+---
+
+`;
+
 const buildRedPillExportText = (posts: SavedPost[]) => {
-  return posts
+  const postsText = posts
     .map((post, index) => {
       const content = (post.metadata?.content as string | undefined) || '';
       const punchline = (post.metadata?.punchline as string | undefined) || '';
@@ -28,6 +40,8 @@ const buildRedPillExportText = (posts: SavedPost[]) => {
       ].join('\n');
     })
     .join('\n\n---\n\n');
+    
+  return RED_PILL_TABLE_PREFIX + postsText;
 };
 
 type TemplateType = 'hero' | 'split' | 'card' | 'quote' | 'warning' | 'versus';
