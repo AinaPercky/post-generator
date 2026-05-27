@@ -87,7 +87,7 @@ const buildMisyFaTsyExportText = (posts: SavedPost[]) => {
   const loadSavedPosts = async () => {
     try {
       setLoadingSavedPosts(true);
-      const posts = await getPostsByType('misyfatsy', { limit: 1000 });
+      const posts = await getPostsByType('misyfatsy', { limit: 50 });
       setSavedPosts(posts);
     } catch (error) {
       console.error('Error loading saved posts:', error);

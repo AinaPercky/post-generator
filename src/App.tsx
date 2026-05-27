@@ -60,7 +60,7 @@ export default function App() {
   useEffect(() => {
     const loadNextIssueNumber = async () => {
       try {
-        const latestMagazines = await getPostsByType('magazine', { limit: 500 });
+        const latestMagazines = await getPostsByType('magazine', { limit: 50 });
         const latestIssueNumber = latestMagazines.reduce((highestIssueNumber, magazine) => {
           const issueNumber = extractIssueNumber(magazine.metadata?.issueNumber as string | undefined);
           return Math.max(highestIssueNumber, issueNumber || 0);

@@ -312,7 +312,7 @@ export function subscribeToPostChanges(
 
 
 export async function shiftMagazineIssueNumbersFrom(startIssueNumber: number): Promise<void> {
-  const magazines = await getPostsByType('magazine', { limit: 500 });
+  const magazines = await getPostsByType('magazine', { limit: 50 });
   const impacted = magazines
     .map((post) => {
       const issueNumber = extractIssueNumber(post.metadata?.issueNumber as string | undefined);
