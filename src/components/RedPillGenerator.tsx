@@ -1221,56 +1221,68 @@ export function RedPillGenerator() {
                         className="absolute inset-x-0 flex flex-col items-center justify-center px-6 transition-all duration-500"
                         style={{ top: `${contentPositionY}%`, transform: `translateY(-50%)` }}
                       >
-                        {/* Top ornament line */}
-                        <div className="flex items-center gap-3 w-full max-w-[85%] mb-4">
-                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#ff2e2e]/60 to-[#ff2e2e]"></div>
-                          <div className="w-2 h-2 rounded-full bg-[#ff2e2e] shadow-[0_0_8px_rgba(255,46,46,0.8)]"></div>
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#ff2e2e]/50"></div>
-                        </div>
+                        <div className="w-full max-w-[90%] flex flex-col items-center relative z-20">
+                          {/* Main Quote Box */}
+                          <div className="relative w-full border border-[#ff2e2e]/40 rounded-2xl p-8 pt-12 pb-12 bg-black/40 shadow-[inset_0_0_30px_rgba(255,46,46,0.05),0_15px_40px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+                            
+                            {/* Top Ornament */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 px-3 bg-[#111]">
+                              <div className="w-6 h-[1px] bg-gradient-to-r from-transparent to-[#ff2e2e]/80"></div>
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#ff2e2e] shadow-[0_0_8px_rgba(255,46,46,0.8)]"></div>
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#ff2e2e] shadow-[0_0_8px_rgba(255,46,46,0.8)]"></div>
+                              <div className="w-6 h-[1px] bg-gradient-to-l from-transparent to-[#ff2e2e]/80"></div>
+                            </div>
 
-                        {/* Big opening quote mark */}
-                        <div className="w-full max-w-[85%] relative">
-                          <span
-                            className="absolute -top-6 -left-2 font-serif font-black leading-none select-none pointer-events-none"
-                            style={{ fontSize: '7rem', color: '#ff2e2e', opacity: 0.25, lineHeight: 1 }}
-                          >&ldquo;</span>
+                            {/* Big opening quote mark */}
+                            <span
+                              className="absolute top-8 left-8 font-serif font-black leading-none select-none pointer-events-none drop-shadow-[0_0_15px_rgba(255,46,46,0.5)]"
+                              style={{ fontSize: '4.5rem', color: '#ff2e2e', opacity: 0.7, lineHeight: 0.5 }}
+                            >&ldquo;</span>
 
-                          {/* Quote body */}
-                          <p
-                            className="relative z-10 font-serif text-white text-center leading-snug drop-shadow-[0_4px_16px_rgba(0,0,0,1)] italic"
-                            style={{ fontSize: `${bodyFontSize + 2}px` }}
-                          >
-                            {content}
-                          </p>
-
-                          {/* Closing quote */}
-                          <span
-                            className="absolute -bottom-10 -right-2 font-serif font-black leading-none select-none pointer-events-none"
-                            style={{ fontSize: '7rem', color: '#ff2e2e', opacity: 0.25, lineHeight: 1 }}
-                          >&rdquo;</span>
-                        </div>
-
-                        {/* Bottom ornament */}
-                        <div className="flex items-center gap-3 w-full max-w-[85%] mt-6">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#ff2e2e]/50"></div>
-                          <div className="w-2 h-2 rounded-full bg-[#ff2e2e] shadow-[0_0_8px_rgba(255,46,46,0.8)]"></div>
-                          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-[#ff2e2e]/60 to-[#ff2e2e]"></div>
-                        </div>
-
-                        {/* Author attribution block */}
-                        <div className="mt-6 flex flex-col items-center gap-2">
-                          {/* Author name */}
-                          {quoteAuthor && (
-                            <p className="text-white font-black uppercase tracking-[0.2em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" style={{ fontSize: `${Math.max(12, bodyFontSize - 4)}px` }}>
-                              — {quoteAuthor}
+                            {/* Quote body */}
+                            <p
+                              className="relative z-10 font-serif text-white text-center leading-relaxed drop-shadow-[0_4px_8px_rgba(0,0,0,1)] italic px-8"
+                              style={{ fontSize: `${bodyFontSize}px` }}
+                            >
+                              {content}
                             </p>
-                          )}
-                          {/* Source italic */}
-                          {quoteSource && (
-                            <p className="italic font-medium tracking-wide" style={{ fontSize: `${Math.max(10, bodyFontSize - 6)}px`, color: src.color, textShadow: `0 0 10px ${src.color}60` }}>
-                              {quoteSource}
-                            </p>
-                          )}
+
+                            {/* Closing quote */}
+                            <span
+                              className="absolute bottom-2 right-8 font-serif font-black leading-none select-none pointer-events-none drop-shadow-[0_0_15px_rgba(255,46,46,0.5)]"
+                              style={{ fontSize: '4.5rem', color: '#ff2e2e', opacity: 0.7, lineHeight: 0.5 }}
+                            >&rdquo;</span>
+
+                            {/* Bottom Ornament */}
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 flex items-center gap-2 px-3 bg-[#111]">
+                              <div className="w-6 h-[1px] bg-gradient-to-r from-transparent to-[#ff2e2e]/80"></div>
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#ff2e2e] shadow-[0_0_8px_rgba(255,46,46,0.8)]"></div>
+                              <div className="w-1.5 h-1.5 rounded-full bg-[#ff2e2e] shadow-[0_0_8px_rgba(255,46,46,0.8)]"></div>
+                              <div className="w-6 h-[1px] bg-gradient-to-l from-transparent to-[#ff2e2e]/80"></div>
+                            </div>
+                          </div>
+
+                          {/* Glowing line separator */}
+                          <div className="mt-8 mb-6 flex justify-center w-full">
+                            <div className="w-10 h-[2px] bg-[#ff2e2e] shadow-[0_0_15px_rgba(255,46,46,0.9)]"></div>
+                          </div>
+
+                          {/* Author attribution block */}
+                          <div className="flex flex-col items-center gap-2">
+                            {/* Author name */}
+                            {quoteAuthor && (
+                              <p className="text-white font-black uppercase tracking-[0.25em] drop-shadow-[0_2px_4px_rgba(0,0,0,1)] flex items-center gap-3" style={{ fontSize: `${Math.max(12, bodyFontSize - 4)}px` }}>
+                                <span className="w-6 h-[2.5px] bg-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"></span>
+                                {quoteAuthor}
+                              </p>
+                            )}
+                            {/* Source italic */}
+                            {quoteSource && (
+                              <p className="italic font-medium tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" style={{ fontSize: `${Math.max(10, bodyFontSize - 6)}px`, color: '#94a3b8' }}>
+                                {quoteSource}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
