@@ -1259,14 +1259,6 @@ export function RedPillGenerator() {
 
                         {/* Author attribution block */}
                         <div className="mt-6 flex flex-col items-center gap-2">
-                          {/* Source type badge */}
-                          <div
-                            className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-widest"
-                            style={{ borderColor: `${src.color}60`, backgroundColor: `${src.color}15`, color: src.color }}
-                          >
-                            <span>{src.emoji}</span>
-                            <span>{src.label}</span>
-                          </div>
                           {/* Author name */}
                           {quoteAuthor && (
                             <p className="text-white font-black uppercase tracking-[0.2em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" style={{ fontSize: `${Math.max(12, bodyFontSize - 4)}px` }}>
@@ -1294,14 +1286,6 @@ export function RedPillGenerator() {
                           <div className="flex-1 h-px bg-gradient-to-r from-transparent to-neutral-400/50"></div>
                           <div className="w-1.5 h-1.5 rotate-45 bg-[#ff2e2e] shadow-[0_0_6px_rgba(255,46,46,0.8)]"></div>
                           <div className="flex-1 h-px bg-gradient-to-l from-transparent to-neutral-400/50"></div>
-                        </div>
-
-                        {/* Source type badge – top */}
-                        <div
-                          className="mb-4 px-4 py-1.5 text-[9px] font-black uppercase tracking-[0.3em] border-t border-b"
-                          style={{ borderColor: `${src.color}50`, color: src.color }}
-                        >
-                          {src.emoji} {src.label}
                         </div>
 
                         {/* Large serif quote */}
@@ -1343,16 +1327,8 @@ export function RedPillGenerator() {
                       >
                         {/* Big red left border + quote */}
                         <div className="relative border-l-4 pl-5" style={{ borderColor: src.color, boxShadow: `-4px 0 20px ${src.color}40` }}>
-                          {/* Floating badge */}
-                          <div
-                            className="inline-flex items-center gap-1.5 mb-3 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-sm"
-                            style={{ backgroundColor: `${src.color}25`, color: src.color }}
-                          >
-                            {src.emoji} {src.label}
-                          </div>
-
                           <p
-                            className="text-white font-bold leading-snug drop-shadow-[0_4px_12px_rgba(0,0,0,1)]"
+                            className="text-white font-bold leading-snug drop-shadow-[0_4px_12px_rgba(0,0,0,1)] text-center"
                             style={{ fontSize: `${bodyFontSize}px` }}
                           >
                             &ldquo;{content}&rdquo;
@@ -1375,21 +1351,7 @@ export function RedPillGenerator() {
                       </div>
                     )}
 
-                    {/* Punchline / accroche */}
-                    {enablePunchline && punchline && (
-                      <div
-                        className="absolute left-0 right-0 flex justify-center transition-all duration-500"
-                        style={{ top: `${punchlinePositionY}%`, transform: `translateY(-${punchlinePositionY}%)` }}
-                      >
-                        <div className="flex items-center justify-center gap-3">
-                          <div className="h-px w-10 bg-gradient-to-r from-transparent to-[#ff2e2e]"></div>
-                          <p className="text-xs font-black uppercase tracking-[0.35em] drop-shadow-[0_0_10px_rgba(255,46,46,0.6)]" style={{ color: '#ff2e2e' }}>
-                            {punchline}
-                          </p>
-                          <div className="h-px w-10 bg-gradient-to-l from-transparent to-[#ff2e2e]"></div>
-                        </div>
-                      </div>
-                    )}
+                    {/* Punchline masquée dans le template quote */}
                   </div>
                 );
               })()}
