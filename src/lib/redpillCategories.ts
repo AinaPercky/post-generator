@@ -36,6 +36,15 @@ export const RED_PILL_CATEGORIES: RedPillCategory[] = [
     keywords: ['Mission', 'autorité', 'détachement', 'cadre', 'discipline', 'protection'],
     typicalExample: 'Cesser de chercher la validation par l\'argent ou les sacrifices, et baser sa puissance uniquement sur ses propres objectifs de vie.',
     defaultTitle: 'THE HARSH TRUTH'
+  },
+  {
+    id: 'citation',
+    name: 'Citation / Parole',
+    description: 'Citation percutante issue d\'un film, série, manga, œuvre littéraire, proverbe, verset biblique ou coranique, ou d\'un philosophe. Mentionner l\'auteur et sa spécificité pour ancrer la vérité dans une source reconnue.',
+    template: 'quote',
+    keywords: ['Citation', 'sagesse', 'vérité', 'philosophie', 'verset', 'proverbe', 'parole', 'personnage'],
+    typicalExample: 'Rock Lee (Naruto) : "Si on ne peut pas faire la magie, on compense par l\'effort." ou Luc 1:25 ou Karl Marx philosophe.',
+    defaultTitle: 'CITATION'
   }
 ];
 

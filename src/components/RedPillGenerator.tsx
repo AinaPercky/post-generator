@@ -83,6 +83,12 @@ export function RedPillGenerator() {
   const [versusLeftPoints, setVersusLeftPoints] = useState('Seeks approval\nAvoids conflict\nHides true intentions\nPlays it safe');
   const [versusRightPoints, setVersusRightPoints] = useState('Self-reliant\nEmbraces friction\nRadically honest\nTakes risks');
   const [versusImageMode, setVersusImageMode] = useState<'single' | 'split'>('split');
+
+  // Quote-specific states
+  const [quoteAuthor, setQuoteAuthor] = useState('Rock Lee');
+  const [quoteSource, setQuoteSource] = useState('Naruto');
+  const [quoteSourceType, setQuoteSourceType] = useState<'film' | 'serie' | 'manga' | 'anime' | 'proverbe' | 'bible' | 'coran' | 'philosophie' | 'litterature' | 'autre'>('manga');
+  const [quoteStyle, setQuoteStyle] = useState<'cinematic' | 'elegant' | 'raw'>('cinematic');
   
   const previewRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -668,57 +674,143 @@ export function RedPillGenerator() {
           {template !== 'versus' && (
             <>
               <div>
-                <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Body Text</label>
+                <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">{template === 'quote' ? 'Citation / Parole' : 'Body Text'}</label>
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  rows={3}
+                  rows={template === 'quote' ? 4 : 3}
+                  placeholder={template === 'quote' ? 'Entrez la citation, verset ou parole culte...' : ''}
                   className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-[#ff2e2e] focus:ring-1 focus:ring-[#ff2e2e] outline-none transition-all resize-none"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Words to Highlight (comma separated)</label>
-                <div className="flex flex-col gap-2">
-                  <div className="flex gap-2">
+              {/* Quote-specific fields */}
+              {template === 'quote' && (
+                <div className="flex flex-col gap-3 p-3 bg-[#0a0a0a] border border-[#ff2e2e]/20 rounded-lg">
+                  <p className="text-[10px] uppercase tracking-widest text-[#ff2e2e]/70 font-bold">Attribution de la Source</p>
+                  
+                  <div>
+                    <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Auteur / Personnage</label>
                     <input
                       type="text"
-                      value={customHighlights}
-                      onChange={(e) => setCustomHighlights(e.target.value)}
-                      placeholder="e.g. sleepwalking, comfort"
-                      className="flex-1 bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-[#ff2e2e] focus:ring-1 focus:ring-[#ff2e2e] outline-none transition-all"
-                    />
-                    <input
-                      type="color"
-                      value={highlightColor}
-                      onChange={(e) => setHighlightColor(e.target.value)}
-                      className="w-10 h-10 rounded cursor-pointer bg-transparent border-0 p-0"
-                      title="Highlight Color"
+                      value={quoteAuthor}
+                      onChange={(e) => setQuoteAuthor(e.target.value)}
+                      placeholder="ex: Rock Lee, Karl Marx, Luc 1:25..."
+                      className="w-full bg-[#141414] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-[#ff2e2e] focus:ring-1 focus:ring-[#ff2e2e] outline-none transition-all text-sm"
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setHighlightStyle('text')}
-                      className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${highlightStyle === 'text' ? 'bg-[#ff2e2e] text-white' : 'bg-[#1a1a1a] text-neutral-400 hover:bg-[#2a2a2a]'}`}
-                    >
-                      Text Color
-                    </button>
-                    <button
-                      onClick={() => setHighlightStyle('background')}
-                      className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${highlightStyle === 'background' ? 'bg-[#ff2e2e] text-white' : 'bg-[#1a1a1a] text-neutral-400 hover:bg-[#2a2a2a]'}`}
-                    >
-                      Background
-                    </button>
+
+                  <div>
+                    <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Œuvre / Source</label>
+                    <input
+                      type="text"
+                      value={quoteSource}
+                      onChange={(e) => setQuoteSource(e.target.value)}
+                      placeholder="ex: Naruto, Évangile de Luc, Philosophe..."
+                      className="w-full bg-[#141414] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-[#ff2e2e] focus:ring-1 focus:ring-[#ff2e2e] outline-none transition-all text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Type de Source</label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {([
+                        { id: 'film', label: '🎬 Film' },
+                        { id: 'serie', label: '📺 Série' },
+                        { id: 'manga', label: '📖 Manga' },
+                        { id: 'anime', label: '✨ Animé' },
+                        { id: 'bible', label: '✝️ Bible' },
+                        { id: 'coran', label: '☪️ Coran' },
+                        { id: 'philosophie', label: '🏛️ Philo' },
+                        { id: 'proverbe', label: '📜 Proverbe' },
+                        { id: 'litterature', label: '🖋️ Littérature' },
+                        { id: 'autre', label: '💬 Autre' },
+                      ] as const).map((type) => (
+                        <button
+                          key={type.id}
+                          onClick={() => setQuoteSourceType(type.id)}
+                          className={`py-1.5 px-1 rounded text-[10px] font-medium transition-all text-center leading-tight ${
+                            quoteSourceType === type.id
+                              ? 'bg-[#ff2e2e] text-white shadow-[0_0_10px_rgba(255,46,46,0.4)]'
+                              : 'bg-[#141414] text-neutral-400 border border-neutral-800 hover:border-neutral-600'
+                          }`}
+                        >
+                          {type.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Style du Template</label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {([
+                        { id: 'cinematic', label: 'Cinéma' },
+                        { id: 'elegant', label: 'Élégant' },
+                        { id: 'raw', label: 'Brut' },
+                      ] as const).map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => setQuoteStyle(s.id)}
+                          className={`py-1.5 px-2 rounded text-xs font-medium transition-all ${
+                            quoteStyle === s.id
+                              ? 'bg-[#ff2e2e] text-white'
+                              : 'bg-[#141414] text-neutral-400 border border-neutral-800 hover:border-neutral-600'
+                          }`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {template !== 'quote' && (
+                <div>
+                  <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Words to Highlight (comma separated)</label>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={customHighlights}
+                        onChange={(e) => setCustomHighlights(e.target.value)}
+                        placeholder="e.g. sleepwalking, comfort"
+                        className="flex-1 bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-[#ff2e2e] focus:ring-1 focus:ring-[#ff2e2e] outline-none transition-all"
+                      />
+                      <input
+                        type="color"
+                        value={highlightColor}
+                        onChange={(e) => setHighlightColor(e.target.value)}
+                        className="w-10 h-10 rounded cursor-pointer bg-transparent border-0 p-0"
+                        title="Highlight Color"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setHighlightStyle('text')}
+                        className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${highlightStyle === 'text' ? 'bg-[#ff2e2e] text-white' : 'bg-[#1a1a1a] text-neutral-400 hover:bg-[#2a2a2a]'}`}
+                      >
+                        Text Color
+                      </button>
+                      <button
+                        onClick={() => setHighlightStyle('background')}
+                        className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${highlightStyle === 'background' ? 'bg-[#ff2e2e] text-white' : 'bg-[#1a1a1a] text-neutral-400 hover:bg-[#2a2a2a]'}`}
+                      >
+                        Background
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
-                <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Punchline</label>
+                <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">{template === 'quote' ? 'Sous-titre / Accroche (optionnel)' : 'Punchline'}</label>
                 <input
                   type="text"
                   value={punchline}
                   onChange={(e) => setPunchline(e.target.value)}
+                  placeholder={template === 'quote' ? 'ex: La vérité que personne ne dit...' : ''}
                   className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-[#ff2e2e] focus:ring-1 focus:ring-[#ff2e2e] outline-none transition-all"
                 />
               </div>
@@ -1105,32 +1197,202 @@ export function RedPillGenerator() {
                 </div>
               )}
 
-              {template === 'quote' && (
-                <div className="h-full w-full relative">
-                  <div className="absolute left-0 right-0 flex justify-center px-6 transition-all duration-500"
-                       style={{ top: `${contentPositionY}%`, transform: `translateY(-${contentPositionY}%)` }}>
-                    <div className="text-center">
-                      <span className="text-6xl text-[#ff2e2e] font-serif leading-none block mb-4 drop-shadow-[0_0_15px_rgba(255,46,46,0.5)]">"</span>
-                      <p className="font-bold text-white leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,1)]" style={{ fontSize: `${bodyFontSize + 4}px` }}>
-                        {renderBodyText(content)}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {enablePunchline && (
-                    <div className="absolute left-0 right-0 flex justify-center transition-all duration-500"
-                         style={{ top: `${punchlinePositionY}%`, transform: `translateY(-${punchlinePositionY}%)` }}>
-                      <div className="flex items-center justify-center gap-4">
-                        <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-[#ff2e2e]"></div>
-                        <p className="text-sm font-black text-[#ff2e2e] uppercase tracking-[0.3em] drop-shadow-[0_0_10px_rgba(255,46,46,0.6)]">
-                          {punchline}
-                        </p>
-                        <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-[#ff2e2e]"></div>
+              {template === 'quote' && (() => {
+                // Source type badge config
+                const sourceTypeConfig: Record<string, { emoji: string; label: string; color: string }> = {
+                  film:        { emoji: '🎬', label: 'Film',        color: '#e8a838' },
+                  serie:       { emoji: '📺', label: 'Série TV',    color: '#4ea8de' },
+                  manga:       { emoji: '📖', label: 'Manga',       color: '#ff6b6b' },
+                  anime:       { emoji: '✨', label: 'Animé',       color: '#c084fc' },
+                  bible:       { emoji: '✝️', label: 'Bible',       color: '#fcd34d' },
+                  coran:       { emoji: '☪️', label: 'Coran',       color: '#34d399' },
+                  philosophie: { emoji: '🏛️', label: 'Philosophie', color: '#94a3b8' },
+                  proverbe:    { emoji: '📜', label: 'Proverbe',    color: '#f97316' },
+                  litterature: { emoji: '🖋️', label: 'Littérature', color: '#a78bfa' },
+                  autre:       { emoji: '💬', label: 'Citation',    color: '#ff2e2e' },
+                };
+                const src = sourceTypeConfig[quoteSourceType] || sourceTypeConfig.autre;
+
+                return (
+                  <div className="h-full w-full relative">
+                    {/* ── CINEMATIC style ── */}
+                    {quoteStyle === 'cinematic' && (
+                      <div
+                        className="absolute inset-x-0 flex flex-col items-center justify-center px-6 transition-all duration-500"
+                        style={{ top: `${contentPositionY}%`, transform: `translateY(-50%)` }}
+                      >
+                        {/* Top ornament line */}
+                        <div className="flex items-center gap-3 w-full max-w-[85%] mb-4">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#ff2e2e]/60 to-[#ff2e2e]"></div>
+                          <div className="w-2 h-2 rounded-full bg-[#ff2e2e] shadow-[0_0_8px_rgba(255,46,46,0.8)]"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#ff2e2e]/50"></div>
+                        </div>
+
+                        {/* Big opening quote mark */}
+                        <div className="w-full max-w-[85%] relative">
+                          <span
+                            className="absolute -top-6 -left-2 font-serif font-black leading-none select-none pointer-events-none"
+                            style={{ fontSize: '7rem', color: '#ff2e2e', opacity: 0.25, lineHeight: 1 }}
+                          >&ldquo;</span>
+
+                          {/* Quote body */}
+                          <p
+                            className="relative z-10 font-serif text-white text-center leading-snug drop-shadow-[0_4px_16px_rgba(0,0,0,1)] italic"
+                            style={{ fontSize: `${bodyFontSize + 2}px` }}
+                          >
+                            {content}
+                          </p>
+
+                          {/* Closing quote */}
+                          <span
+                            className="absolute -bottom-10 -right-2 font-serif font-black leading-none select-none pointer-events-none"
+                            style={{ fontSize: '7rem', color: '#ff2e2e', opacity: 0.25, lineHeight: 1 }}
+                          >&rdquo;</span>
+                        </div>
+
+                        {/* Bottom ornament */}
+                        <div className="flex items-center gap-3 w-full max-w-[85%] mt-6">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#ff2e2e]/50"></div>
+                          <div className="w-2 h-2 rounded-full bg-[#ff2e2e] shadow-[0_0_8px_rgba(255,46,46,0.8)]"></div>
+                          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-[#ff2e2e]/60 to-[#ff2e2e]"></div>
+                        </div>
+
+                        {/* Author attribution block */}
+                        <div className="mt-6 flex flex-col items-center gap-2">
+                          {/* Source type badge */}
+                          <div
+                            className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-widest"
+                            style={{ borderColor: `${src.color}60`, backgroundColor: `${src.color}15`, color: src.color }}
+                          >
+                            <span>{src.emoji}</span>
+                            <span>{src.label}</span>
+                          </div>
+                          {/* Author name */}
+                          {quoteAuthor && (
+                            <p className="text-white font-black uppercase tracking-[0.2em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" style={{ fontSize: `${Math.max(12, bodyFontSize - 4)}px` }}>
+                              — {quoteAuthor}
+                            </p>
+                          )}
+                          {/* Source italic */}
+                          {quoteSource && (
+                            <p className="italic font-medium tracking-wide" style={{ fontSize: `${Math.max(10, bodyFontSize - 6)}px`, color: src.color, textShadow: `0 0 10px ${src.color}60` }}>
+                              {quoteSource}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+
+                    {/* ── ELEGANT style ── */}
+                    {quoteStyle === 'elegant' && (
+                      <div
+                        className="absolute inset-x-0 flex flex-col items-center justify-center px-6 transition-all duration-500"
+                        style={{ top: `${contentPositionY}%`, transform: `translateY(-50%)` }}
+                      >
+                        {/* Decorative horizontal rule with diamond */}
+                        <div className="flex items-center gap-2 mb-5 w-full max-w-[80%]">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-neutral-400/50"></div>
+                          <div className="w-1.5 h-1.5 rotate-45 bg-[#ff2e2e] shadow-[0_0_6px_rgba(255,46,46,0.8)]"></div>
+                          <div className="flex-1 h-px bg-gradient-to-l from-transparent to-neutral-400/50"></div>
+                        </div>
+
+                        {/* Source type badge – top */}
+                        <div
+                          className="mb-4 px-4 py-1.5 text-[9px] font-black uppercase tracking-[0.3em] border-t border-b"
+                          style={{ borderColor: `${src.color}50`, color: src.color }}
+                        >
+                          {src.emoji} {src.label}
+                        </div>
+
+                        {/* Large serif quote */}
+                        <p
+                          className="font-serif text-white text-center leading-relaxed drop-shadow-[0_4px_16px_rgba(0,0,0,1)] mb-6"
+                          style={{ fontSize: `${bodyFontSize + 2}px` }}
+                        >
+                          &ldquo;{content}&rdquo;
+                        </p>
+
+                        {/* Author line */}
+                        <div className="flex flex-col items-center gap-1">
+                          {quoteAuthor && (
+                            <p className="text-white font-bold tracking-[0.15em] uppercase" style={{ fontSize: `${Math.max(11, bodyFontSize - 5)}px` }}>
+                              {quoteAuthor}
+                            </p>
+                          )}
+                          {quoteSource && (
+                            <p className="italic tracking-wider" style={{ fontSize: `${Math.max(9, bodyFontSize - 7)}px`, color: `${src.color}CC` }}>
+                              {quoteSource}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Bottom diamond */}
+                        <div className="mt-5 flex items-center gap-2 w-full max-w-[80%]">
+                          <div className="flex-1 h-px bg-gradient-to-r from-transparent to-neutral-400/50"></div>
+                          <div className="w-1.5 h-1.5 rotate-45 bg-[#ff2e2e] shadow-[0_0_6px_rgba(255,46,46,0.8)]"></div>
+                          <div className="flex-1 h-px bg-gradient-to-l from-transparent to-neutral-400/50"></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── RAW style ── */}
+                    {quoteStyle === 'raw' && (
+                      <div
+                        className="absolute inset-x-0 flex flex-col justify-center px-7 transition-all duration-500"
+                        style={{ top: `${contentPositionY}%`, transform: `translateY(-50%)` }}
+                      >
+                        {/* Big red left border + quote */}
+                        <div className="relative border-l-4 pl-5" style={{ borderColor: src.color, boxShadow: `-4px 0 20px ${src.color}40` }}>
+                          {/* Floating badge */}
+                          <div
+                            className="inline-flex items-center gap-1.5 mb-3 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-sm"
+                            style={{ backgroundColor: `${src.color}25`, color: src.color }}
+                          >
+                            {src.emoji} {src.label}
+                          </div>
+
+                          <p
+                            className="text-white font-bold leading-snug drop-shadow-[0_4px_12px_rgba(0,0,0,1)]"
+                            style={{ fontSize: `${bodyFontSize}px` }}
+                          >
+                            &ldquo;{content}&rdquo;
+                          </p>
+
+                          {/* Author */}
+                          <div className="mt-4 flex flex-col gap-0.5">
+                            {quoteAuthor && (
+                              <p className="font-black uppercase tracking-[0.2em] text-white" style={{ fontSize: `${Math.max(11, bodyFontSize - 5)}px` }}>
+                                — {quoteAuthor}
+                              </p>
+                            )}
+                            {quoteSource && (
+                              <p className="italic font-medium tracking-wide" style={{ fontSize: `${Math.max(9, bodyFontSize - 7)}px`, color: src.color }}>
+                                {quoteSource}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Punchline / accroche */}
+                    {enablePunchline && punchline && (
+                      <div
+                        className="absolute left-0 right-0 flex justify-center transition-all duration-500"
+                        style={{ top: `${punchlinePositionY}%`, transform: `translateY(-${punchlinePositionY}%)` }}
+                      >
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="h-px w-10 bg-gradient-to-r from-transparent to-[#ff2e2e]"></div>
+                          <p className="text-xs font-black uppercase tracking-[0.35em] drop-shadow-[0_0_10px_rgba(255,46,46,0.6)]" style={{ color: '#ff2e2e' }}>
+                            {punchline}
+                          </p>
+                          <div className="h-px w-10 bg-gradient-to-l from-transparent to-[#ff2e2e]"></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {template === 'warning' && (
                 <div className="h-full w-full relative">
