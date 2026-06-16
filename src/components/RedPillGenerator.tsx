@@ -176,7 +176,16 @@ export function RedPillGenerator() {
           punchline: punchline,
           template: template,
           categoryId: selectedCategoryId,
-        bodyTextAlign: bodyTextAlign,
+          bodyTextAlign: bodyTextAlign,
+        },
+      };
+
+      if (editingPostId) {
+        await updateRedPillPost(editingPostId, newPost);
+      } else {
+        await createRedPillPost(newPost);
+      }
+    } catch (error: any) {
       console.error('Failed to save:', error);
       setSaveError(error?.message || 'Failed to save post');
     } finally {
