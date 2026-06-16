@@ -35,6 +35,7 @@ export interface RedPillPost extends SavedPost {
     categoryId?: 'reminder' | 'error-of' | 'harsh-truth';
     content?: string;
     punchline?: string;
+    bodyTextAlign?: 'left' | 'center' | 'right' | 'justify';
     [key: string]: unknown;
   };
 }

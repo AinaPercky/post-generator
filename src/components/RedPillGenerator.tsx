@@ -72,6 +72,7 @@ export function RedPillGenerator() {
   const [enableRedPillTitle, setEnableRedPillTitle] = useState(true);
   const [titlePositionY, setTitlePositionY] = useState(12);
   const [bodyFontSize, setBodyFontSize] = useState(20);
+  const [bodyTextAlign, setBodyTextAlign] = useState<'left' | 'center' | 'right' | 'justify'>('center');
   const [contentPositionY, setContentPositionY] = useState(50);
   const [enablePunchline, setEnablePunchline] = useState(true);
   const [punchlinePositionY, setPunchlinePositionY] = useState(90);
@@ -175,17 +176,7 @@ export function RedPillGenerator() {
           punchline: punchline,
           template: template,
           categoryId: selectedCategoryId,
-        }
-      };
-
-      if (editingPostId) {
-        await updateRedPillPost(editingPostId, newPost);
-      } else {
-        await createRedPillPost(newPost);
-      }
-      setEditingPostId(null);
-      setSaveError(null);
-    } catch (error: any) {
+        bodyTextAlign: bodyTextAlign,
       console.error('Failed to save:', error);
       setSaveError(error?.message || 'Failed to save post');
     } finally {
@@ -237,6 +228,7 @@ export function RedPillGenerator() {
     if (post.metadata?.punchline) setPunchline(post.metadata.punchline as string);
     if (post.metadata?.template) setTemplate(post.metadata.template as TemplateType);
     if (post.metadata?.categoryId) setSelectedCategoryId(post.metadata.categoryId as string);
+    if (post.metadata?.bodyTextAlign) setBodyTextAlign(post.metadata.bodyTextAlign as 'left' | 'center' | 'right' | 'justify');
     // Note: image_url is the rendered PNG, not the source image
   };
 
@@ -605,6 +597,28 @@ export function RedPillGenerator() {
               onChange={(e) => setBodyFontSize(Number(e.target.value))}
               className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-[#ff2e2e]"
             />
+          </div>
+
+          <div className="flex flex-col gap-2 mb-2 mt-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-neutral-500 uppercase tracking-wider">Body Text Align</label>
+              <span className="text-xs text-neutral-400 font-mono uppercase">{bodyTextAlign}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {(['left', 'center', 'right', 'justify'] as const).map((align) => {
+                const isActive = bodyTextAlign === align;
+                return (
+                  <button
+                    key={align}
+                    type="button"
+                    onClick={() => setBodyTextAlign(align)}
+                    className={`rounded-lg px-2 py-2 text-xs uppercase transition-all ${isActive ? 'bg-[#ff2e2e] text-white shadow-[0_0_15px_rgba(255,46,46,0.35)]' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'}`}
+                  >
+                    {align}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex flex-col gap-2 mb-2 mt-2">
@@ -1124,7 +1138,7 @@ export function RedPillGenerator() {
                   {/* Center: Content */}
                   <div className="absolute left-0 right-0 flex justify-center px-4 transition-all duration-500"
                        style={{ top: `${contentPositionY}%`, transform: `translateY(-${contentPositionY}%)` }}>
-                    <p className="text-center text-neutral-200 font-medium leading-relaxed max-w-[85%] drop-shadow-[0_4px_12px_rgba(0,0,0,1)] whitespace-pre-wrap" style={{ fontSize: `${bodyFontSize}px` }}>
+                    <p className="text-neutral-200 font-medium leading-relaxed max-w-[85%] drop-shadow-[0_4px_12px_rgba(0,0,0,1)] whitespace-pre-wrap" style={{ fontSize: `${bodyFontSize}px`, textAlign: bodyTextAlign }}>
                       {renderBodyText(content)}
                     </p>
                   </div>
@@ -1151,7 +1165,7 @@ export function RedPillGenerator() {
                         {renderHighlightedText(title)}
                       </h1>
                     )}
-                    <p className="text-neutral-300 font-medium leading-relaxed drop-shadow-[0_4px_12px_rgba(0,0,0,1)] whitespace-pre-wrap" style={{ fontSize: `${bodyFontSize}px` }}>
+                    <p className="text-neutral-300 font-medium leading-relaxed drop-shadow-[0_4px_12px_rgba(0,0,0,1)] whitespace-pre-wrap" style={{ fontSize: `${bodyFontSize}px`, textAlign: bodyTextAlign }}>
                       {renderBodyText(content)}
                     </p>
                   </div>
@@ -1180,7 +1194,7 @@ export function RedPillGenerator() {
                           {renderHighlightedText(title)}
                         </h1>
                       )}
-                      <p className="text-neutral-300 font-medium leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${bodyFontSize}px` }}>
+                      <p className="text-neutral-300 font-medium leading-relaxed whitespace-pre-wrap" style={{ fontSize: `${bodyFontSize}px`, textAlign: bodyTextAlign }}>
                         {renderBodyText(content)}
                       </p>
                     </div>
@@ -1241,8 +1255,8 @@ export function RedPillGenerator() {
 
                             {/* Quote body */}
                             <p
-                              className="relative z-10 font-serif text-white text-center leading-relaxed drop-shadow-[0_4px_8px_rgba(0,0,0,1)] italic px-8 whitespace-pre-wrap"
-                              style={{ fontSize: `${bodyFontSize}px` }}
+                              className="relative z-10 font-serif text-white leading-relaxed drop-shadow-[0_4px_8px_rgba(0,0,0,1)] italic px-8 whitespace-pre-wrap"
+                              style={{ fontSize: `${bodyFontSize}px`, textAlign: bodyTextAlign }}
                             >
                               {content}
                             </p>
@@ -1302,8 +1316,8 @@ export function RedPillGenerator() {
 
                         {/* Large serif quote */}
                         <p
-                          className="font-serif text-white text-center leading-relaxed drop-shadow-[0_4px_16px_rgba(0,0,0,1)] mb-6 whitespace-pre-wrap"
-                          style={{ fontSize: `${bodyFontSize + 2}px` }}
+                          className="font-serif text-white leading-relaxed drop-shadow-[0_4px_16px_rgba(0,0,0,1)] mb-6 whitespace-pre-wrap"
+                          style={{ fontSize: `${bodyFontSize + 2}px`, textAlign: bodyTextAlign }}
                         >
                           &ldquo;{content}&rdquo;
                         </p>
@@ -1340,8 +1354,8 @@ export function RedPillGenerator() {
                         {/* Big red left border + quote */}
                         <div className="relative border-l-4 pl-5" style={{ borderColor: src.color, boxShadow: `-4px 0 20px ${src.color}40` }}>
                           <p
-                            className="text-white font-bold leading-snug drop-shadow-[0_4px_12px_rgba(0,0,0,1)] text-center whitespace-pre-wrap"
-                            style={{ fontSize: `${bodyFontSize}px` }}
+                            className="text-white font-bold leading-snug drop-shadow-[0_4px_12px_rgba(0,0,0,1)] whitespace-pre-wrap"
+                            style={{ fontSize: `${bodyFontSize}px`, textAlign: bodyTextAlign }}
                           >
                             &ldquo;{content}&rdquo;
                           </p>
@@ -1379,7 +1393,7 @@ export function RedPillGenerator() {
                   <div className="absolute left-4 right-4 transition-all duration-500"
                        style={{ top: `${contentPositionY}%`, transform: `translateY(-${contentPositionY}%)` }}>
                     <div className="bg-black/60 p-6 border-l-4 border-[#ff2e2e] shadow-[0_10px_30px_rgba(0,0,0,0.55)]">
-                      <p className="text-white font-bold leading-snug drop-shadow-md whitespace-pre-wrap" style={{ fontSize: `${bodyFontSize}px` }}>
+                      <p className="text-white font-bold leading-snug drop-shadow-md whitespace-pre-wrap" style={{ fontSize: `${bodyFontSize}px`, textAlign: bodyTextAlign }}>
                         {renderBodyText(content)}
                       </p>
                     </div>
