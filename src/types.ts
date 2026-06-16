@@ -36,6 +36,7 @@ export interface RedPillPost extends SavedPost {
     content?: string;
     punchline?: string;
     bodyTextAlign?: 'left' | 'center' | 'right' | 'justify';
+    bodyLineHeight?: number;
     [key: string]: unknown;
   };
 }
