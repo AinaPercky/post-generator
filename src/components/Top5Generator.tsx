@@ -321,18 +321,18 @@ export function Top5Generator() {
             </div>
 
             {/* List */}
-            <div className="relative z-10 flex-grow px-12 flex flex-col justify-start gap-6 pb-16 pt-6">
+            <div className="relative z-10 flex-grow px-10 flex flex-col justify-center gap-7 pb-10 pt-4">
               {items.map((item) => {
                 const config = (rankConfig as any)[item.rank];
                 const IconComp = config.Icon;
                 
-                // Progressive scaling implementation (refitted to avoid vertical overflow)
+                // Progressive scaling implementation
                 const rankParams = {
-                  4: { img: 'w-[130px] h-[130px]', p: 'p-4 gap-5', rankFont: 'text-[95px]', rankW: 'w-[75px]', title: 'text-[28px]', desc: 'text-[17px]', badge: 'w-10 h-10', icon: 'w-5 h-5', bar: 'w-12' },
-                  5: { img: 'w-[130px] h-[130px]', p: 'p-4 gap-5', rankFont: 'text-[95px]', rankW: 'w-[75px]', title: 'text-[28px]', desc: 'text-[17px]', badge: 'w-10 h-10', icon: 'w-5 h-5', bar: 'w-12' },
-                  3: { img: 'w-[140px] h-[140px]', p: 'p-4 gap-5', rankFont: 'text-[105px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[18px]', badge: 'w-11 h-11', icon: 'w-[22px] h-[22px]', bar: 'w-14' },
-                  2: { img: 'w-[155px] h-[155px]', p: 'p-5 gap-6', rankFont: 'text-[115px]', rankW: 'w-[85px]', title: 'text-[34px]', desc: 'text-[19px]', badge: 'w-12 h-12', icon: 'w-6 h-6', bar: 'w-16' },
-                  1: { img: 'w-[170px] h-[170px]', p: 'p-5 gap-7', rankFont: 'text-[130px]', rankW: 'w-[95px]', title: 'text-[38px]', desc: 'text-[21px]', badge: 'w-[52px] h-[52px]', icon: 'w-[26px] h-[26px]', bar: 'w-20' },
+                  5: { img: 'w-[145px] h-[145px]', p: 'p-5 gap-5', rankFont: 'text-[100px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[18px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
+                  4: { img: 'w-[145px] h-[145px]', p: 'p-5 gap-5', rankFont: 'text-[100px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[18px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
+                  3: { img: 'w-[155px] h-[155px]', p: 'p-5 gap-5', rankFont: 'text-[110px]', rankW: 'w-[85px]', title: 'text-[32px]', desc: 'text-[19px]', badge: 'w-12 h-12', icon: 'w-[22px] h-[22px]', bar: 'w-14' },
+                  2: { img: 'w-[165px] h-[165px]', p: 'p-5 gap-6', rankFont: 'text-[120px]', rankW: 'w-[90px]', title: 'text-[36px]', desc: 'text-[20px]', badge: 'w-[52px] h-[52px]', icon: 'w-6 h-6', bar: 'w-16' },
+                  1: { img: 'w-[180px] h-[180px]', p: 'p-6 gap-7', rankFont: 'text-[135px]', rankW: 'w-[95px]', title: 'text-[40px]', desc: 'text-[22px]', badge: 'w-14 h-14', icon: 'w-7 h-7', bar: 'w-20' },
                 }[item.rank];
 
                 return (
