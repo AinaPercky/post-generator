@@ -170,10 +170,16 @@ export async function getPostsByType(
     search?: string;
     limit?: number;
     offset?: number;
+    includeImageData?: boolean;
   }
 ): Promise<SavedPost[]> {
   try {
-    let query = supabase.from(TABLE_NAME).select('*').eq('type', postType);
+    // Select all fields except image_url by default to prevent timeouts due to large base64 strings
+    const selectFields = filters?.includeImageData 
+      ? '*' 
+      : 'id, type, title, description, metadata, created_at, updated_at, user_id, author_name';
+
+    let query = supabase.from(TABLE_NAME).select(selectFields).eq('type', postType);
 
     if (filters?.search) {
       query = query.ilike('title', `%${filters.search}%`);

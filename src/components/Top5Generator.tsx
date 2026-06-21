@@ -1,6 +1,40 @@
 import React, { useState, useRef, useEffect } from 'react';
 // import { Download, Loader as Loader2, Image as ImageIcon, Sun, TrendingUp, Star, Target, Crown } from 'lucide-react';
-import { Download, Loader as Loader2, Image as ImageIcon, Ribbon, Award, Medal, Trophy, Crown } from 'lucide-react';
+import { Download, Loader as Loader2, Image as ImageIcon, Ribbon, Award, Medal, Trophy, Crown, Target, Music, Heart, Sparkles, Dumbbell, Globe, TreePine, Film, Landmark, ScrollText, Car, Cpu, Languages, Lightbulb, GraduationCap, Users, Newspaper, User as UserIcon, LineChart, History, PawPrint, Dribbble as BasketballIcon } from 'lucide-react';
+
+const CATEGORIES = [
+  'sport', 'basket', 'nba', 'environnement', 'loisirs', 'cinema', 'politique', 
+  'géopolitique', 'géographie', 'histoire', 'animaux', 'voitures', 'technologie', 
+  'langues', 'savoir', 'philosophie', 'société', 'culture', 'actualités', 
+  'people', 'économie', 'musique', 'style de vie', 'santé'
+];
+
+const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
+  'sport': Dumbbell,
+  'basket': BasketballIcon,
+  'nba': BasketballIcon,
+  'environnement': TreePine,
+  'loisirs': Sparkles,
+  'cinema': Film,
+  'politique': Landmark,
+  'géopolitique': Globe,
+  'géographie': Globe,
+  'histoire': History,
+  'animaux': PawPrint,
+  'voitures': Car,
+  'technologie': Cpu,
+  'langues': Languages,
+  'savoir': GraduationCap,
+  'philosophie': Lightbulb,
+  'société': Users,
+  'culture': ScrollText,
+  'actualités': Newspaper,
+  'people': UserIcon,
+  'économie': LineChart,
+  'musique': Music,
+  'style de vie': Sparkles,
+  'santé': Heart,
+};
 import { toPng, toJpeg } from 'html-to-image';
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -55,6 +89,8 @@ export function Top5Generator() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [categorySubtitle, setCategorySubtitle] = useState('YOUR CATEGORY HERE');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [categoryData, setCategoryData] = useState<Record<string, typeof initialItems>>({});
 
   const initialItems = [5, 4, 3, 2, 1].map(rank => ({
     rank,
@@ -64,6 +100,32 @@ export function Top5Generator() {
   }));
 
   const [items, setItems] = useState(initialItems);
+
+  // Update items when selected category changes (load saved data or reset)
+  useEffect(() => {
+    if (selectedCategory) {
+      // Load saved data for this category or use fresh initial items
+      const savedData = categoryData[selectedCategory] || initialItems;
+      setItems(savedData);
+    }
+  }, [selectedCategory, categoryData]);
+
+  // Save current items to categoryData before switching away
+  const handleSelectCategory = (cat: string) => {
+    // Save current items of previous category if any
+    if (selectedCategory) {
+      setCategoryData(prev => ({
+        ...prev,
+        [selectedCategory]: items
+      }));
+    }
+    
+    setSelectedCategory(cat);
+    // Set to lowercase, then capitalize only first letter of first word
+    const lowerCat = cat.toLowerCase();
+    const formattedCat = lowerCat.charAt(0).toUpperCase() + lowerCat.slice(1);
+    setCategorySubtitle(formattedCat);
+  };
 
   const containerRef = useRef<HTMLDivElement>(null);
   const previewRef  = useRef<HTMLDivElement>(null);
@@ -85,7 +147,17 @@ export function Top5Generator() {
   }, []);
 
   const handleItemChange = (index: number, field: string, value: string) => {
-    setItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+    setItems(prev => {
+      const newItems = prev.map((item, i) => i === index ? { ...item, [field]: value } : item);
+      // Also save to categoryData if a category is selected
+      if (selectedCategory) {
+        setCategoryData(prevData => ({
+          ...prevData,
+          [selectedCategory]: newItems
+        }));
+      }
+      return newItems;
+    });
   };
 
   const handleImageUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,9 +244,43 @@ export function Top5Generator() {
             value={categorySubtitle}
             onChange={e => setCategorySubtitle(e.target.value)}
             rows={2}
-            className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none resize-none"
+            className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none resize-none mb-4"
             placeholder="YOUR CATEGORY HERE"
           />
+
+          <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Select Category</label>
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                onClick={() => handleSelectCategory(cat)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  selectedCategory === cat
+                    ? 'bg-emerald-600 text-white shadow-[0_0_10px_rgba(16,185,129,0.4)]'
+                    : 'bg-[#0a0a0a] text-neutral-400 border border-neutral-800 hover:border-neutral-600'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          {selectedCategory && (
+            <button
+              onClick={() => {
+                if (selectedCategory) {
+                  setCategoryData(prev => ({
+                    ...prev,
+                    [selectedCategory]: items
+                  }));
+                }
+                setSelectedCategory(null);
+                setCategorySubtitle('YOUR CATEGORY HERE');
+              }}
+              className="mt-3 text-[10px] text-neutral-500 hover:text-emerald-500 transition-colors uppercase tracking-widest"
+            >
+              Clear Selection
+            </button>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -320,20 +426,25 @@ export function Top5Generator() {
 
               {/* Subtitle "• CATEGORY •" */}
               <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24,
                 marginTop: 30,
               }}>
-                <span style={{ fontSize: 16, color: '#888' }}>•</span>
+                {(() => {
+                  const Icon = selectedCategory ? (CATEGORY_ICONS[selectedCategory] || Target) : Target;
+                  return <Icon size={42} color="#888" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} />;
+                })()}
                 <span style={{
                   fontSize: 36, fontWeight: 900,
                   letterSpacing: '5px',
-                  textTransform: 'capitalize',
                   color: '#aaaaaa',
-                  maxWidth: 860, textAlign: 'center', lineHeight: 1.3,
+                  maxWidth: 700, textAlign: 'center', lineHeight: 1.3,
                 }}>
                   {categorySubtitle || 'YOUR CATEGORY HERE'}
                 </span>
-                <span style={{ fontSize: 16, color: '#888' }}>•</span>
+                {(() => {
+                  const Icon = selectedCategory ? (CATEGORY_ICONS[selectedCategory] || Target) : Target;
+                  return <Icon size={42} color="#888" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} />;
+                })()}
               </div>
 
               {/* Separator — purple → orange, 3px */}
