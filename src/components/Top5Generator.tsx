@@ -9,33 +9,41 @@ import { savePost } from '../lib/postService';
 const CANVAS_W = 1080;
 const CANVAS_H = 1620;
 
-// Color for each rank (5 = top of list = lowest rank visually, 1 = winner)
-const rankConfig: Record<number, { color: string; glow: string; Icon: React.ComponentType<any> }> = {
-  5: { color: '#F97316', glow: 'rgba(249,115,22,0.6)',  Icon: Sun },
-  4: { color: '#F59E0B', glow: 'rgba(245,158,11,0.6)',  Icon: TrendingUp },
-  3: { color: '#EAB308', glow: 'rgba(234,179,8,0.6)',   Icon: Star },
-  2: { color: '#84CC16', glow: 'rgba(132,204,22,0.6)',  Icon: Target },
-  1: { color: '#22C55E', glow: 'rgba(34,197,94,0.65)',  Icon: Crown },
+// Exact border colours per spec
+const RANK_COLORS: Record<number, string> = {
+  5: '#FF6B00',
+  4: '#FFB300',
+  3: '#FFD700',
+  2: '#CCFF00',
+  1: '#39FF14',
 };
 
-// Card dimensions — tuned so all 5 cards + header fit exactly in 1620px
-// Header ≈ 268px | Cards area ≈ 1352px  (5 cards + 4×14px gaps + 12px bottom pad)
-const cardSizes: Record<number, {
-  cardH: number; imgSize: number; badgeSize: number;
-  rankFontSize: number; titleFont: number; descFont: number; barW: number;
-}> = {
-  5: { cardH: 218, imgSize: 170, badgeSize: 42, rankFontSize: 104, titleFont: 30, descFont: 19, barW: 110 },
-  4: { cardH: 218, imgSize: 170, badgeSize: 42, rankFontSize: 104, titleFont: 30, descFont: 19, barW: 110 },
-  3: { cardH: 234, imgSize: 184, badgeSize: 46, rankFontSize: 114, titleFont: 32, descFont: 19, barW: 120 },
-  2: { cardH: 254, imgSize: 202, badgeSize: 50, rankFontSize: 128, titleFont: 35, descFont: 20, barW: 130 },
-  1: { cardH: 286, imgSize: 230, badgeSize: 56, rankFontSize: 148, titleFont: 39, descFont: 21, barW: 148 },
-  // Total cards: 218+218+234+254+286 = 1210 | gaps: 4×14=56 | bottom: 12 → 1278px
-  // 268 header + 1278 = 1546px (74px slack — safe even with 2-line category text)
+const RANK_ICONS: Record<number, React.ComponentType<any>> = {
+  5: Sun,
+  4: TrendingUp,
+  3: Star,
+  2: Target,
+  1: Crown,
 };
+
+// All equal-height rows except rank 1 (larger, matches reference)
+// Heights at 1080px canvas — 4×222 + 1×268 = 1156; gaps 4×18=72; pad 10+20=30; header 290 → total 1548px ✓
+const ROW_H: Record<number, number> = { 5: 222, 4: 222, 3: 222, 2: 222, 1: 268 };
 
 function hexToRgb(hex: string) {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return r ? `${parseInt(r[1], 16)},${parseInt(r[2], 16)},${parseInt(r[3], 16)}` : '255,255,255';
+}
+
+// Mountain/landscape placeholder icon (used when no image uploaded)
+function PlaceholderIcon({ size }: { size: number }) {
+  return (
+    <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="3" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <path d="M2 18l6-7 5 5 3-3 6 5" />
+    </svg>
+  );
 }
 
 export function Top5Generator() {
@@ -55,7 +63,7 @@ export function Top5Generator() {
   const [items, setItems] = useState(initialItems);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const previewRef  = useRef<HTMLDivElement>(null);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [previewScale, setPreviewScale] = useState(0.42);
 
@@ -168,11 +176,11 @@ export function Top5Generator() {
 
         <div className="space-y-4">
           {items.map((item, index) => {
-            const cfg = rankConfig[item.rank];
+            const color = RANK_COLORS[item.rank];
             return (
               <div key={item.rank} className="bg-[#141414] p-4 rounded-xl border border-neutral-800">
                 <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-                  <span style={{ color: cfg.color }}>#{item.rank}</span>
+                  <span style={{ color }}>#{item.rank}</span>
                   <span className="text-neutral-400">Item Details</span>
                 </h3>
                 <div className="flex gap-3">
@@ -194,8 +202,7 @@ export function Top5Generator() {
                   <div className="flex-grow flex flex-col gap-2">
                     <div>
                       <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Title</label>
-                      <input
-                        type="text" value={item.title}
+                      <input type="text" value={item.title}
                         onChange={e => handleItemChange(index, 'title', e.target.value)}
                         className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-1.5 text-white focus:border-emerald-500 outline-none text-sm"
                         placeholder="YOUR ITEM TITLE HERE"
@@ -203,8 +210,7 @@ export function Top5Generator() {
                     </div>
                     <div>
                       <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Description</label>
-                      <textarea
-                        value={item.description}
+                      <textarea value={item.description}
                         onChange={e => handleItemChange(index, 'description', e.target.value)}
                         rows={2}
                         className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-1.5 text-white focus:border-emerald-500 outline-none text-sm resize-none"
@@ -243,11 +249,12 @@ export function Top5Generator() {
 
       {/* ── Preview ── */}
       <div className="lg:col-span-7 flex justify-center items-start overflow-auto">
+        {/* Responsive shell — maintains 2:3 aspect ratio */}
         <div
           ref={containerRef}
           className="w-full max-w-[420px] xl:max-w-[460px] aspect-[2/3] relative border border-neutral-800 rounded-xl overflow-hidden shadow-2xl"
         >
-          {/* Scaled 1080×1620 canvas */}
+          {/* ─────────── CANVAS 1080 × 1620 ─────────── */}
           <div
             ref={previewRef}
             style={{
@@ -256,218 +263,240 @@ export function Top5Generator() {
               height: `${CANVAS_H}px`,
               transform: `scale(${previewScale})`,
               transformOrigin: 'top left',
-              background: '#07080F',
+              background: '#0a0a0f',
               fontFamily: 'Inter, system-ui, sans-serif',
               overflow: 'hidden',
             }}
           >
-            {/* ── Background: arc glow at top ── */}
+            {/* ── Top arc glow ── */}
             <div style={{
-              position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)',
-              width: 1000, height: 560,
-              background: 'radial-gradient(ellipse at 50% 0%, rgba(70,50,160,0.5) 0%, rgba(25,15,70,0.22) 55%, transparent 78%)',
+              position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+              width: 1100, height: 600,
+              background: 'radial-gradient(ellipse at 50% 0%, rgba(60,40,160,0.55) 0%, rgba(20,10,60,0.25) 55%, transparent 78%)',
               pointerEvents: 'none',
             }} />
-            <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', pointerEvents: 'none' }} height="280" viewBox="0 0 1080 280" fill="none">
-              <path d="M-20 280 Q540 -30 1100 280" stroke="rgba(100,75,220,0.22)" strokeWidth="1.5" fill="none" />
+            <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', pointerEvents: 'none' }} height="300" viewBox="0 0 1080 300" fill="none">
+              <path d="M-30 300 Q540 -20 1110 300" stroke="rgba(90,60,200,0.2)" strokeWidth="1.5" fill="none" />
             </svg>
 
             {/* ── Scattered sparkle dots ── */}
             {([
-              [108, 390, true], [974, 430, false],
-              [50,  680, false], [1030, 660, true],
-              [75,  940, true],  [1006, 920, false],
-              [90, 1210, false], [990, 1185, true],
-              [130,1460, true],  [950, 1445, false],
-            ] as [number, number, boolean][]).map(([x, y, warm], i) => (
+              [108, 410, '#FFB300'],  [972, 440, '#ffffff'],
+              [52,  700, '#ffffff'],  [1028, 680, '#FF6B00'],
+              [78,  960, '#FFD700'],  [1004, 940, '#ffffff'],
+              [95, 1230, '#ffffff'],  [986, 1210, '#CCFF00'],
+              [125,1470, '#39FF14'], [952, 1450, '#ffffff'],
+            ] as [number, number, string][]).map(([x, y, c], i) => (
               <div key={i} style={{
                 position: 'absolute', left: x, top: y,
                 width: 6, height: 6, borderRadius: '50%',
-                background: warm ? 'rgba(255,200,80,0.8)' : 'rgba(190,210,255,0.6)',
-                boxShadow: warm ? '0 0 8px 2px rgba(255,200,80,0.7)' : '0 0 7px 1px rgba(190,210,255,0.7)',
+                background: c,
+                boxShadow: `0 0 8px 2px ${c}99`,
                 pointerEvents: 'none',
               }} />
             ))}
 
-            {/* ── HEADER ── approx 268px total */}
-            <div style={{ textAlign: 'center', paddingTop: 44, paddingBottom: 16 }}>
-              {/* TOP 5 — metallic gradient text */}
+            {/* ══════════════ HEADER ══════════════ */}
+            {/* Total header height budget: ≈ 290px */}
+            <div style={{ textAlign: 'center', paddingTop: 44, paddingBottom: 14 }}>
+
+              {/* "TOP 5" — metallic gradient, italic bold */}
               <div style={{
-                fontSize: 136,
+                fontSize: 165,
                 fontWeight: 900,
                 fontStyle: 'italic',
                 lineHeight: 1,
                 letterSpacing: '-3px',
-                background: 'linear-gradient(175deg, #ffffff 0%, #d8d8d8 35%, #a8a8a8 100%)',
+                background: 'linear-gradient(175deg, #ffffff 0%, #e8e8e8 30%, #b8b8b8 65%, #888 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                filter: 'drop-shadow(0 0 28px rgba(255,255,255,0.3)) drop-shadow(0 4px 14px rgba(0,0,0,0.9))',
+                filter: 'drop-shadow(0 0 30px rgba(255,255,255,0.25)) drop-shadow(0 6px 18px rgba(0,0,0,0.95))',
               }}>
                 TOP 5
               </div>
 
-              {/* Bullet · category · bullet */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 14 }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', boxShadow: '0 0 7px #fff', flexShrink: 0 }} />
+              {/* Subtitle "• CATEGORY •" */}
+              <div style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18,
+                marginTop: 16,
+              }}>
+                <span style={{ fontSize: 16, color: '#888' }}>•</span>
                 <span style={{
-                  fontSize: 26, fontWeight: 700, letterSpacing: '0.2em',
-                  textTransform: 'uppercase', color: '#e5e5e5',
-                  maxWidth: 720, textAlign: 'center', lineHeight: 1.25,
+                  fontSize: 26, fontWeight: 700,
+                  letterSpacing: '13px',
+                  textTransform: 'uppercase',
+                  color: '#aaaaaa',
+                  maxWidth: 760, textAlign: 'center', lineHeight: 1.3,
                 }}>
                   {categorySubtitle || 'YOUR CATEGORY HERE'}
                 </span>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', boxShadow: '0 0 7px #fff', flexShrink: 0 }} />
+                <span style={{ fontSize: 16, color: '#888' }}>•</span>
               </div>
 
-              {/* Gradient underline */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
+              {/* Separator — purple → orange, 3px */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14 }}>
                 <div style={{
-                  width: 240, height: 2,
-                  background: 'linear-gradient(90deg, transparent, #a855f7 30%, #ec4899 50%, #38bdf8 70%, transparent)',
-                  borderRadius: 2,
+                  width: 260, height: 3, borderRadius: 2,
+                  background: 'linear-gradient(90deg, #a855f7, #f97316)',
                 }} />
               </div>
             </div>
 
-            {/* ── CARDS ── */}
+            {/* ══════════════ CARD LIST ══════════════ */}
+            {/* Container padding: 20px sides; gap 18px; bottom 20px */}
             <div style={{
-              padding: '4px 52px 12px',
-              display: 'flex', flexDirection: 'column', gap: 14,
+              padding: '10px 20px 20px',
+              display: 'flex', flexDirection: 'column', gap: 18,
             }}>
               {items.map(item => {
-                const cfg = rankConfig[item.rank];
-                const sz  = cardSizes[item.rank];
-                const rgb = hexToRgb(cfg.color);
-                const IconComp = cfg.Icon;
-                // inner horizontal layout widths
-                const imgCol    = sz.imgSize;
-                const rankCol   = Math.round(sz.rankFontSize * 0.78);
-                const dividerW  = 3;
-                // card inner width = CANVAS_W - 52*2 = 976px
-                // content area = 976 - 20(margin-left image) - imgCol - 14 - rankCol - 12 - dividerW - 20(gap after div) = remaining
+                const color   = RANK_COLORS[item.rank];
+                const rgb     = hexToRgb(color);
+                const rowH    = ROW_H[item.rank];
+                const IconComp = RANK_ICONS[item.rank];
+
+                // Scale factors derived from card height (222px = baseline)
+                const s = rowH / 222;
+                const imgSize    = Math.round(176 * s);      // icon box side
+                const badgeSize  = Math.round(40 * s);       // badge circle
+                const rankFont   = Math.round(116 * s);      // rank number font
+                const rankColW   = Math.round(148 * s);      // rank number column width
+                const titleFont  = Math.round(34 * s);       // item title
+                const descFont   = Math.round(22 * s);       // description
+                const barW       = Math.round(76 * s);       // underline bar width
+                const padV       = Math.round(20 * s);       // card vertical padding
+
                 return (
                   <div
                     key={item.rank}
                     style={{
-                      height: sz.cardH,
-                      borderRadius: 16,
-                      border: `1.5px solid rgba(${rgb},0.55)`,
-                      background: `linear-gradient(130deg, rgba(${rgb},0.07) 0%, #09090F 55%, rgba(${rgb},0.04) 100%)`,
-                      boxShadow: `0 0 20px rgba(${rgb},0.22), 0 0 5px rgba(${rgb},0.12), inset 0 0 18px rgba(${rgb},0.03)`,
+                      height: rowH,
+                      borderRadius: 12,
+                      border: `2px solid ${color}`,
+                      background: 'rgba(255,255,255,0.04)',
+                      boxShadow: `0 0 18px rgba(${rgb},0.35), 0 0 5px rgba(${rgb},0.18)`,
                       display: 'flex', alignItems: 'center',
-                      overflow: 'hidden', position: 'relative', flexShrink: 0,
+                      overflow: 'hidden', position: 'relative',
+                      flexShrink: 0,
+                      padding: `${padV}px 24px`,
+                      gap: 0,
+                      boxSizing: 'border-box',
                     }}
                   >
-                    {/* tiny glow dots at corners */}
-                    <div style={{ position: 'absolute', top: 7, right: 14, width: 5, height: 5, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 7px ${cfg.color}`, opacity: 0.6 }} />
-                    <div style={{ position: 'absolute', bottom: 7, right: 44, width: 3, height: 3, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 5px ${cfg.color}`, opacity: 0.4 }} />
+                    {/* Small glow dot — top-right */}
+                    <div style={{
+                      position: 'absolute', top: 8, right: 16,
+                      width: 5, height: 5, borderRadius: '50%',
+                      background: color, boxShadow: `0 0 8px ${color}`, opacity: 0.65,
+                    }} />
 
-                    {/* ── Image block ── */}
-                    <div style={{ flexShrink: 0, marginLeft: 18, position: 'relative' }}>
+                    {/* ── ICON BOX ── */}
+                    <div style={{ flexShrink: 0, position: 'relative' }}>
                       <div style={{
-                        width: imgCol, height: imgCol,
-                        borderRadius: 12,
+                        width: imgSize, height: imgSize,
+                        borderRadius: 10,
+                        background: '#1a1a2e',
+                        border: `1px solid rgba(${rgb},0.25)`,
                         overflow: 'hidden',
-                        background: '#0F1219',
-                        border: '1.5px solid rgba(255,255,255,0.09)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0,
                       }}>
                         {item.imageUrl
                           ? <img src={item.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
-                          : (
-                            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.2">
-                              <rect x="3" y="3" width="18" height="18" rx="2" />
-                              <circle cx="8.5" cy="8.5" r="1.5" />
-                              <path d="M21 15l-5-5L5 21" />
-                            </svg>
-                          )}
+                          : <PlaceholderIcon size={imgSize} />}
                       </div>
 
-                      {/* Circular icon badge — top-left of image */}
+                      {/* Badge — top-left of icon box */}
                       <div style={{
-                        position: 'absolute', top: -11, left: -11,
-                        width: sz.badgeSize, height: sz.badgeSize, borderRadius: '50%',
-                        background: `radial-gradient(circle at 40% 40%, rgba(${rgb},0.45) 0%, rgba(8,10,18,0.96) 75%)`,
-                        border: `2px solid rgba(${rgb},0.88)`,
-                        boxShadow: `0 0 14px rgba(${rgb},0.55), 0 0 5px rgba(${rgb},0.3), inset 0 0 6px rgba(${rgb},0.15)`,
+                        position: 'absolute', top: -badgeSize * 0.28, left: -badgeSize * 0.28,
+                        width: badgeSize, height: badgeSize, borderRadius: '50%',
+                        background: `radial-gradient(circle at 40% 40%, rgba(${rgb},0.42) 0%, rgba(10,10,20,0.96) 75%)`,
+                        border: `2px solid ${color}`,
+                        boxShadow: `0 0 14px rgba(${rgb},0.6), 0 0 4px rgba(${rgb},0.25)`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         <IconComp style={{
-                          width: sz.badgeSize * 0.50,
-                          height: sz.badgeSize * 0.50,
-                          color: cfg.color,
-                          strokeWidth: 2.2,
-                          filter: `drop-shadow(0 0 3px ${cfg.color})`,
+                          width: badgeSize * 0.52,
+                          height: badgeSize * 0.52,
+                          color,
+                          strokeWidth: 2,
+                          filter: `drop-shadow(0 0 3px ${color})`,
                         }} />
                       </div>
                     </div>
 
-                    {/* ── Rank number ── */}
+                    {/* ── SEPARATOR — icon box → number ── */}
                     <div style={{
-                      width: rankCol, flexShrink: 0,
+                      flexShrink: 0, width: 2, alignSelf: 'stretch',
+                      margin: `0 18px`,
+                      display: 'flex', alignItems: 'center',
+                    }}>
+                      <div style={{
+                        width: 2, height: '80%', borderRadius: 2,
+                        background: `linear-gradient(180deg, transparent, ${color} 20%, ${color} 80%, transparent)`,
+                        boxShadow: `0 0 8px rgba(${rgb},0.65)`,
+                        position: 'relative',
+                      }}>
+                        {/* sparkle centre */}
+                        <div style={{
+                          position: 'absolute', top: '50%', left: '50%',
+                          transform: 'translate(-50%,-50%)',
+                          width: 8, height: 8, borderRadius: '50%',
+                          background: color,
+                          boxShadow: `0 0 12px ${color}`,
+                        }} />
+                      </div>
+                    </div>
+
+                    {/* ── RANK NUMBER ── */}
+                    <div style={{
+                      width: rankColW, flexShrink: 0,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      marginLeft: 12,
                     }}>
                       <span style={{
-                        fontSize: sz.rankFontSize,
+                        fontSize: rankFont,
                         fontWeight: 900,
                         fontStyle: 'italic',
                         lineHeight: 1,
-                        color: cfg.color,
-                        textShadow: `0 0 28px ${cfg.glow}, 0 0 55px rgba(${rgb},0.3)`,
-                        letterSpacing: '-1px',
+                        color,
+                        textShadow: `0 0 30px rgba(${rgb},0.7), 0 0 60px rgba(${rgb},0.3)`,
+                        letterSpacing: '-2px',
                         userSelect: 'none',
                       }}>
                         {item.rank}
                       </span>
                     </div>
 
-                    {/* ── Vertical divider ── */}
-                    <div style={{ flexShrink: 0, marginLeft: 10, alignSelf: 'stretch', display: 'flex', alignItems: 'center' }}>
-                      <div style={{ position: 'relative', width: dividerW, height: '65%' }}>
-                        <div style={{
-                          width: dividerW, height: '100%', borderRadius: 2,
-                          background: `linear-gradient(180deg, transparent 0%, rgba(${rgb},0.9) 30%, rgba(${rgb},1) 50%, rgba(${rgb},0.9) 70%, transparent 100%)`,
-                          boxShadow: `0 0 9px rgba(${rgb},0.7)`,
-                        }} />
-                        {/* centre sparkle */}
-                        <div style={{
-                          position: 'absolute', top: '50%', left: '50%',
-                          transform: 'translate(-50%,-50%)',
-                          width: 9, height: 9, borderRadius: '50%',
-                          background: cfg.color,
-                          boxShadow: `0 0 14px ${cfg.color}, 0 0 22px rgba(${rgb},0.5)`,
-                        }} />
-                      </div>
-                    </div>
-
-                    {/* ── Text content ── */}
+                    {/* ── TEXT CONTENT ── */}
                     <div style={{
-                      flex: 1, marginLeft: 18, marginRight: 22,
-                      display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8,
-                      overflow: 'hidden',
+                      flex: 1, marginLeft: 22,
+                      display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                      gap: 6, overflow: 'hidden',
                     }}>
+                      {/* Title */}
                       <div style={{
-                        fontSize: sz.titleFont,
+                        fontSize: titleFont,
                         fontWeight: 800,
                         textTransform: 'uppercase',
                         color: '#ffffff',
                         lineHeight: 1.1,
-                        letterSpacing: '0.5px',
-                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                        letterSpacing: '0.3px',
                       }}>
                         {item.title || 'YOUR ITEM TITLE HERE'}
                       </div>
-                      {/* Coloured underline bar */}
+
+                      {/* Underline bar — 40px base scaled */}
                       <div style={{
-                        width: sz.barW, height: 3, borderRadius: 2,
-                        background: `linear-gradient(90deg, ${cfg.color} 0%, rgba(${rgb},0.15) 100%)`,
-                        boxShadow: `0 0 8px rgba(${rgb},0.55)`,
+                        width: barW, height: 3, borderRadius: 2,
+                        background: color,
+                        boxShadow: `0 0 7px rgba(${rgb},0.6)`,
                       }} />
+
+                      {/* Description */}
                       <div style={{
-                        fontSize: sz.descFont,
-                        color: 'rgba(215,215,228,0.88)',
-                        lineHeight: 1.45, fontWeight: 400,
+                        fontSize: descFont,
+                        color: '#aaaaaa',
+                        lineHeight: 1.5,
+                        fontWeight: 400,
                       }}>
                         {item.description || 'Your short description or key metric goes here.'}
                       </div>
