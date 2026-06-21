@@ -9,20 +9,28 @@ import { savePost } from '../lib/postService';
 const CANVAS_W = 1080;
 const CANVAS_H = 1620;
 
+// Color for each rank (5 = top of list = lowest rank visually, 1 = winner)
 const rankConfig: Record<number, { color: string; glow: string; Icon: React.ComponentType<any> }> = {
-  5: { color: '#F97316', glow: 'rgba(249,115,22,0.55)', Icon: Sun },
-  4: { color: '#F59E0B', glow: 'rgba(245,158,11,0.55)', Icon: TrendingUp },
-  3: { color: '#EAB308', glow: 'rgba(234,179,8,0.55)',  Icon: Star },
-  2: { color: '#84CC16', glow: 'rgba(132,204,22,0.55)', Icon: Target },
+  5: { color: '#F97316', glow: 'rgba(249,115,22,0.6)',  Icon: Sun },
+  4: { color: '#F59E0B', glow: 'rgba(245,158,11,0.6)',  Icon: TrendingUp },
+  3: { color: '#EAB308', glow: 'rgba(234,179,8,0.6)',   Icon: Star },
+  2: { color: '#84CC16', glow: 'rgba(132,204,22,0.6)',  Icon: Target },
   1: { color: '#22C55E', glow: 'rgba(34,197,94,0.65)',  Icon: Crown },
 };
 
-const cardSizes: Record<number, { cardH: number; imgSize: number; badgeSize: number; rankFont: number; titleFont: number; descFont: number; barW: number }> = {
-  5: { cardH: 222, imgSize: 174, badgeSize: 44, rankFont: 110, titleFont: 34, descFont: 22, barW: 120 },
-  4: { cardH: 222, imgSize: 174, badgeSize: 44, rankFont: 110, titleFont: 34, descFont: 22, barW: 120 },
-  3: { cardH: 238, imgSize: 188, badgeSize: 48, rankFont: 122, titleFont: 36, descFont: 22, barW: 130 },
-  2: { cardH: 258, imgSize: 206, badgeSize: 52, rankFont: 136, titleFont: 38, descFont: 23, barW: 140 },
-  1: { cardH: 290, imgSize: 234, badgeSize: 58, rankFont: 156, titleFont: 42, descFont: 24, barW: 160 },
+// Card dimensions — tuned so all 5 cards + header fit exactly in 1620px
+// Header ≈ 268px | Cards area ≈ 1352px  (5 cards + 4×14px gaps + 12px bottom pad)
+const cardSizes: Record<number, {
+  cardH: number; imgSize: number; badgeSize: number;
+  rankFontSize: number; titleFont: number; descFont: number; barW: number;
+}> = {
+  5: { cardH: 218, imgSize: 170, badgeSize: 42, rankFontSize: 104, titleFont: 30, descFont: 19, barW: 110 },
+  4: { cardH: 218, imgSize: 170, badgeSize: 42, rankFontSize: 104, titleFont: 30, descFont: 19, barW: 110 },
+  3: { cardH: 234, imgSize: 184, badgeSize: 46, rankFontSize: 114, titleFont: 32, descFont: 19, barW: 120 },
+  2: { cardH: 254, imgSize: 202, badgeSize: 50, rankFontSize: 128, titleFont: 35, descFont: 20, barW: 130 },
+  1: { cardH: 286, imgSize: 230, badgeSize: 56, rankFontSize: 148, titleFont: 39, descFont: 21, barW: 148 },
+  // Total cards: 218+218+234+254+286 = 1210 | gaps: 4×14=56 | bottom: 12 → 1278px
+  // 268 header + 1278 = 1546px (74px slack — safe even with 2-line category text)
 };
 
 function hexToRgb(hex: string) {
@@ -136,11 +144,12 @@ export function Top5Generator() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-[#0a0a0a] text-white min-h-[calc(100vh-4rem)] p-6 rounded-2xl font-sans">
-      {/* Controls */}
+
+      {/* ── Controls ── */}
       <div className="lg:col-span-5 flex flex-col gap-5 overflow-y-auto max-h-[calc(100vh-6rem)] pr-2">
         <div>
           <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+            <div className="w-3 h-3 rounded-full bg-emerald-500" />
             Top 5 Generator
           </h2>
           <p className="text-neutral-400 text-sm">Create breathtaking Top 5 rankings.</p>
@@ -169,8 +178,14 @@ export function Top5Generator() {
                 <div className="flex gap-3">
                   <div className="flex-shrink-0">
                     <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Photo</label>
-                    <input type="file" accept="image/*" className="hidden" ref={el => fileInputRefs.current[index] = el} onChange={e => handleImageUpload(index, e)} />
-                    <div onClick={() => fileInputRefs.current[index]?.click()} className="w-20 h-20 bg-[#0a0a0a] border border-neutral-800 rounded-lg flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-all overflow-hidden">
+                    <input type="file" accept="image/*" className="hidden"
+                      ref={el => { fileInputRefs.current[index] = el; }}
+                      onChange={e => handleImageUpload(index, e)}
+                    />
+                    <div
+                      onClick={() => fileInputRefs.current[index]?.click()}
+                      className="w-20 h-20 bg-[#0a0a0a] border border-neutral-800 rounded-lg flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-all overflow-hidden"
+                    >
                       {item.imageUrl
                         ? <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
                         : <ImageIcon className="w-6 h-6 text-neutral-600" />}
@@ -179,11 +194,22 @@ export function Top5Generator() {
                   <div className="flex-grow flex flex-col gap-2">
                     <div>
                       <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Title</label>
-                      <input type="text" value={item.title} onChange={e => handleItemChange(index, 'title', e.target.value)} className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-1.5 text-white focus:border-emerald-500 outline-none text-sm" placeholder="YOUR ITEM TITLE HERE" />
+                      <input
+                        type="text" value={item.title}
+                        onChange={e => handleItemChange(index, 'title', e.target.value)}
+                        className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-1.5 text-white focus:border-emerald-500 outline-none text-sm"
+                        placeholder="YOUR ITEM TITLE HERE"
+                      />
                     </div>
                     <div>
                       <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Description</label>
-                      <textarea value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} rows={2} className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-1.5 text-white focus:border-emerald-500 outline-none text-sm resize-none" placeholder="Short description..." />
+                      <textarea
+                        value={item.description}
+                        onChange={e => handleItemChange(index, 'description', e.target.value)}
+                        rows={2}
+                        className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-1.5 text-white focus:border-emerald-500 outline-none text-sm resize-none"
+                        placeholder="Short description..."
+                      />
                     </div>
                   </div>
                 </div>
@@ -192,235 +218,235 @@ export function Top5Generator() {
           })}
         </div>
 
-        {saveError && <div className="p-3 bg-red-900/50 text-red-200 text-sm rounded-lg border border-red-800">{saveError}</div>}
+        {saveError && (
+          <div className="p-3 bg-red-900/50 text-red-200 text-sm rounded-lg border border-red-800">{saveError}</div>
+        )}
 
         <div className="flex flex-col gap-3 pb-8">
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => handleDownload('png')} disabled={isDownloading} className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+            <button onClick={() => handleDownload('png')} disabled={isDownloading}
+              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
               {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} PNG
             </button>
-            <button onClick={() => handleDownload('jpg')} disabled={isDownloading} className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+            <button onClick={() => handleDownload('jpg')} disabled={isDownloading}
+              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
               {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} JPEG
             </button>
           </div>
-          <button onClick={handleSaveToLibrary} disabled={isSaving} className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+          <button onClick={handleSaveToLibrary} disabled={isSaving}
+            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <SaveIcon />}
             {user ? 'Save to Library' : 'Sign in to Save'}
           </button>
         </div>
       </div>
 
-      {/* Preview */}
+      {/* ── Preview ── */}
       <div className="lg:col-span-7 flex justify-center items-start overflow-auto">
         <div
           ref={containerRef}
           className="w-full max-w-[420px] xl:max-w-[460px] aspect-[2/3] relative border border-neutral-800 rounded-xl overflow-hidden shadow-2xl"
         >
-          {/* Scaled canvas */}
+          {/* Scaled 1080×1620 canvas */}
           <div
             ref={previewRef}
-            className="absolute top-0 left-0 origin-top-left"
             style={{
+              position: 'absolute', top: 0, left: 0,
               width: `${CANVAS_W}px`,
               height: `${CANVAS_H}px`,
               transform: `scale(${previewScale})`,
+              transformOrigin: 'top left',
               background: '#07080F',
               fontFamily: 'Inter, system-ui, sans-serif',
+              overflow: 'hidden',
             }}
           >
-            {/* Arc glow at top */}
+            {/* ── Background: arc glow at top ── */}
             <div style={{
-              position: 'absolute', top: '-60px', left: '50%', transform: 'translateX(-50%)',
-              width: '900px', height: '500px',
-              background: 'radial-gradient(ellipse at 50% 0%, rgba(80,60,160,0.45) 0%, rgba(30,20,80,0.2) 50%, transparent 75%)',
+              position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)',
+              width: 1000, height: 560,
+              background: 'radial-gradient(ellipse at 50% 0%, rgba(70,50,160,0.5) 0%, rgba(25,15,70,0.22) 55%, transparent 78%)',
               pointerEvents: 'none',
             }} />
-            {/* Subtle arc border */}
-            <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', pointerEvents: 'none' }} height="300" viewBox="0 0 1080 300" fill="none">
-              <path d="M0 300 Q540 -40 1080 300" stroke="rgba(100,80,200,0.25)" strokeWidth="1.5" fill="none" />
+            <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', pointerEvents: 'none' }} height="280" viewBox="0 0 1080 280" fill="none">
+              <path d="M-20 280 Q540 -30 1100 280" stroke="rgba(100,75,220,0.22)" strokeWidth="1.5" fill="none" />
             </svg>
 
-            {/* Scattered sparkle dots */}
-            {[
-              [120, 380], [960, 420], [55, 680], [1025, 660],
-              [80, 920], [1000, 900], [100, 1180], [980, 1150],
-              [140, 1420], [940, 1400],
-            ].map(([x, y], i) => (
+            {/* ── Scattered sparkle dots ── */}
+            {([
+              [108, 390, true], [974, 430, false],
+              [50,  680, false], [1030, 660, true],
+              [75,  940, true],  [1006, 920, false],
+              [90, 1210, false], [990, 1185, true],
+              [130,1460, true],  [950, 1445, false],
+            ] as [number, number, boolean][]).map(([x, y, warm], i) => (
               <div key={i} style={{
                 position: 'absolute', left: x, top: y,
                 width: 6, height: 6, borderRadius: '50%',
-                background: i % 2 === 0 ? 'rgba(255,200,80,0.7)' : 'rgba(200,220,255,0.5)',
-                boxShadow: i % 2 === 0 ? '0 0 8px rgba(255,200,80,0.9)' : '0 0 6px rgba(200,220,255,0.8)',
+                background: warm ? 'rgba(255,200,80,0.8)' : 'rgba(190,210,255,0.6)',
+                boxShadow: warm ? '0 0 8px 2px rgba(255,200,80,0.7)' : '0 0 7px 1px rgba(190,210,255,0.7)',
                 pointerEvents: 'none',
               }} />
             ))}
 
-            {/* Header */}
-            <div style={{ textAlign: 'center', paddingTop: 64, paddingBottom: 32 }}>
-              {/* TOP 5 */}
+            {/* ── HEADER ── approx 268px total */}
+            <div style={{ textAlign: 'center', paddingTop: 44, paddingBottom: 16 }}>
+              {/* TOP 5 — metallic gradient text */}
               <div style={{
-                fontSize: 148,
+                fontSize: 136,
                 fontWeight: 900,
                 fontStyle: 'italic',
                 lineHeight: 1,
-                letterSpacing: '-4px',
-                background: 'linear-gradient(180deg, #ffffff 0%, #d0d0d0 40%, #a0a0a0 100%)',
+                letterSpacing: '-3px',
+                background: 'linear-gradient(175deg, #ffffff 0%, #d8d8d8 35%, #a8a8a8 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                textShadow: 'none',
-                filter: 'drop-shadow(0 0 30px rgba(255,255,255,0.35)) drop-shadow(0 4px 16px rgba(0,0,0,0.8))',
+                filter: 'drop-shadow(0 0 28px rgba(255,255,255,0.3)) drop-shadow(0 4px 14px rgba(0,0,0,0.9))',
               }}>
                 TOP 5
               </div>
 
-              {/* Category row */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18, marginTop: 20 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', boxShadow: '0 0 8px #fff', display: 'inline-block', flexShrink: 0 }} />
+              {/* Bullet · category · bullet */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 14 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', boxShadow: '0 0 7px #fff', flexShrink: 0 }} />
                 <span style={{
-                  fontSize: 28,
-                  fontWeight: 700,
-                  letterSpacing: '0.22em',
-                  textTransform: 'uppercase',
-                  color: '#e8e8e8',
-                  maxWidth: 700,
-                  textAlign: 'center',
-                  lineHeight: 1.2,
+                  fontSize: 26, fontWeight: 700, letterSpacing: '0.2em',
+                  textTransform: 'uppercase', color: '#e5e5e5',
+                  maxWidth: 720, textAlign: 'center', lineHeight: 1.25,
                 }}>
                   {categorySubtitle || 'YOUR CATEGORY HERE'}
                 </span>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', boxShadow: '0 0 8px #fff', display: 'inline-block', flexShrink: 0 }} />
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', boxShadow: '0 0 7px #fff', flexShrink: 0 }} />
               </div>
 
               {/* Gradient underline */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
                 <div style={{
-                  width: 260,
-                  height: 2,
-                  background: 'linear-gradient(90deg, transparent, #a855f7, #ec4899, #38bdf8, transparent)',
+                  width: 240, height: 2,
+                  background: 'linear-gradient(90deg, transparent, #a855f7 30%, #ec4899 50%, #38bdf8 70%, transparent)',
                   borderRadius: 2,
                 }} />
               </div>
             </div>
 
-            {/* Cards */}
-            <div style={{ padding: '0 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* ── CARDS ── */}
+            <div style={{
+              padding: '4px 52px 12px',
+              display: 'flex', flexDirection: 'column', gap: 14,
+            }}>
               {items.map(item => {
                 const cfg = rankConfig[item.rank];
-                const sz = cardSizes[item.rank];
+                const sz  = cardSizes[item.rank];
                 const rgb = hexToRgb(cfg.color);
                 const IconComp = cfg.Icon;
-
+                // inner horizontal layout widths
+                const imgCol    = sz.imgSize;
+                const rankCol   = Math.round(sz.rankFontSize * 0.78);
+                const dividerW  = 3;
+                // card inner width = CANVAS_W - 52*2 = 976px
+                // content area = 976 - 20(margin-left image) - imgCol - 14 - rankCol - 12 - dividerW - 20(gap after div) = remaining
                 return (
                   <div
                     key={item.rank}
                     style={{
                       height: sz.cardH,
-                      borderRadius: 18,
+                      borderRadius: 16,
                       border: `1.5px solid rgba(${rgb},0.55)`,
-                      background: `linear-gradient(135deg, rgba(${rgb},0.06) 0%, rgba(10,12,20,0.98) 60%)`,
-                      boxShadow: `0 0 18px rgba(${rgb},0.25), 0 0 6px rgba(${rgb},0.15), inset 0 0 20px rgba(${rgb},0.04)`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      overflow: 'hidden',
-                      position: 'relative',
-                      flexShrink: 0,
+                      background: `linear-gradient(130deg, rgba(${rgb},0.07) 0%, #09090F 55%, rgba(${rgb},0.04) 100%)`,
+                      boxShadow: `0 0 20px rgba(${rgb},0.22), 0 0 5px rgba(${rgb},0.12), inset 0 0 18px rgba(${rgb},0.03)`,
+                      display: 'flex', alignItems: 'center',
+                      overflow: 'hidden', position: 'relative', flexShrink: 0,
                     }}
                   >
-                    {/* Corner glow dots */}
-                    <div style={{ position: 'absolute', top: 8, right: 16, width: 5, height: 5, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 8px ${cfg.color}`, opacity: 0.7 }} />
-                    <div style={{ position: 'absolute', bottom: 8, right: 50, width: 3, height: 3, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 6px ${cfg.color}`, opacity: 0.5 }} />
+                    {/* tiny glow dots at corners */}
+                    <div style={{ position: 'absolute', top: 7, right: 14, width: 5, height: 5, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 7px ${cfg.color}`, opacity: 0.6 }} />
+                    <div style={{ position: 'absolute', bottom: 7, right: 44, width: 3, height: 3, borderRadius: '50%', background: cfg.color, boxShadow: `0 0 5px ${cfg.color}`, opacity: 0.4 }} />
 
-                    {/* Image block */}
+                    {/* ── Image block ── */}
                     <div style={{ flexShrink: 0, marginLeft: 18, position: 'relative' }}>
                       <div style={{
-                        width: sz.imgSize,
-                        height: sz.imgSize,
-                        borderRadius: 14,
+                        width: imgCol, height: imgCol,
+                        borderRadius: 12,
                         overflow: 'hidden',
-                        background: '#10131C',
-                        border: '1.5px solid rgba(255,255,255,0.08)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        background: '#0F1219',
+                        border: '1.5px solid rgba(255,255,255,0.09)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         {item.imageUrl
-                          ? <img src={item.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }} />
+                          ? <img src={item.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
                           : (
-                            <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5">
+                            <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1.2">
                               <rect x="3" y="3" width="18" height="18" rx="2" />
                               <circle cx="8.5" cy="8.5" r="1.5" />
                               <path d="M21 15l-5-5L5 21" />
                             </svg>
-                          )
-                        }
+                          )}
                       </div>
-                      {/* Circular icon badge */}
+
+                      {/* Circular icon badge — top-left of image */}
                       <div style={{
-                        position: 'absolute',
-                        top: -10,
-                        left: -10,
-                        width: sz.badgeSize,
-                        height: sz.badgeSize,
-                        borderRadius: '50%',
-                        background: `radial-gradient(circle, rgba(${rgb},0.25) 0%, rgba(10,12,20,0.95) 100%)`,
-                        border: `1.5px solid rgba(${rgb},0.7)`,
-                        boxShadow: `0 0 12px rgba(${rgb},0.5), inset 0 0 8px rgba(${rgb},0.15)`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        position: 'absolute', top: -11, left: -11,
+                        width: sz.badgeSize, height: sz.badgeSize, borderRadius: '50%',
+                        background: `radial-gradient(circle at 40% 40%, rgba(${rgb},0.45) 0%, rgba(8,10,18,0.96) 75%)`,
+                        border: `2px solid rgba(${rgb},0.88)`,
+                        boxShadow: `0 0 14px rgba(${rgb},0.55), 0 0 5px rgba(${rgb},0.3), inset 0 0 6px rgba(${rgb},0.15)`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
-                        <IconComp style={{ width: sz.badgeSize * 0.48, height: sz.badgeSize * 0.48, color: cfg.color, strokeWidth: 2 }} />
+                        <IconComp style={{
+                          width: sz.badgeSize * 0.50,
+                          height: sz.badgeSize * 0.50,
+                          color: cfg.color,
+                          strokeWidth: 2.2,
+                          filter: `drop-shadow(0 0 3px ${cfg.color})`,
+                        }} />
                       </div>
                     </div>
 
-                    {/* Rank number */}
+                    {/* ── Rank number ── */}
                     <div style={{
-                      width: sz.rankFont * 0.82,
-                      flexShrink: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginLeft: 16,
+                      width: rankCol, flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginLeft: 12,
                     }}>
                       <span style={{
-                        fontSize: sz.rankFont,
+                        fontSize: sz.rankFontSize,
                         fontWeight: 900,
                         fontStyle: 'italic',
                         lineHeight: 1,
                         color: cfg.color,
-                        textShadow: `0 0 30px ${cfg.glow}, 0 0 60px rgba(${rgb},0.3)`,
-                        letterSpacing: '-2px',
+                        textShadow: `0 0 28px ${cfg.glow}, 0 0 55px rgba(${rgb},0.3)`,
+                        letterSpacing: '-1px',
                         userSelect: 'none',
                       }}>
                         {item.rank}
                       </span>
                     </div>
 
-                    {/* Vertical divider */}
-                    <div style={{ flexShrink: 0, width: 2, alignSelf: 'stretch', marginTop: 20, marginBottom: 20, marginLeft: 10, position: 'relative' }}>
-                      <div style={{
-                        width: 2,
-                        height: '100%',
-                        background: `linear-gradient(180deg, transparent, rgba(${rgb},0.8) 30%, rgba(${rgb},1) 50%, rgba(${rgb},0.8) 70%, transparent)`,
-                        boxShadow: `0 0 8px rgba(${rgb},0.6)`,
-                        borderRadius: 1,
-                      }} />
-                      {/* Sparkle on divider */}
-                      <div style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background: cfg.color,
-                        boxShadow: `0 0 12px ${cfg.color}, 0 0 20px rgba(${rgb},0.5)`,
-                      }} />
+                    {/* ── Vertical divider ── */}
+                    <div style={{ flexShrink: 0, marginLeft: 10, alignSelf: 'stretch', display: 'flex', alignItems: 'center' }}>
+                      <div style={{ position: 'relative', width: dividerW, height: '65%' }}>
+                        <div style={{
+                          width: dividerW, height: '100%', borderRadius: 2,
+                          background: `linear-gradient(180deg, transparent 0%, rgba(${rgb},0.9) 30%, rgba(${rgb},1) 50%, rgba(${rgb},0.9) 70%, transparent 100%)`,
+                          boxShadow: `0 0 9px rgba(${rgb},0.7)`,
+                        }} />
+                        {/* centre sparkle */}
+                        <div style={{
+                          position: 'absolute', top: '50%', left: '50%',
+                          transform: 'translate(-50%,-50%)',
+                          width: 9, height: 9, borderRadius: '50%',
+                          background: cfg.color,
+                          boxShadow: `0 0 14px ${cfg.color}, 0 0 22px rgba(${rgb},0.5)`,
+                        }} />
+                      </div>
                     </div>
 
-                    {/* Text content */}
-                    <div style={{ flex: 1, paddingLeft: 20, paddingRight: 24, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, overflow: 'hidden' }}>
+                    {/* ── Text content ── */}
+                    <div style={{
+                      flex: 1, marginLeft: 18, marginRight: 22,
+                      display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8,
+                      overflow: 'hidden',
+                    }}>
                       <div style={{
                         fontSize: sz.titleFont,
                         fontWeight: 800,
@@ -428,23 +454,20 @@ export function Top5Generator() {
                         color: '#ffffff',
                         lineHeight: 1.1,
                         letterSpacing: '0.5px',
-                        textShadow: '0 2px 8px rgba(0,0,0,0.7)',
+                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                       }}>
                         {item.title || 'YOUR ITEM TITLE HERE'}
                       </div>
-                      {/* Underline bar */}
+                      {/* Coloured underline bar */}
                       <div style={{
-                        width: sz.barW,
-                        height: 3,
-                        borderRadius: 2,
-                        background: `linear-gradient(90deg, ${cfg.color}, transparent)`,
-                        boxShadow: `0 0 8px rgba(${rgb},0.5)`,
+                        width: sz.barW, height: 3, borderRadius: 2,
+                        background: `linear-gradient(90deg, ${cfg.color} 0%, rgba(${rgb},0.15) 100%)`,
+                        boxShadow: `0 0 8px rgba(${rgb},0.55)`,
                       }} />
                       <div style={{
                         fontSize: sz.descFont,
-                        color: 'rgba(220,220,230,0.85)',
-                        lineHeight: 1.45,
-                        fontWeight: 400,
+                        color: 'rgba(215,215,228,0.88)',
+                        lineHeight: 1.45, fontWeight: 400,
                       }}>
                         {item.description || 'Your short description or key metric goes here.'}
                       </div>
