@@ -303,7 +303,7 @@ export function Top5Generator() {
             <div className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[1080px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full"></div>
 
             {/* Header */}
-            <div className="relative z-10 pt-[70px] pb-4 text-center flex flex-col items-center shrink-0">
+            <div className="relative z-10 pt-[60px] pb-2 text-center flex flex-col items-center shrink-0">
               <h1 className="text-[110px] leading-none font-black italic tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] uppercase" style={{ transform: 'skewX(-5deg)' }}>
                 TOP 5
               </h1>
@@ -314,25 +314,25 @@ export function Top5Generator() {
                 </h2>
                 <div className="w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_8px_white]"></div>
               </div>
-              <div className="w-64 h-0.5 mt-5 relative">
+              <div className="w-64 h-0.5 mt-4 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-fuchsia-500/50 to-transparent"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent mix-blend-screen"></div>
               </div>
             </div>
 
             {/* List */}
-            <div className="relative z-10 flex-grow px-10 flex flex-col justify-center gap-7 pb-10 pt-4">
+            <div className="relative z-10 flex-grow px-10 flex flex-col justify-center gap-6 pb-8 pt-2">
               {items.map((item) => {
                 const config = (rankConfig as any)[item.rank];
                 const IconComp = config.Icon;
                 
                 // Progressive scaling implementation
                 const rankParams = {
-                  5: { img: 'w-[140px] h-[140px]', p: 'p-4 gap-5', rankFont: 'text-[100px]', rankW: 'w-[78px]', title: 'text-[30px]', desc: 'text-[17px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
-                  4: { img: 'w-[140px] h-[140px]', p: 'p-4 gap-5', rankFont: 'text-[100px]', rankW: 'w-[78px]', title: 'text-[30px]', desc: 'text-[17px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
-                  3: { img: 'w-[150px] h-[150px]', p: 'p-4 gap-5', rankFont: 'text-[108px]', rankW: 'w-[82px]', title: 'text-[32px]', desc: 'text-[18px]', badge: 'w-12 h-12', icon: 'w-[22px] h-[22px]', bar: 'w-14' },
-                  2: { img: 'w-[160px] h-[160px]', p: 'p-5 gap-6', rankFont: 'text-[118px]', rankW: 'w-[88px]', title: 'text-[35px]', desc: 'text-[19px]', badge: 'w-[50px] h-[50px]', icon: 'w-6 h-6', bar: 'w-16' },
-                  1: { img: 'w-[170px] h-[170px]', p: 'p-5 gap-6', rankFont: 'text-[125px]', rankW: 'w-[92px]', title: 'text-[38px]', desc: 'text-[20px]', badge: 'w-[52px] h-[52px]', icon: 'w-[26px] h-[26px]', bar: 'w-20' },
+                  5: { img: 'w-[145px] h-[145px]', p: 'p-[18px] gap-5', rankFont: 'text-[102px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[17px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
+                  4: { img: 'w-[145px] h-[145px]', p: 'p-[18px] gap-5', rankFont: 'text-[102px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[17px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
+                  3: { img: 'w-[155px] h-[155px]', p: 'p-[18px] gap-5', rankFont: 'text-[110px]', rankW: 'w-[84px]', title: 'text-[32px]', desc: 'text-[18px]', badge: 'w-12 h-12', icon: 'w-[22px] h-[22px]', bar: 'w-14' },
+                  2: { img: 'w-[165px] h-[165px]', p: 'p-5 gap-6', rankFont: 'text-[120px]', rankW: 'w-[88px]', title: 'text-[35px]', desc: 'text-[19px]', badge: 'w-[50px] h-[50px]', icon: 'w-6 h-6', bar: 'w-16' },
+                  1: { img: 'w-[175px] h-[175px]', p: 'p-5 gap-6', rankFont: 'text-[128px]', rankW: 'w-[92px]', title: 'text-[38px]', desc: 'text-[20px]', badge: 'w-[52px] h-[52px]', icon: 'w-[26px] h-[26px]', bar: 'w-20' },
                 }[item.rank];
 
                 return (
