@@ -77,6 +77,8 @@ export function Top5Generator() {
         quality: 0.95, 
         cacheBust: true, 
         pixelRatio: 2,
+        width: 1080,
+        height: 1620,
         style: {
           transform: 'scale(1)',
           transformOrigin: 'top left'
@@ -115,6 +117,8 @@ export function Top5Generator() {
         quality: 0.95, 
         cacheBust: true, 
         pixelRatio: 2,
+        width: 1080,
+        height: 1620,
         style: {
           transform: 'scale(1)',
           transformOrigin: 'top left'
@@ -145,11 +149,11 @@ export function Top5Generator() {
   };
 
   const rankConfig = {
-    5: { colorStr: '#F97316', bgStr: 'rgba(249, 115, 22, 0.1)', Icon: Sparkles },
-    4: { colorStr: '#F59E0B', bgStr: 'rgba(245, 158, 11, 0.1)', Icon: TrendingUp },
-    3: { colorStr: '#EAB308', bgStr: 'rgba(234, 179, 8, 0.1)', Icon: Star },
-    2: { colorStr: '#A3E635', bgStr: 'rgba(163, 230, 53, 0.1)', Icon: Target },
-    1: { colorStr: '#4ADE80', bgStr: 'rgba(74, 222, 128, 0.15)', Icon: Crown }
+    5: { colorStr: '#F97316', bgStr: 'rgba(249, 115, 22, 0.1)', Icon: RibbonIcon },
+    4: { colorStr: '#F59E0B', bgStr: 'rgba(245, 158, 11, 0.1)', Icon: LaurelIcon },
+    3: { colorStr: '#EAB308', bgStr: 'rgba(234, 179, 8, 0.1)', Icon: MedalIcon },
+    2: { colorStr: '#A3E635', bgStr: 'rgba(163, 230, 53, 0.1)', Icon: TrophyIcon },
+    1: { colorStr: '#4ADE80', bgStr: 'rgba(74, 222, 128, 0.15)', Icon: CrownIcon }
   };
 
   return (
@@ -276,21 +280,21 @@ export function Top5Generator() {
         {/* Responsive wrapper constraining the visual size */}
         <div 
           ref={containerRef}
-          className="w-full max-w-[450px] xl:max-w-[500px] aspect-[9/16] shrink-0 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl relative"
+          className="w-full max-w-[450px] xl:max-w-[500px] aspect-[2/3] shrink-0 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl relative"
         >
           
-          {/* Virtual 1080x1920 Canvas, perfectly scaled using absolute scaling */}
+          {/* Virtual 1080x1620 Canvas, perfectly scaled using absolute scaling */}
           <div 
             ref={previewRef}
             className="absolute top-0 left-0 bg-[#0A0D14] flex flex-col origin-top-left"
             style={{ 
               width: '1080px', 
-              height: '1920px', 
+              height: '1620px', 
               transform: `scale(${previewScale})`,
             }}
           >
             {/* Background effects */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1920px] h-[1920px] opacity-20 pointer-events-none">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1620px] h-[1620px] opacity-20 pointer-events-none">
               <div className="absolute inset-0 border border-white/20 rounded-full scale-100"></div>
               <div className="absolute inset-0 border border-white/10 rounded-full scale-[0.85]"></div>
               <div className="absolute inset-0 border border-white/5 rounded-full scale-[0.7]"></div>
@@ -299,7 +303,7 @@ export function Top5Generator() {
             <div className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[1080px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full"></div>
 
             {/* Header */}
-            <div className="relative z-10 pt-[100px] pb-6 text-center flex flex-col items-center shrink-0">
+            <div className="relative z-10 pt-[90px] pb-6 text-center flex flex-col items-center shrink-0">
               <h1 className="text-[140px] leading-none font-black italic tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] uppercase" style={{ transform: 'skewX(-5deg)' }}>
                 TOP 5
               </h1>
@@ -396,16 +400,6 @@ export function Top5Generator() {
                         <p className={`text-white/80 ${rankParams.desc} leading-snug font-medium pr-8`}>
                           {item.description || 'Your short description or key metric goes here. Keep it simple and easy to understand.'}
                         </p>
-                        
-                        {/* Decorative dots in the background of the card */}
-                        {item.rank === 1 && (
-                          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-32 h-32 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #4ADE80 2px, transparent 2px)', backgroundSize: '16px 16px' }}></div>
-                        )}
-                        {item.rank === 2 && (
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20 text-[#A3E635]">
-                             <Target className="w-24 h-24" />
-                          </div>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -416,6 +410,47 @@ export function Top5Generator() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Helper SVG Icons
+function CrownIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M4 21h16v-2H4v2Zm1-4h14l1.5-10-4.5 4-4-6-4 6-4.5-4L5 17Z"/>
+    </svg>
+  );
+}
+
+function TrophyIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 3h-2V2H7v1H5c-1.1 0-2 .9-2 2v2c0 2.22 1.48 4.12 3.5 4.82A5.02 5.02 0 0 0 11 15.93V19H7v2h10v-2h-4v-3.07a5.02 5.02 0 0 0 4.5-4.11C19.52 9.12 21 7.22 21 5V5c0-1.1-.9-2-2-2ZM5 7V5h2v4.82C5.84 9.4 5 8.3 5 7Zm14 0c0 1.3-.84 2.4-2 2.82V5h2v2Z"/>
+    </svg>
+  );
+}
+
+function MedalIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 11c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5Zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3Z M5 2l3 6H4l-2 3-2-3h3L2 2h3Zm14 0l-3 6h4l2 3 2-3h-3l3-6h-3Z"/>
+    </svg>
+  );
+}
+
+function LaurelIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M16.5 4C14.5 4 12.5 5.5 12 7.5C11.5 5.5 9.5 4 7.5 4C5 4 3 6 3 8.5C3 13 12 20 12 20C12 20 21 13 21 8.5C21 6 19 4 16.5 4Z"/>
+    </svg>
+  );
+}
+
+function RibbonIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M4 4h16v6l-8 4-8-4V4Z M2 14v4l6 2v-4 L2 14Z M22 14v4l-6 2v-4 l6-2Z" />
+    </svg>
   );
 }
 
