@@ -24,8 +24,23 @@ export function Top5Generator() {
 
   const [items, setItems] = useState(initialItems);
   
+  const containerRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const [previewScale, setPreviewScale] = useState(0.5);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const ro = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          setPreviewScale(entry.contentRect.width / 1080);
+        }
+      });
+      ro.observe(containerRef.current);
+      return () => ro.disconnect();
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -58,7 +73,15 @@ export function Top5Generator() {
       setIsDownloading(true);
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const options = { quality: 0.95, cacheBust: true, pixelRatio: 2 };
+      const options = { 
+        quality: 0.95, 
+        cacheBust: true, 
+        pixelRatio: 2,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        }
+      };
       const dataUrl = format === 'jpg' 
         ? await toJpeg(previewRef.current, options)
         : await toPng(previewRef.current, options);
@@ -88,8 +111,16 @@ export function Top5Generator() {
     setIsSaving(true);
     setSaveError(null);
     try {
-      if (!previewRef.current) throw new Error('Preview not available');
-      const imageData = await toPng(previewRef.current);
+      const options = { 
+        quality: 0.95, 
+        cacheBust: true, 
+        pixelRatio: 2,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left'
+        }
+      };
+      const imageData = await toPng(previewRef.current, options);
 
       const newPost: SavedPost = {
         type: 'top5',
@@ -241,34 +272,21 @@ export function Top5Generator() {
         </div>
       </div>
 
-      {/* Right Panel: Preview */}
       <div className="lg:col-span-7 flex justify-center items-center overflow-auto min-h-[500px]">
         {/* Responsive wrapper constraining the visual size */}
-        <div className="w-[500px] h-[750px] md:w-[540px] md:h-[810px] xl:w-[600px] xl:h-[900px] shrink-0 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl relative">
+        <div 
+          ref={containerRef}
+          className="w-full max-w-[540px] xl:max-w-[600px] aspect-[1080/1620] shrink-0 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl relative"
+        >
           
           {/* Virtual 1080x1620 Canvas, perfectly scaled using absolute scaling */}
           <div 
+            ref={previewRef}
             className="absolute top-0 left-0 bg-[#0A0D14] flex flex-col origin-top-left"
             style={{ 
               width: '1080px', 
               height: '1620px', 
-              // The CSS transform uses 100% of parent width / 1080px to perfectly fit
-              transform: 'scale(calc(var(--parent-w) / 1080))',
-            }}
-            ref={(node) => {
-              // Custom logic to dynamically set parent width var to calculate scale correctly
-              if (node && node.parentElement) {
-                node.style.setProperty('--parent-w', `${node.parentElement.clientWidth}px`);
-                // Use a ResizeObserver to keep it responsive
-                const ro = new ResizeObserver((entries) => {
-                  for (let entry of entries) {
-                    node.style.setProperty('--parent-w', `${entry.contentRect.width}px`);
-                  }
-                });
-                ro.observe(node.parentElement);
-                // Important to pass to previewRef for html-to-image
-                (previewRef as any).current = node;
-              }
+              transform: `scale(${previewScale})`,
             }}
           >
             {/* Background effects */}
