@@ -211,15 +211,25 @@ export function Top5Generator() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3 mb-8">
-          <button
-            onClick={() => handleDownload('png')}
-            disabled={isDownloading}
-            className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-          >
-            {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Download PNG
-          </button>
+        <div className="flex flex-col gap-3 mb-8">
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleDownload('png')}
+              disabled={isDownloading}
+              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              PNG
+            </button>
+            <button
+              onClick={() => handleDownload('jpg')}
+              disabled={isDownloading}
+              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              JPEG
+            </button>
+          </div>
           <button
             onClick={handleSaveToLibrary}
             disabled={isSaving}
@@ -232,45 +242,68 @@ export function Top5Generator() {
       </div>
 
       {/* Right Panel: Preview */}
-      <div className="lg:col-span-7 flex justify-center items-start overflow-hidden">
-        <div className="w-full max-w-[500px] xl:max-w-[600px] scale-[0.8] origin-top translate-y-[-5%] sm:translate-y-0 sm:scale-100 transition-transform">
-          {/* Editor wrapper with specific aspect ratio / size for high-res output */}
+      <div className="lg:col-span-7 flex justify-center items-center overflow-auto min-h-[500px]">
+        {/* Responsive wrapper constraining the visual size */}
+        <div className="w-[500px] h-[750px] md:w-[540px] md:h-[810px] xl:w-[600px] xl:h-[900px] shrink-0 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl relative">
+          
+          {/* Virtual 1080x1620 Canvas, perfectly scaled using absolute scaling */}
           <div 
-            ref={previewRef}
-            className="w-[800px] h-[1200px] bg-[#0A0D14] relative overflow-hidden flex flex-col transform origin-top-left scale-[0.6] xl:scale-[0.75] shadow-2xl ring-1 ring-white/10"
+            className="absolute top-0 left-0 bg-[#0A0D14] flex flex-col origin-top-left"
+            style={{ 
+              width: '1080px', 
+              height: '1620px', 
+              // The CSS transform uses 100% of parent width / 1080px to perfectly fit
+              transform: 'scale(calc(var(--parent-w) / 1080))',
+            }}
+            ref={(node) => {
+              // Custom logic to dynamically set parent width var to calculate scale correctly
+              if (node && node.parentElement) {
+                node.style.setProperty('--parent-w', `${node.parentElement.clientWidth}px`);
+                // Use a ResizeObserver to keep it responsive
+                const ro = new ResizeObserver((entries) => {
+                  for (let entry of entries) {
+                    node.style.setProperty('--parent-w', `${entry.contentRect.width}px`);
+                  }
+                });
+                ro.observe(node.parentElement);
+                // Important to pass to previewRef for html-to-image
+                (previewRef as any).current = node;
+              }
+            }}
           >
             {/* Background effects */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[1200px] opacity-20 pointer-events-none">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1620px] h-[1620px] opacity-20 pointer-events-none">
               <div className="absolute inset-0 border border-white/20 rounded-full scale-100"></div>
               <div className="absolute inset-0 border border-white/10 rounded-full scale-[0.85]"></div>
               <div className="absolute inset-0 border border-white/5 rounded-full scale-[0.7]"></div>
             </div>
             
-            <div className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full"></div>
+            <div className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[1080px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full"></div>
 
             {/* Header */}
-            <div className="relative z-10 pt-16 pb-8 text-center flex flex-col items-center">
-              <h1 className="text-[120px] leading-none font-black italic tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] uppercase" style={{ transform: 'skewX(-5deg)' }}>
+            <div className="relative z-10 pt-20 pb-10 text-center flex flex-col items-center">
+              <h1 className="text-[140px] leading-none font-black italic tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] uppercase" style={{ transform: 'skewX(-5deg)' }}>
                 TOP 5
               </h1>
               <div className="flex items-center justify-center gap-6 mt-4">
-                <div className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_white]"></div>
-                <h2 className="text-[18px] tracking-[0.4em] uppercase font-medium text-neutral-300">
+                <div className="w-2 h-2 bg-white rounded-full shadow-[0_0_8px_white]"></div>
+                <h2 className="text-[20px] tracking-[0.4em] uppercase font-medium text-neutral-300">
                   {categorySubtitle || 'YOUR CATEGORY HERE'}
                 </h2>
-                <div className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_white]"></div>
+                <div className="w-2 h-2 bg-white rounded-full shadow-[0_0_8px_white]"></div>
               </div>
-              <div className="w-48 h-0.5 mt-3 relative">
+              <div className="w-56 h-0.5 mt-4 relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-fuchsia-500/50 to-transparent"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent mix-blend-screen"></div>
               </div>
             </div>
 
             {/* List */}
-            <div className="relative z-10 flex-grow px-12 flex flex-col gap-6 pb-12 justify-center">
+            <div className="relative z-10 flex-grow px-12 flex flex-col gap-6 pb-16 justify-center">
               {items.map((item) => {
                 const config = (rankConfig as any)[item.rank];
                 const IconComp = config.Icon;
+                const isTop1 = item.rank === 1;
                 
                 return (
                   <div 
@@ -281,15 +314,14 @@ export function Top5Generator() {
                       boxShadow: `0 0 20px ${config.bgStr}, inset 0 0 10px ${config.bgStr}`
                     }}
                   >
-                    {/* Glow effect on the left edge if it's rank 1? Or subtle overall */}
                     {item.rank === 1 && (
                       <div className="absolute inset-0 rounded-2xl shadow-[0_0_40px_rgba(74,222,128,0.2)] pointer-events-none"></div>
                     )}
 
-                    <div className="flex w-full items-stretch p-4 gap-6 relative z-10">
+                    <div className={`flex w-full items-stretch relative z-10 ${isTop1 ? 'p-6 gap-8' : 'p-4 gap-6'}`}>
                       
                       {/* Left: Image container */}
-                      <div className="w-[140px] h-[140px] flex-shrink-0 relative rounded-xl overflow-hidden border border-white/10 bg-[#161a22] shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                      <div className={`${isTop1 ? 'w-[180px] h-[180px]' : 'w-[140px] h-[140px]'} flex-shrink-0 relative rounded-xl overflow-hidden border border-white/10 bg-[#161a22] shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
                         {item.imageUrl ? (
                           <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -300,22 +332,22 @@ export function Top5Generator() {
                         
                         {/* Rank Badge overlapping top-left */}
                         <div 
-                          className="absolute -top-1 -left-1 w-10 h-10 rounded-full flex items-center justify-center border-2 border-[#0A0D14]"
+                          className={`absolute -top-1 -left-1 rounded-full flex items-center justify-center border-2 border-[#0A0D14] ${isTop1 ? 'w-12 h-12' : 'w-10 h-10'}`}
                           style={{ 
                             backgroundColor: config.colorStr,
                             boxShadow: `0 0 10px ${config.colorStr}`
                           }}
                         >
-                          <IconComp className="w-5 h-5 text-[#0A0D14] fill-transparent stroke-[2.5]" />
+                          <IconComp className={`${isTop1 ? 'w-6 h-6' : 'w-5 h-5'} text-[#0A0D14] fill-transparent stroke-[2.5]`} />
                         </div>
                       </div>
 
                       {/* Rank Number */}
                       <div 
-                        className="w-[80px] flex-shrink-0 flex items-center justify-center"
+                        className={`${isTop1 ? 'w-[100px]' : 'w-[80px]'} flex-shrink-0 flex items-center justify-center`}
                       >
                         <span 
-                          className="text-[100px] leading-none font-bold uppercase drop-shadow-md pb-4"
+                          className={`${isTop1 ? 'text-[140px]' : 'text-[100px]'} leading-none font-bold uppercase drop-shadow-md pb-4`}
                           style={{ 
                             color: config.colorStr, 
                             textShadow: `0 0 25px ${config.colorStr}80`,
@@ -327,13 +359,13 @@ export function Top5Generator() {
                       </div>
 
                       {/* Right: Content */}
-                      <div className="flex-grow flex flex-col justify-center gap-2 pr-4 relative">
-                        <h3 className="text-[32px] leading-tight font-bold uppercase tracking-wide text-white drop-shadow-sm font-sans" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                      <div className={`flex-grow flex flex-col justify-center gap-2 relative ${isTop1 ? 'pr-6' : 'pr-4'}`}>
+                        <h3 className={`${isTop1 ? 'text-[42px]' : 'text-[32px]'} leading-tight font-bold uppercase tracking-wide text-white drop-shadow-sm font-sans`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                           {item.title || 'YOUR ITEM TITLE HERE'}
                         </h3>
                         
                         <div 
-                          className="w-12 h-1.5 rounded-full"
+                          className={`h-1.5 rounded-full ${isTop1 ? 'w-16' : 'w-12'}`}
                           style={{ backgroundColor: config.colorStr, boxShadow: `0 0 8px ${config.colorStr}80` }}
                         ></div>
                         
