@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Download, Loader2, Sparkles, TrendingUp, Star, Target, Crown, Image as ImageIcon } from 'lucide-react';
+import { Upload, Download, Loader2, Sparkles, TrendingUp, Star, Target, Crown, Image as ImageIcon, Trophy, MedalIcon, Award, RibbonIcon } from 'lucide-react';
 import { toPng, toJpeg } from 'html-to-image';
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -149,10 +149,10 @@ export function Top5Generator() {
   };
 
   const rankConfig = {
-    5: { colorStr: '#F97316', bgStr: 'rgba(249, 115, 22, 0.1)', Icon: Sparkles },
-    4: { colorStr: '#F59E0B', bgStr: 'rgba(245, 158, 11, 0.1)', Icon: TrendingUp },
-    3: { colorStr: '#EAB308', bgStr: 'rgba(234, 179, 8, 0.1)', Icon: Star },
-    2: { colorStr: '#A3E635', bgStr: 'rgba(163, 230, 53, 0.1)', Icon: Target },
+    5: { colorStr: '#F97316', bgStr: 'rgba(249, 115, 22, 0.1)', Icon: RibbonIcon },
+    4: { colorStr: '#F59E0B', bgStr: 'rgba(245, 158, 11, 0.1)', Icon: Award },
+    3: { colorStr: '#EAB308', bgStr: 'rgba(234, 179, 8, 0.1)', Icon: MedalIcon },
+    2: { colorStr: '#A3E635', bgStr: 'rgba(163, 230, 53, 0.1)', Icon: Trophy },
     1: { colorStr: '#4ADE80', bgStr: 'rgba(74, 222, 128, 0.15)', Icon: Crown }
   };
 
@@ -170,14 +170,14 @@ export function Top5Generator() {
 
         <div className="bg-[#141414] p-5 rounded-xl border border-neutral-800">
           <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Category Subtitle (Mandatory)</label>
-          <input
-            type="text"
-            value={categorySubtitle}
-            onChange={(e) => setCategorySubtitle(e.target.value)}
-            className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
-            placeholder="YOUR CATEGORY HERE"
-            required
-          />
+            <textarea
+              value={categorySubtitle}
+              onChange={(e) => setCategorySubtitle(e.target.value)}
+              rows={3}
+              className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all resize-none"
+              placeholder="YOUR CATEGORY HERE"
+              required
+            />
         </div>
 
         <div className="space-y-4">
@@ -309,9 +309,23 @@ export function Top5Generator() {
               </h1>
               <div className="flex items-center justify-center gap-6 mt-8">
                 <div className="w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_8px_white]"></div>
-                <h2 className="text-[32px] tracking-[0.35em] uppercase font-bold text-neutral-200">
-                  {categorySubtitle || 'YOUR CATEGORY HERE'}
-                </h2>
+                                  <h2
+                    className="
+                      text-[26px]
+                      tracking-[0.15em]
+                      uppercase
+                      font-bold
+                      text-neutral-200
+                      text-center
+                      whitespace-pre-line
+                      break-words
+                      leading-tight
+                      max-w-[750px]
+                      mx-auto
+                    "
+                  >
+                    {categorySubtitle || 'YOUR CATEGORY HERE'}
+                  </h2>
                 <div className="w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_8px_white]"></div>
               </div>
               <div className="w-64 h-0.5 mt-4 relative">
@@ -328,11 +342,11 @@ export function Top5Generator() {
 
                 // Progressive scaling implementation
                 const rankParams = {
-                  5: { img: 'w-[145px] h-[145px]', p: 'p-[18px] gap-5', rankFont: 'text-[102px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[17px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
-                  4: { img: 'w-[145px] h-[145px]', p: 'p-[18px] gap-5', rankFont: 'text-[102px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[17px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
-                  3: { img: 'w-[155px] h-[155px]', p: 'p-[18px] gap-5', rankFont: 'text-[110px]', rankW: 'w-[84px]', title: 'text-[32px]', desc: 'text-[18px]', badge: 'w-12 h-12', icon: 'w-[22px] h-[22px]', bar: 'w-14' },
-                  2: { img: 'w-[165px] h-[165px]', p: 'p-5 gap-6', rankFont: 'text-[120px]', rankW: 'w-[88px]', title: 'text-[35px]', desc: 'text-[19px]', badge: 'w-[50px] h-[50px]', icon: 'w-6 h-6', bar: 'w-16' },
-                  1: { img: 'w-[175px] h-[175px]', p: 'p-5 gap-6', rankFont: 'text-[128px]', rankW: 'w-[92px]', title: 'text-[38px]', desc: 'text-[20px]', badge: 'w-[52px] h-[52px]', icon: 'w-[26px] h-[26px]', bar: 'w-20' },
+                  5: { img: 'w-[145px] h-[145px]', p: 'p-[18px] gap-5', rankFont: 'text-[102px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[20px]', badge: 'w-11 h-11', icon: 'w-[30px] h-[30px]', bar: 'w-12' },
+                  4: { img: 'w-[145px] h-[145px]', p: 'p-[18px] gap-5', rankFont: 'text-[102px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[20px]', badge: 'w-11 h-11', icon: 'w-[30px] h-[30px]', bar: 'w-12' },
+                  3: { img: 'w-[155px] h-[155px]', p: 'p-[18px] gap-5', rankFont: 'text-[110px]', rankW: 'w-[84px]', title: 'text-[32px]', desc: 'text-[20px]', badge: 'w-12 h-12', icon: 'w-[30px] h-[30px]', bar: 'w-14' },
+                  2: { img: 'w-[165px] h-[165px]', p: 'p-5 gap-6', rankFont: 'text-[120px]', rankW: 'w-[88px]', title: 'text-[35px]', desc: 'text-[21px]', badge: 'w-[50px] h-[50px]', icon: 'w-[30px] h-[30px]', bar: 'w-16' },
+                  1: { img: 'w-[175px] h-[175px]', p: 'p-5 gap-6', rankFont: 'text-[128px]', rankW: 'w-[92px]', title: 'text-[38px]', desc: 'text-[21px]', badge: 'w-[52px] h-[52px]', icon: 'w-[26px] h-[26px]', bar: 'w-20' },
                 }[item.rank];
 
                 return (
