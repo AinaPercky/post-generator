@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, Loader as Loader2, Image as ImageIcon, Sun, TrendingUp, Star, Target, Crown } from 'lucide-react';
+// import { Download, Loader as Loader2, Image as ImageIcon, Sun, TrendingUp, Star, Target, Crown } from 'lucide-react';
+import { Download, Loader as Loader2, Image as ImageIcon, Ribbon, Award, Medal, Trophy, Crown } from 'lucide-react';
 import { toPng, toJpeg } from 'html-to-image';
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -18,11 +19,13 @@ const RANK_COLORS: Record<number, string> = {
   1: '#39FF14',
 };
 
+
+
 const RANK_ICONS: Record<number, React.ComponentType<any>> = {
-  5: Sun,
-  4: TrendingUp,
-  3: Star,
-  2: Target,
+  5: Ribbon,
+  4: Award,
+  3: Medal,
+  2: Trophy,
   1: Crown,
 };
 
@@ -302,7 +305,7 @@ export function Top5Generator() {
 
               {/* "TOP 5" — metallic gradient, italic bold */}
               <div style={{
-                fontSize: 165,
+                fontSize: 100,
                 fontWeight: 900,
                 fontStyle: 'italic',
                 lineHeight: 1,
@@ -318,15 +321,15 @@ export function Top5Generator() {
               {/* Subtitle "• CATEGORY •" */}
               <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18,
-                marginTop: 16,
+                marginTop: 30,
               }}>
                 <span style={{ fontSize: 16, color: '#888' }}>•</span>
                 <span style={{
-                  fontSize: 26, fontWeight: 700,
-                  letterSpacing: '13px',
-                  textTransform: 'uppercase',
+                  fontSize: 36, fontWeight: 900,
+                  letterSpacing: '5px',
+                  textTransform: 'capitalize',
                   color: '#aaaaaa',
-                  maxWidth: 760, textAlign: 'center', lineHeight: 1.3,
+                  maxWidth: 860, textAlign: 'center', lineHeight: 1.3,
                 }}>
                   {categorySubtitle || 'YOUR CATEGORY HERE'}
                 </span>
@@ -345,7 +348,7 @@ export function Top5Generator() {
             {/* ══════════════ CARD LIST ══════════════ */}
             {/* Container padding: 20px sides; gap 18px; bottom 20px */}
             <div style={{
-              padding: '10px 20px 20px',
+              padding: '30px 20px 20px',
               display: 'flex', flexDirection: 'column', gap: 18,
             }}>
               {items.map(item => {
@@ -353,17 +356,25 @@ export function Top5Generator() {
                 const rgb     = hexToRgb(color);
                 const rowH    = ROW_H[item.rank];
                 const IconComp = RANK_ICONS[item.rank];
+                const isTop4 = item.rank >= 2 && item.rank <= 5;
+               
 
                 // Scale factors derived from card height (222px = baseline)
                 const s = rowH / 222;
                 const imgSize    = Math.round(176 * s);      // icon box side
-                const badgeSize  = Math.round(40 * s);       // badge circle
+                const badgeSize  = Math.round(65 * s);       // badge circle
                 const rankFont   = Math.round(116 * s);      // rank number font
                 const rankColW   = Math.round(148 * s);      // rank number column width
                 const titleFont  = Math.round(34 * s);       // item title
                 const descFont   = Math.round(22 * s);       // description
                 const barW       = Math.round(76 * s);       // underline bar width
                 const padV       = Math.round(20 * s);       // card vertical padding
+                const padH= 24;
+                const isRank1 = item.rank === 1;
+                const rankNumberSize = isRank1 ? 140 : rankColW;
+                const rankPadding=isRank1 ? 45 : padH;
+                const marginLeft=isRank1 ? 5 : 22;
+                const persoTitleFont=isRank1 ? 36 : titleFont;
 
                 return (
                   <div
@@ -377,9 +388,11 @@ export function Top5Generator() {
                       display: 'flex', alignItems: 'center',
                       overflow: 'hidden', position: 'relative',
                       flexShrink: 0,
-                      padding: `${padV}px 24px`,
+                      padding: `${padV}px ${rankPadding}px`,
                       gap: 0,
                       boxSizing: 'border-box',
+                      margin: isTop4 ? '0px 40px' : '0px 15px',
+
                     }}
                   >
                     {/* Small glow dot — top-right */}
@@ -409,14 +422,14 @@ export function Top5Generator() {
                       <div style={{
                         position: 'absolute', top: -badgeSize * 0.28, left: -badgeSize * 0.28,
                         width: badgeSize, height: badgeSize, borderRadius: '50%',
-                        background: `radial-gradient(circle at 40% 40%, rgba(${rgb},0.42) 0%, rgba(10,10,20,0.96) 75%)`,
+                        background: `radial-gradient(circle at 40% 40%, rgba(${rgb},0.5) 0%, rgba(10,10,20,0.65) 75%)`,
                         border: `2px solid ${color}`,
                         boxShadow: `0 0 14px rgba(${rgb},0.6), 0 0 4px rgba(${rgb},0.25)`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         <IconComp style={{
-                          width: badgeSize * 0.52,
-                          height: badgeSize * 0.52,
+                          width: badgeSize * 0.75,
+                          height: badgeSize * 0.75,
                           color,
                           strokeWidth: 2,
                           filter: `drop-shadow(0 0 3px ${color})`,
@@ -424,7 +437,8 @@ export function Top5Generator() {
                       </div>
                     </div>
 
-                    {/* ── SEPARATOR — icon box → number ── */}
+                  {/* ── SEPARATOR — avant le nombre pour rangs 2-5, après pour rang 1 ── */}
+                  {!isRank1 && (
                     <div style={{
                       flexShrink: 0, width: 2, alignSelf: 'stretch',
                       margin: `0 18px`,
@@ -436,7 +450,6 @@ export function Top5Generator() {
                         boxShadow: `0 0 8px rgba(${rgb},0.65)`,
                         position: 'relative',
                       }}>
-                        {/* sparkle centre */}
                         <div style={{
                           position: 'absolute', top: '50%', left: '50%',
                           transform: 'translate(-50%,-50%)',
@@ -446,35 +459,60 @@ export function Top5Generator() {
                         }} />
                       </div>
                     </div>
+                  )}
 
-                    {/* ── RANK NUMBER ── */}
-                    <div style={{
-                      width: rankColW, flexShrink: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  {/* ── RANK NUMBER ── */}
+                  <div style={{
+                    width: rankNumberSize, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <span style={{
+                      fontSize: rankColW,
+                      fontWeight: 900,
+                      fontStyle: 'italic',
+                      lineHeight: 1,
+                      color,
+                      textShadow: `0 0 30px rgba(${rgb},0.7), 0 0 60px rgba(${rgb},0.3)`,
+                      letterSpacing: '-2px',
+                      userSelect: 'none',
                     }}>
-                      <span style={{
-                        fontSize: rankFont,
-                        fontWeight: 900,
-                        fontStyle: 'italic',
-                        lineHeight: 1,
-                        color,
-                        textShadow: `0 0 30px rgba(${rgb},0.7), 0 0 60px rgba(${rgb},0.3)`,
-                        letterSpacing: '-2px',
-                        userSelect: 'none',
+                      {item.rank}
+                    </span>
+                  </div>
+
+                  {/* ── SEPARATOR — après le nombre pour rang 1 seulement ── */}
+                  {isRank1 && (
+                    <div style={{
+                      flexShrink: 0, width: 2, alignSelf: 'stretch',
+                      margin: `0 13px`,
+                      display: 'flex', alignItems: 'center',
+                    }}>
+                      <div style={{
+                        width: 2, height: '80%', borderRadius: 2,
+                        background: `linear-gradient(180deg, transparent, ${color} 20%, ${color} 80%, transparent)`,
+                        boxShadow: `0 0 8px rgba(${rgb},0.65)`,
+                        position: 'relative',
                       }}>
-                        {item.rank}
-                      </span>
+                        <div style={{
+                          position: 'absolute', top: '50%', left: '50%',
+                          transform: 'translate(-50%,-50%)',
+                          width: 8, height: 8, borderRadius: '50%',
+                          background: color,
+                          boxShadow: `0 0 12px ${color}`,
+                        }} />
+                      </div>
                     </div>
+                  )}
 
                     {/* ── TEXT CONTENT ── */}
                     <div style={{
-                      flex: 1, marginLeft: 22,
+                      flex: 1, marginLeft: marginLeft,//modification margin left
                       display: 'flex', flexDirection: 'column', justifyContent: 'center',
                       gap: 6, overflow: 'hidden',
                     }}>
                       {/* Title */}
                       <div style={{
-                        fontSize: titleFont,
+                        fontSize: persoTitleFont,
                         fontWeight: 800,
                         textTransform: 'uppercase',
                         color: '#ffffff',
@@ -505,6 +543,18 @@ export function Top5Generator() {
                 );
               })}
             </div>
+            {/* ── Sol glow — reflet vert sous la carte #1 ── */}
+            <div style={{
+              position: 'absolute',
+              bottom: 0,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '90%',
+              height: 120,
+              background: 'radial-gradient(ellipse at 50% 100%, rgba(57,255,20,0.45) 0%, rgba(57,255,20,0.15) 40%, transparent 70%)',
+              pointerEvents: 'none',
+              zIndex: 10,
+            }} />
           </div>
         </div>
       </div>
