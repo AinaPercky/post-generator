@@ -149,11 +149,11 @@ export function Top5Generator() {
   };
 
   const rankConfig = {
-    5: { colorStr: '#F97316', bgStr: 'rgba(249, 115, 22, 0.1)', Icon: RibbonIcon },
-    4: { colorStr: '#F59E0B', bgStr: 'rgba(245, 158, 11, 0.1)', Icon: LaurelIcon },
-    3: { colorStr: '#EAB308', bgStr: 'rgba(234, 179, 8, 0.1)', Icon: MedalIcon },
-    2: { colorStr: '#A3E635', bgStr: 'rgba(163, 230, 53, 0.1)', Icon: TrophyIcon },
-    1: { colorStr: '#4ADE80', bgStr: 'rgba(74, 222, 128, 0.15)', Icon: CrownIcon }
+    5: { colorStr: '#F97316', bgStr: 'rgba(249, 115, 22, 0.1)', Icon: Sparkles },
+    4: { colorStr: '#F59E0B', bgStr: 'rgba(245, 158, 11, 0.1)', Icon: TrendingUp },
+    3: { colorStr: '#EAB308', bgStr: 'rgba(234, 179, 8, 0.1)', Icon: Star },
+    2: { colorStr: '#A3E635', bgStr: 'rgba(163, 230, 53, 0.1)', Icon: Target },
+    1: { colorStr: '#4ADE80', bgStr: 'rgba(74, 222, 128, 0.15)', Icon: Crown }
   };
 
   return (
@@ -368,7 +368,7 @@ export function Top5Generator() {
                             boxShadow: `0 0 10px ${config.colorStr}`
                           }}
                         >
-                          <IconComp className={`${rankParams.icon} text-[#0A0D14]`} />
+                          <IconComp className={`${rankParams.icon} text-[#0A0D14] fill-transparent stroke-[2.5]`} />
                         </div>
                       </div>
 
@@ -410,47 +410,6 @@ export function Top5Generator() {
         </div>
       </div>
     </div>
-  );
-}
-
-// Helper SVG Icons
-function CrownIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M4 21h16v-2H4v2Zm1-4h14l1.5-10-4.5 4-4-6-4 6-4.5-4L5 17Z"/>
-    </svg>
-  );
-}
-
-function TrophyIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19 3h-2V2H7v1H5c-1.1 0-2 .9-2 2v2c0 2.22 1.48 4.12 3.5 4.82A5.02 5.02 0 0 0 11 15.93V19H7v2h10v-2h-4v-3.07a5.02 5.02 0 0 0 4.5-4.11C19.52 9.12 21 7.22 21 5V5c0-1.1-.9-2-2-2ZM5 7V5h2v4.82C5.84 9.4 5 8.3 5 7Zm14 0c0 1.3-.84 2.4-2 2.82V5h2v2Z"/>
-    </svg>
-  );
-}
-
-function MedalIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 11c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5Zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3Z M5 2l3 6H4l-2 3-2-3h3L2 2h3Zm14 0l-3 6h4l2 3 2-3h-3l3-6h-3Z"/>
-    </svg>
-  );
-}
-
-function LaurelIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M16.5 4C14.5 4 12.5 5.5 12 7.5C11.5 5.5 9.5 4 7.5 4C5 4 3 6 3 8.5C3 13 12 20 12 20C12 20 21 13 21 8.5C21 6 19 4 16.5 4Z"/>
-    </svg>
-  );
-}
-
-function RibbonIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M4 4h16v6l-8 4-8-4V4Z M2 14v4l6 2v-4 L2 14Z M22 14v4l-6 2v-4 l6-2Z" />
-    </svg>
   );
 }
 
