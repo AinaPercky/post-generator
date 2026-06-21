@@ -1,5 +1,4 @@
-// Types de posts supportés
-export type PostType = 'magazine' | 'redpill' | 'misyfatsy';
+export type PostType = 'magazine' | 'redpill' | 'misyfatsy' | 'top5';
 
 // Interface unifiée pour tous les types de posts
 export interface SavedPost {
@@ -45,6 +44,23 @@ export interface RedPillPost extends SavedPost {
 export interface MisyFaTsyPost extends SavedPost {
   type: 'misyfatsy';
   metadata?: {
+    [key: string]: unknown;
+  };
+}
+
+export interface Top5Item {
+  id: string;
+  rank: number;
+  title: string;
+  description: string;
+  imageUrl: string;
+}
+
+export interface Top5Post extends SavedPost {
+  type: 'top5';
+  metadata?: {
+    categorySubtitle: string;
+    items: Top5Item[];
     [key: string]: unknown;
   };
 }
