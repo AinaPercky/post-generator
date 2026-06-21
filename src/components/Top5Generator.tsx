@@ -276,21 +276,21 @@ export function Top5Generator() {
         {/* Responsive wrapper constraining the visual size */}
         <div 
           ref={containerRef}
-          className="w-full max-w-[540px] xl:max-w-[600px] aspect-[1080/1620] shrink-0 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl relative"
+          className="w-full max-w-[450px] xl:max-w-[500px] aspect-[9/16] shrink-0 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl relative"
         >
           
-          {/* Virtual 1080x1620 Canvas, perfectly scaled using absolute scaling */}
+          {/* Virtual 1080x1920 Canvas, perfectly scaled using absolute scaling */}
           <div 
             ref={previewRef}
             className="absolute top-0 left-0 bg-[#0A0D14] flex flex-col origin-top-left"
             style={{ 
               width: '1080px', 
-              height: '1620px', 
+              height: '1920px', 
               transform: `scale(${previewScale})`,
             }}
           >
             {/* Background effects */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1620px] h-[1620px] opacity-20 pointer-events-none">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1920px] h-[1920px] opacity-20 pointer-events-none">
               <div className="absolute inset-0 border border-white/20 rounded-full scale-100"></div>
               <div className="absolute inset-0 border border-white/10 rounded-full scale-[0.85]"></div>
               <div className="absolute inset-0 border border-white/5 rounded-full scale-[0.7]"></div>
@@ -299,7 +299,7 @@ export function Top5Generator() {
             <div className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[1080px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full"></div>
 
             {/* Header */}
-            <div className="relative z-10 pt-20 pb-10 text-center flex flex-col items-center">
+            <div className="relative z-10 pt-[100px] pb-6 text-center flex flex-col items-center shrink-0">
               <h1 className="text-[140px] leading-none font-black italic tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] uppercase" style={{ transform: 'skewX(-5deg)' }}>
                 TOP 5
               </h1>
@@ -317,16 +317,24 @@ export function Top5Generator() {
             </div>
 
             {/* List */}
-            <div className="relative z-10 flex-grow px-12 flex flex-col gap-6 pb-16 justify-center">
+            <div className="relative z-10 flex-grow px-12 flex flex-col justify-start gap-8 pb-16 pt-8">
               {items.map((item) => {
                 const config = (rankConfig as any)[item.rank];
                 const IconComp = config.Icon;
-                const isTop1 = item.rank === 1;
                 
+                // Progressive scaling implementation
+                const rankParams = {
+                  4: { img: 'w-[140px] h-[140px]', p: 'p-4 gap-6', rankFont: 'text-[100px]', rankW: 'w-[80px]', title: 'text-[32px]', desc: 'text-[18px]', badge: 'w-10 h-10', icon: 'w-5 h-5', bar: 'w-12' },
+                  5: { img: 'w-[140px] h-[140px]', p: 'p-4 gap-6', rankFont: 'text-[100px]', rankW: 'w-[80px]', title: 'text-[32px]', desc: 'text-[18px]', badge: 'w-10 h-10', icon: 'w-5 h-5', bar: 'w-12' },
+                  3: { img: 'w-[155px] h-[155px]', p: 'p-5 gap-6', rankFont: 'text-[115px]', rankW: 'w-[85px]', title: 'text-[36px]', desc: 'text-[19px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-14' },
+                  2: { img: 'w-[170px] h-[170px]', p: 'p-5 gap-7', rankFont: 'text-[130px]', rankW: 'w-[90px]', title: 'text-[40px]', desc: 'text-[20px]', badge: 'w-[48px] h-[48px]', icon: 'w-[22px] h-[22px]', bar: 'w-16' },
+                  1: { img: 'w-[190px] h-[190px]', p: 'p-6 gap-8', rankFont: 'text-[150px]', rankW: 'w-[100px]', title: 'text-[46px]', desc: 'text-[22px]', badge: 'w-[54px] h-[54px]', icon: 'w-6 h-6', bar: 'w-20' },
+                }[item.rank];
+
                 return (
                   <div 
                     key={item.rank} 
-                    className="relative flex items-center bg-[#0d1219]/80 backdrop-blur-md rounded-2xl border"
+                    className="relative flex items-center bg-[#0d1219]/90 backdrop-blur-md rounded-2xl border shrink-0"
                     style={{ 
                       borderColor: `rgba(${hexToRgb(config.colorStr)}, 0.4)`,
                       boxShadow: `0 0 20px ${config.bgStr}, inset 0 0 10px ${config.bgStr}`
@@ -336,12 +344,12 @@ export function Top5Generator() {
                       <div className="absolute inset-0 rounded-2xl shadow-[0_0_40px_rgba(74,222,128,0.2)] pointer-events-none"></div>
                     )}
 
-                    <div className={`flex w-full items-stretch relative z-10 ${isTop1 ? 'p-6 gap-8' : 'p-4 gap-6'}`}>
+                    <div className={`flex w-full items-stretch relative z-10 ${rankParams.p}`}>
                       
                       {/* Left: Image container */}
-                      <div className={`${isTop1 ? 'w-[180px] h-[180px]' : 'w-[140px] h-[140px]'} flex-shrink-0 relative rounded-xl overflow-hidden border border-white/10 bg-[#161a22] shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
+                      <div className={`${rankParams.img} flex-shrink-0 relative rounded-xl overflow-hidden border border-white/10 bg-[#161a22] shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
                         {item.imageUrl ? (
-                          <img src={item.imageUrl} alt="" className="w-full h-full object-cover" />
+                          <img src={item.imageUrl} alt="" className="w-full h-full object-cover object-top" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             <ImageIcon className="w-12 h-12 text-white/5" />
@@ -350,22 +358,20 @@ export function Top5Generator() {
                         
                         {/* Rank Badge overlapping top-left */}
                         <div 
-                          className={`absolute -top-1 -left-1 rounded-full flex items-center justify-center border-2 border-[#0A0D14] ${isTop1 ? 'w-12 h-12' : 'w-10 h-10'}`}
+                          className={`absolute -top-1 -left-1 rounded-full flex items-center justify-center border-2 border-[#0A0D14] ${rankParams.badge}`}
                           style={{ 
                             backgroundColor: config.colorStr,
                             boxShadow: `0 0 10px ${config.colorStr}`
                           }}
                         >
-                          <IconComp className={`${isTop1 ? 'w-6 h-6' : 'w-5 h-5'} text-[#0A0D14] fill-transparent stroke-[2.5]`} />
+                          <IconComp className={`${rankParams.icon} text-[#0A0D14] fill-transparent stroke-[2.5]`} />
                         </div>
                       </div>
 
                       {/* Rank Number */}
-                      <div 
-                        className={`${isTop1 ? 'w-[100px]' : 'w-[80px]'} flex-shrink-0 flex items-center justify-center`}
-                      >
+                      <div className={`${rankParams.rankW} flex-shrink-0 flex items-center justify-center`}>
                         <span 
-                          className={`${isTop1 ? 'text-[140px]' : 'text-[100px]'} leading-none font-bold uppercase drop-shadow-md pb-4`}
+                          className={`${rankParams.rankFont} leading-none font-bold uppercase drop-shadow-md pb-4`}
                           style={{ 
                             color: config.colorStr, 
                             textShadow: `0 0 25px ${config.colorStr}80`,
@@ -377,17 +383,17 @@ export function Top5Generator() {
                       </div>
 
                       {/* Right: Content */}
-                      <div className={`flex-grow flex flex-col justify-center gap-2 relative ${isTop1 ? 'pr-6' : 'pr-4'}`}>
-                        <h3 className={`${isTop1 ? 'text-[42px]' : 'text-[32px]'} leading-tight font-bold uppercase tracking-wide text-white drop-shadow-sm font-sans`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                      <div className={`flex-grow flex flex-col justify-center gap-2 relative pr-4`}>
+                        <h3 className={`${rankParams.title} leading-tight font-bold uppercase tracking-wide text-white drop-shadow-sm font-sans`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                           {item.title || 'YOUR ITEM TITLE HERE'}
                         </h3>
                         
                         <div 
-                          className={`h-1.5 rounded-full ${isTop1 ? 'w-16' : 'w-12'}`}
+                          className={`h-1.5 rounded-full ${rankParams.bar}`}
                           style={{ backgroundColor: config.colorStr, boxShadow: `0 0 8px ${config.colorStr}80` }}
                         ></div>
                         
-                        <p className="text-white/70 text-[18px] leading-snug font-medium pr-8">
+                        <p className={`text-white/80 ${rankParams.desc} leading-snug font-medium pr-8`}>
                           {item.description || 'Your short description or key metric goes here. Keep it simple and easy to understand.'}
                         </p>
                         
