@@ -13,7 +13,7 @@ export function Top5Generator() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   const [categorySubtitle, setCategorySubtitle] = useState('YOUR CATEGORY HERE');
-  
+
   const initialItems = [
     { rank: 5, title: 'YOUR ITEM TITLE HERE', description: 'Your short description or key metric goes here. Keep it simple and easy to understand.', imageUrl: null as string | null },
     { rank: 4, title: 'YOUR ITEM TITLE HERE', description: 'Your short description or key metric goes here. Keep it simple and easy to understand.', imageUrl: null as string | null },
@@ -23,7 +23,7 @@ export function Top5Generator() {
   ];
 
   const [items, setItems] = useState(initialItems);
-  
+
   const containerRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -72,10 +72,10 @@ export function Top5Generator() {
     try {
       setIsDownloading(true);
       await new Promise(resolve => setTimeout(resolve, 100));
-      
-      const options = { 
-        quality: 0.95, 
-        cacheBust: true, 
+
+      const options = {
+        quality: 0.95,
+        cacheBust: true,
         pixelRatio: 2,
         width: 1080,
         height: 1620,
@@ -84,10 +84,10 @@ export function Top5Generator() {
           transformOrigin: 'top left'
         }
       };
-      const dataUrl = format === 'jpg' 
+      const dataUrl = format === 'jpg'
         ? await toJpeg(previewRef.current, options)
         : await toPng(previewRef.current, options);
-        
+
       const link = document.createElement('a');
       link.download = `top-5-post-${Date.now()}.${format}`;
       link.href = dataUrl;
@@ -113,9 +113,9 @@ export function Top5Generator() {
     setIsSaving(true);
     setSaveError(null);
     try {
-      const options = { 
-        quality: 0.95, 
-        cacheBust: true, 
+      const options = {
+        quality: 0.95,
+        cacheBust: true,
         pixelRatio: 2,
         width: 1080,
         height: 1620,
@@ -134,7 +134,7 @@ export function Top5Generator() {
         metadata: {
           firebaseUid: user.uid,
           categorySubtitle: categorySubtitle,
-          items: items.map(item => ({...item, imageUrl: ''})) // don't store base64 in metadata if it's too big, or store if needed
+          items: items.map(item => ({ ...item, imageUrl: '' })) // don't store base64 in metadata if it's too big, or store if needed
         },
       };
 
@@ -184,10 +184,10 @@ export function Top5Generator() {
           {items.map((item, index) => (
             <div key={item.rank} className="bg-[#141414] p-5 rounded-xl border border-neutral-800 flex flex-col gap-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <span className="text-lg" style={{ color: (rankConfig as any)[item.rank].colorStr }}>#{item.rank}</span> 
+                <span className="text-lg" style={{ color: (rankConfig as any)[item.rank].colorStr }}>#{item.rank}</span>
                 Item Details
               </h3>
-              
+
               <div className="flex gap-4">
                 {/* Photo Upload */}
                 <div className="flex-shrink-0 w-24">
@@ -199,7 +199,7 @@ export function Top5Generator() {
                     ref={el => fileInputRefs.current[index] = el}
                     onChange={(e) => handleImageUpload(index, e)}
                   />
-                  <div 
+                  <div
                     onClick={() => fileInputRefs.current[index]?.click()}
                     className="w-24 h-24 bg-[#0a0a0a] border border-neutral-800 rounded-lg flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-all overflow-hidden relative"
                   >
@@ -210,7 +210,7 @@ export function Top5Generator() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Text Fields */}
                 <div className="flex-grow flex flex-col gap-2">
                   <div>
@@ -278,18 +278,18 @@ export function Top5Generator() {
 
       <div className="lg:col-span-7 flex justify-center items-center overflow-auto min-h-[500px]">
         {/* Responsive wrapper constraining the visual size */}
-        <div 
+        <div
           ref={containerRef}
           className="w-full max-w-[450px] xl:max-w-[500px] aspect-[2/3] shrink-0 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl relative"
         >
-          
+
           {/* Virtual 1080x1620 Canvas, perfectly scaled using absolute scaling */}
-          <div 
+          <div
             ref={previewRef}
             className="absolute top-0 left-0 bg-[#0A0D14] flex flex-col origin-top-left"
-            style={{ 
-              width: '1080px', 
-              height: '1620px', 
+            style={{
+              width: '1080px',
+              height: '1620px',
               transform: `scale(${previewScale})`,
             }}
           >
@@ -299,17 +299,17 @@ export function Top5Generator() {
               <div className="absolute inset-0 border border-white/10 rounded-full scale-[0.85]"></div>
               <div className="absolute inset-0 border border-white/5 rounded-full scale-[0.7]"></div>
             </div>
-            
+
             <div className="absolute -top-[200px] left-1/2 -translate-x-1/2 w-[1080px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full"></div>
 
             {/* Header */}
-            <div className="relative z-10 pt-[60px] pb-2 text-center flex flex-col items-center shrink-0">
+            <div className="relative z-10 pt-[80px] pb-14 text-center flex flex-col items-center shrink-0">
               <h1 className="text-[110px] leading-none font-black italic tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] uppercase" style={{ transform: 'skewX(-5deg)' }}>
                 TOP 5
               </h1>
               <div className="flex items-center justify-center gap-6 mt-8">
                 <div className="w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_8px_white]"></div>
-                <h2 className="text-[30px] tracking-[0.35em] uppercase font-bold text-neutral-200">
+                <h2 className="text-[32px] tracking-[0.35em] uppercase font-bold text-neutral-200">
                   {categorySubtitle || 'YOUR CATEGORY HERE'}
                 </h2>
                 <div className="w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_8px_white]"></div>
@@ -325,7 +325,7 @@ export function Top5Generator() {
               {items.map((item) => {
                 const config = (rankConfig as any)[item.rank];
                 const IconComp = config.Icon;
-                
+
                 // Progressive scaling implementation
                 const rankParams = {
                   5: { img: 'w-[145px] h-[145px]', p: 'p-[18px] gap-5', rankFont: 'text-[102px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[17px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
@@ -336,17 +336,17 @@ export function Top5Generator() {
                 }[item.rank];
 
                 return (
-                  <div 
-                    key={item.rank} 
+                  <div
+                    key={item.rank}
                     className="relative flex items-center bg-[#0d1219]/90 backdrop-blur-md rounded-2xl border shrink-0 overflow-hidden"
-                    style={{ 
+                    style={{
                       borderColor: `rgba(${hexToRgb(config.colorStr)}, 0.4)`,
                       boxShadow: `0 0 12px ${config.bgStr}, inset 0 0 8px ${config.bgStr}`
                     }}
                   >
 
                     <div className={`flex w-full items-stretch relative z-10 ${rankParams.p}`}>
-                      
+
                       {/* Left: Image container */}
                       <div className={`${rankParams.img} flex-shrink-0 relative rounded-xl overflow-hidden border border-white/10 bg-[#161a22] shadow-[0_0_15px_rgba(0,0,0,0.5)]`}>
                         {item.imageUrl ? (
@@ -356,11 +356,11 @@ export function Top5Generator() {
                             <ImageIcon className="w-12 h-12 text-white/5" />
                           </div>
                         )}
-                        
+
                         {/* Rank Badge overlapping top-left */}
-                        <div 
+                        <div
                           className={`absolute -top-1 -left-1 rounded-full flex items-center justify-center border-2 border-[#0A0D14] ${rankParams.badge}`}
-                          style={{ 
+                          style={{
                             backgroundColor: config.colorStr,
                             boxShadow: `0 0 10px ${config.colorStr}`
                           }}
@@ -371,12 +371,12 @@ export function Top5Generator() {
 
                       {/* Rank Number */}
                       <div className={`${rankParams.rankW} flex-shrink-0 flex items-center justify-center`}>
-                        <span 
+                        <span
                           className={`${rankParams.rankFont} leading-none font-bold uppercase drop-shadow-md pb-4`}
-                          style={{ 
-                            color: config.colorStr, 
+                          style={{
+                            color: config.colorStr,
                             textShadow: `0 0 25px ${config.colorStr}80`,
-                            fontFamily: "'Teko', 'Impact', sans-serif" 
+                            fontFamily: "'Teko', 'Impact', sans-serif"
                           }}
                         >
                           {item.rank}
@@ -388,12 +388,12 @@ export function Top5Generator() {
                         <h3 className={`${rankParams.title} leading-tight font-bold uppercase tracking-wide text-white drop-shadow-sm font-sans`} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                           {item.title || 'YOUR ITEM TITLE HERE'}
                         </h3>
-                        
-                        <div 
+
+                        <div
                           className={`h-1.5 rounded-full ${rankParams.bar}`}
                           style={{ backgroundColor: config.colorStr, boxShadow: `0 0 8px ${config.colorStr}80` }}
                         ></div>
-                        
+
                         <p className={`text-white/80 ${rankParams.desc} leading-snug font-medium pr-8`}>
                           {item.description || 'Your short description or key metric goes here. Keep it simple and easy to understand.'}
                         </p>
@@ -419,7 +419,7 @@ function SaveIcon() {
 
 function hexToRgb(hex: string) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? 
-    `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` 
+  return result ?
+    `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`
     : '255, 255, 255';
 }
