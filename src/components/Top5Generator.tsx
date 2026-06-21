@@ -368,7 +368,7 @@ export function Top5Generator() {
                             boxShadow: `0 0 10px ${config.colorStr}`
                           }}
                         >
-                          <IconComp className={`${rankParams.icon} text-[#0A0D14] fill-transparent stroke-[2.5]`} />
+                          <IconComp className={`${rankParams.icon} text-[#0A0D14]`} />
                         </div>
                       </div>
 
