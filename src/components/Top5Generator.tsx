@@ -328,25 +328,22 @@ export function Top5Generator() {
                 
                 // Progressive scaling implementation
                 const rankParams = {
-                  5: { img: 'w-[145px] h-[145px]', p: 'p-5 gap-5', rankFont: 'text-[100px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[18px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
-                  4: { img: 'w-[145px] h-[145px]', p: 'p-5 gap-5', rankFont: 'text-[100px]', rankW: 'w-[80px]', title: 'text-[30px]', desc: 'text-[18px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
-                  3: { img: 'w-[155px] h-[155px]', p: 'p-5 gap-5', rankFont: 'text-[110px]', rankW: 'w-[85px]', title: 'text-[32px]', desc: 'text-[19px]', badge: 'w-12 h-12', icon: 'w-[22px] h-[22px]', bar: 'w-14' },
-                  2: { img: 'w-[165px] h-[165px]', p: 'p-5 gap-6', rankFont: 'text-[120px]', rankW: 'w-[90px]', title: 'text-[36px]', desc: 'text-[20px]', badge: 'w-[52px] h-[52px]', icon: 'w-6 h-6', bar: 'w-16' },
-                  1: { img: 'w-[180px] h-[180px]', p: 'p-6 gap-7', rankFont: 'text-[135px]', rankW: 'w-[95px]', title: 'text-[40px]', desc: 'text-[22px]', badge: 'w-14 h-14', icon: 'w-7 h-7', bar: 'w-20' },
+                  5: { img: 'w-[140px] h-[140px]', p: 'p-4 gap-5', rankFont: 'text-[100px]', rankW: 'w-[78px]', title: 'text-[30px]', desc: 'text-[17px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
+                  4: { img: 'w-[140px] h-[140px]', p: 'p-4 gap-5', rankFont: 'text-[100px]', rankW: 'w-[78px]', title: 'text-[30px]', desc: 'text-[17px]', badge: 'w-11 h-11', icon: 'w-5 h-5', bar: 'w-12' },
+                  3: { img: 'w-[150px] h-[150px]', p: 'p-4 gap-5', rankFont: 'text-[108px]', rankW: 'w-[82px]', title: 'text-[32px]', desc: 'text-[18px]', badge: 'w-12 h-12', icon: 'w-[22px] h-[22px]', bar: 'w-14' },
+                  2: { img: 'w-[160px] h-[160px]', p: 'p-5 gap-6', rankFont: 'text-[118px]', rankW: 'w-[88px]', title: 'text-[35px]', desc: 'text-[19px]', badge: 'w-[50px] h-[50px]', icon: 'w-6 h-6', bar: 'w-16' },
+                  1: { img: 'w-[170px] h-[170px]', p: 'p-5 gap-6', rankFont: 'text-[125px]', rankW: 'w-[92px]', title: 'text-[38px]', desc: 'text-[20px]', badge: 'w-[52px] h-[52px]', icon: 'w-[26px] h-[26px]', bar: 'w-20' },
                 }[item.rank];
 
                 return (
                   <div 
                     key={item.rank} 
-                    className="relative flex items-center bg-[#0d1219]/90 backdrop-blur-md rounded-2xl border shrink-0"
+                    className="relative flex items-center bg-[#0d1219]/90 backdrop-blur-md rounded-2xl border shrink-0 overflow-hidden"
                     style={{ 
                       borderColor: `rgba(${hexToRgb(config.colorStr)}, 0.4)`,
-                      boxShadow: `0 0 20px ${config.bgStr}, inset 0 0 10px ${config.bgStr}`
+                      boxShadow: `0 0 12px ${config.bgStr}, inset 0 0 8px ${config.bgStr}`
                     }}
                   >
-                    {item.rank === 1 && (
-                      <div className="absolute inset-0 rounded-2xl shadow-[0_0_40px_rgba(74,222,128,0.2)] pointer-events-none"></div>
-                    )}
 
                     <div className={`flex w-full items-stretch relative z-10 ${rankParams.p}`}>
                       
