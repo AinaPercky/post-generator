@@ -307,9 +307,9 @@ export function Top5Generator() {
               <h1 className="text-[110px] leading-none font-black italic tracking-tighter text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] uppercase" style={{ transform: 'skewX(-5deg)' }}>
                 TOP 5
               </h1>
-              <div className="flex items-center justify-center gap-6 mt-6">
+              <div className="flex items-center justify-center gap-6 mt-8">
                 <div className="w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_8px_white]"></div>
-                <h2 className="text-[26px] tracking-[0.4em] uppercase font-bold text-neutral-200">
+                <h2 className="text-[30px] tracking-[0.35em] uppercase font-bold text-neutral-200">
                   {categorySubtitle || 'YOUR CATEGORY HERE'}
                 </h2>
                 <div className="w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_8px_white]"></div>
@@ -321,7 +321,7 @@ export function Top5Generator() {
             </div>
 
             {/* List */}
-            <div className="relative z-10 flex-grow px-10 flex flex-col justify-center gap-6 pb-8 pt-2">
+            <div className="relative z-10 flex-grow px-10 flex flex-col justify-start gap-6 pb-8 pt-6">
               {items.map((item) => {
                 const config = (rankConfig as any)[item.rank];
                 const IconComp = config.Icon;
