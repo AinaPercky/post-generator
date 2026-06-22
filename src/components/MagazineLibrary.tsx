@@ -69,7 +69,7 @@ export function MagazineLibrary({ onSelectIssue, currentUserId }: MagazineLibrar
     try {
       setLoading(true);
       setError(null);
-      const posts = await getPostsByType('magazine', { limit: 50 });
+      const posts = await getPostsByType('magazine', { limit: 50, includeImageData: true });
       setIssues(posts);
     } catch (err) {
       console.error('Error loading magazines:', err);

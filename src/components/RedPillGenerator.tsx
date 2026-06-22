@@ -112,7 +112,7 @@ export function RedPillGenerator() {
   const loadSavedPosts = async () => {
     try {
       setLoadingSavedPosts(true);
-      const posts = await getPostsByType('redpill', { limit: 50 });
+      const posts = await getPostsByType('redpill', { limit: 50, includeImageData: true });
       setSavedPosts(posts);
     } catch (error) {
       console.error('Error loading saved posts:', error);

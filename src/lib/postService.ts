@@ -308,7 +308,7 @@ export function subscribeToPostChanges(
         filter: `type=eq.${postType}`,
       },
       () => {
-        getPostsByType(postType).then(callback);
+        getPostsByType(postType, { limit: 50, includeImageData: true }).then(callback);
       }
     )
     .subscribe();
