@@ -446,3 +446,35 @@ export async function deleteCustomCategoryIcon(userId: string, category: string)
     return false;
   }
 }
+
+// --- Legend Card Counter ---
+
+export async function getNextLegendCardNumber(): Promise<number> {
+  try {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('metadata')
+      .eq('type', 'legend')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error('Error fetching legend cards for counter:', error);
+      return 1;
+    }
+
+    if (!data || data.length === 0) {
+      return 1;
+    }
+
+    const maxNumber = data.reduce((max, post) => {
+      const cardNumber = (post.metadata as any)?.card?.cardNumber;
+      return typeof cardNumber === 'number' ? Math.max(max, cardNumber) : max;
+    }, 0);
+
+    return maxNumber + 1;
+  } catch (error) {
+    console.error('Failed to get next legend card number:', error);
+    return 1;
+  }
+}

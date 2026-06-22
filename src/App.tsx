@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { toPng, toCanvas } from 'html-to-image';
-import { Download, Loader2, Save, RefreshCw, Image as ImageIcon, LogIn, LogOut, Upload } from 'lucide-react';
+import { Download, Loader as Loader2, Save, RefreshCw, Image as ImageIcon, LogIn, LogOut, Upload } from 'lucide-react';
 import { CoverPreview } from './components/CoverPreview';
 import { MagazineLibrary } from './components/MagazineLibrary';
 import { RedPillGenerator } from './components/RedPillGenerator';
 import { MisyFaTsyGenerator } from './components/MisyFaTsyGenerator';
 import { Top5Generator } from './components/Top5Generator';
 import { Top5Library } from './components/Top5Library';
+import { LegendGenerator } from './components/LegendGenerator';
 import { SavedPost } from './types';
 import { auth, signInWithGoogle, logOut } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -17,7 +18,7 @@ import { savePost, updatePost, getPostsByType, shiftMagazineIssueNumbersFrom } f
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'magazine' | 'redpill' | 'misyfatsy' | 'top5'>('magazine');
+  const [activeTab, setActiveTab] = useState<'magazine' | 'redpill' | 'misyfatsy' | 'top5' | 'legend'>('magazine');
   const [headline, setHeadline] = useState('');
   const [sceneDescription, setSceneDescription] = useState('');
   const [customIssueNumber, setCustomIssueNumber] = useState('');
@@ -310,6 +311,12 @@ export default function App() {
             >
               Top 5
             </button>
+            <button
+              onClick={() => setActiveTab('legend')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'legend' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
+            >
+              Legend
+            </button>
           </div>
         </div>
         <div>
@@ -365,6 +372,12 @@ export default function App() {
           >
             Top 5
           </button>
+          <button
+            onClick={() => setActiveTab('legend')}
+            className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'legend' ? 'bg-white shadow-sm text-neutral-900' : 'text-neutral-500 hover:text-neutral-700'}`}
+          >
+            Legend
+          </button>
         </div>
       </div>
 
@@ -378,12 +391,14 @@ export default function App() {
             <Top5Generator />
             <div className="mt-20 pt-10 border-t border-neutral-200">
               <h2 className="text-2xl font-semibold text-neutral-800 mb-8">Top 5 Library</h2>
-              <Top5Library 
+              <Top5Library
                 onSelectTop5={() => {}} // We'll implement this later
                 currentUserId={user?.uid}
               />
             </div>
           </>
+        ) : activeTab === 'legend' ? (
+          <LegendGenerator />
         ) : (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

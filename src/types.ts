@@ -1,4 +1,4 @@
-export type PostType = 'magazine' | 'redpill' | 'misyfatsy' | 'top5';
+export type PostType = 'magazine' | 'redpill' | 'misyfatsy' | 'top5' | 'legend';
 
 // Interface unifiée pour tous les types de posts
 export interface SavedPost {
@@ -61,6 +61,29 @@ export interface Top5Post extends SavedPost {
   metadata?: {
     categorySubtitle: string;
     items: Top5Item[];
+    [key: string]: unknown;
+  };
+}
+
+export interface LegendCard {
+  name: string;
+  surname: string;
+  era: string;
+  origin: string;
+  characterClass: 'Guerrier' | 'Explorateur' | 'Savant' | 'Artiste' | 'Fictionnel' | 'Penseur' | 'Dirigeant' | 'Athlete';
+  rarity: 'Commun' | 'Rare' | 'Epique' | 'Legendaire' | 'Mythique';
+  specialties: [string, string, string];
+  keyAchievement: string;
+  flaw: string;
+  quote: string;
+  portraitUrl: string | null;
+  cardNumber: number;
+}
+
+export interface LegendPost extends SavedPost {
+  type: 'legend';
+  metadata?: {
+    card: LegendCard;
     [key: string]: unknown;
   };
 }
