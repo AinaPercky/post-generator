@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 // import { Download, Loader as Loader2, Image as ImageIcon, Sun, TrendingUp, Star, Target, Crown } from 'lucide-react';
-import { Download, Loader as Loader2, Image as ImageIcon, Ribbon, Award, Medal, Trophy, Crown, Target, Music, Heart, Sparkles, Dumbbell, Globe, TreePine, Film, Landmark, ScrollText, Car, Cpu, Languages, Lightbulb, GraduationCap, Users, Newspaper, User as UserIcon, LineChart, History, PawPrint, Dribbble as BasketballIcon } from 'lucide-react';
+import { Download, Loader as Loader2, Image as ImageIcon, FileText, Ribbon, Award, Medal, Trophy, Crown, Target, Music, Heart, Sparkles, Dumbbell, Globe, TreePine, Film, Landmark, ScrollText, Car, Cpu, Languages, Lightbulb, GraduationCap, Users, Newspaper, User as UserIcon, LineChart, History, PawPrint, Dribbble as BasketballIcon } from 'lucide-react';
 
 const CATEGORIES = [
   'sport', 'basket', 'nba', 'environnement', 'loisirs', 'cinema', 'politique', 
@@ -39,7 +39,12 @@ import { toPng, toJpeg } from 'html-to-image';
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
-import { savePost } from '../lib/postService';
+import { 
+  savePost, 
+  getCustomCategoryIcons, 
+  saveCustomCategoryIcon, 
+  deleteCustomCategoryIcon 
+} from '../lib/postService';
 
 const CANVAS_W = 1080;
 const CANVAS_H = 1620;
@@ -91,6 +96,11 @@ export function Top5Generator() {
   const [categorySubtitle, setCategorySubtitle] = useState('YOUR CATEGORY HERE');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryData, setCategoryData] = useState<Record<string, typeof initialItems>>({});
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategoryIcon, setCustomCategoryIcon] = useState<string | null>(null);
+  const [savedCategoryIcons, setSavedCategoryIcons] = useState<Record<string, string>>({});
+  const [assignToCategory, setAssignToCategory] = useState<string>('');
+  const customIconInputRef = useRef<HTMLInputElement>(null);
 
   const initialItems = [5, 4, 3, 2, 1].map(rank => ({
     rank,
@@ -120,11 +130,24 @@ export function Top5Generator() {
       }));
     }
     
+    setIsCustomCategory(false);
     setSelectedCategory(cat);
     // Set to lowercase, then capitalize only first letter of first word
     const lowerCat = cat.toLowerCase();
     const formattedCat = lowerCat.charAt(0).toUpperCase() + lowerCat.slice(1);
     setCategorySubtitle(formattedCat);
+  };
+
+  const handleSelectCustomCategory = () => {
+    if (selectedCategory) {
+      setCategoryData(prev => ({
+        ...prev,
+        [selectedCategory]: items
+      }));
+    }
+    setSelectedCategory(null);
+    setIsCustomCategory(true);
+    setCategorySubtitle('Custom Category');
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -142,9 +165,22 @@ export function Top5Generator() {
   }, []);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, u => setUser(u));
+    const unsub = onAuthStateChanged(auth, u => {
+      setUser(u);
+      // Load custom icons from Supabase when user is authenticated
+      if (u) {
+        loadSavedIcons(u.uid);
+      } else {
+        setSavedCategoryIcons({});
+      }
+    });
     return unsub;
   }, []);
+
+  const loadSavedIcons = async (userId: string) => {
+    const icons = await getCustomCategoryIcons(userId);
+    setSavedCategoryIcons(icons);
+  };
 
   const handleItemChange = (index: number, field: string, value: string) => {
     setItems(prev => {
@@ -168,6 +204,64 @@ export function Top5Generator() {
       if (ev.target?.result) handleItemChange(index, 'imageUrl', ev.target.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCustomIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      if (ev.target?.result) setCustomCategoryIcon(ev.target.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Assign custom icon to one or more categories
+  const handleAssignIconToCategories = async () => {
+    if (!customCategoryIcon || !assignToCategory || !user) return;
+    // Assign to selected category and also "basket" if "nba" is selected (or vice versa)
+    const categoriesToUpdate: string[] = [assignToCategory];
+    if (assignToCategory === 'nba') {
+      categoriesToUpdate.push('basket');
+    } else if (assignToCategory === 'basket') {
+      categoriesToUpdate.push('nba');
+    }
+    
+    // Save to Supabase
+    let successCount = 0;
+    for (const cat of categoriesToUpdate) {
+      const saved = await saveCustomCategoryIcon(user.uid, cat, customCategoryIcon);
+      if (saved) successCount++;
+    }
+
+    // Refresh local state
+    await loadSavedIcons(user.uid);
+    
+    if (successCount === categoriesToUpdate.length) {
+      alert(`Icône sauvegardée pour ${categoriesToUpdate.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(' et ')} !`);
+    } else {
+      alert(`Certaines icônes n'ont pas pu être sauvegardées.`);
+    }
+  };
+
+  // Remove saved icon for a category
+  const handleRemoveSavedIcon = async (category: string) => {
+    if (!user) return;
+    // Remove from paired category if applicable
+    const categoriesToRemove: string[] = [category];
+    if (category === 'nba') {
+      categoriesToRemove.push('basket');
+    } else if (category === 'basket') {
+      categoriesToRemove.push('nba');
+    }
+
+    // Delete from Supabase
+    for (const cat of categoriesToRemove) {
+      await deleteCustomCategoryIcon(user.uid, cat);
+    }
+
+    // Refresh local state
+    await loadSavedIcons(user.uid);
   };
 
   const exportOptions = {
@@ -225,6 +319,26 @@ export function Top5Generator() {
     }
   };
 
+  const handleExportTxt = () => {
+    const txtContent = `TOP 5: ${categorySubtitle || 'YOUR CATEGORY HERE'}
+
+${items.map((item) => `#${item.rank}
+${item.title}
+${item.description}
+`).join('\n')}
+`;
+
+    const blob = new Blob([`\uFEFF${txtContent}`], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `top5-${(categorySubtitle || 'export').replace(/\s+/g, '-')}-${Date.now()}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-[#0a0a0a] text-white min-h-[calc(100vh-4rem)] p-6 rounded-2xl font-sans">
 
@@ -263,8 +377,94 @@ export function Top5Generator() {
                 {cat}
               </button>
             ))}
+            <button
+              onClick={handleSelectCustomCategory}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                isCustomCategory
+                  ? 'bg-purple-600 text-white shadow-[0_0_10px_rgba(147,51,234,0.4)]'
+                  : 'bg-[#0a0a0a] text-neutral-400 border border-neutral-800 hover:border-neutral-600'
+              }`}
+            >
+              Custom
+            </button>
           </div>
-          {selectedCategory && (
+
+          {isCustomCategory && (
+            <div className="mt-4 pt-4 border-t border-neutral-800">
+              <label className="block text-xs text-neutral-500 mb-2 uppercase tracking-wider">Custom Category Icon</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  ref={customIconInputRef}
+                  onChange={handleCustomIconUpload}
+                />
+                <div
+                  onClick={() => customIconInputRef.current?.click()}
+                  className="w-20 h-20 bg-[#0a0a0a] border border-neutral-800 rounded-lg flex items-center justify-center cursor-pointer hover:border-purple-500 transition-all overflow-hidden"
+                >
+                  {customCategoryIcon
+                    ? <img src={customCategoryIcon} alt="Custom Icon" className="w-full h-full object-contain" />
+                    : <ImageIcon className="w-6 h-6 text-neutral-600" />}
+                </div>
+                <div className="flex-grow flex flex-col gap-2">
+                  <p className="text-xs text-neutral-400">Upload your custom icon or logo (PNG with transparency recommended)</p>
+                  {customCategoryIcon && (
+                    <>
+                      <div className="flex gap-2">
+                        <select
+                          value={assignToCategory}
+                          onChange={(e) => setAssignToCategory(e.target.value)}
+                          className="flex-grow bg-[#0a0a0a] border border-neutral-800 rounded px-2 py-1 text-xs text-white"
+                        >
+                          <option value="">Sélectionner une catégorie...</option>
+                          {CATEGORIES.map(cat => (
+                            <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={handleAssignIconToCategories}
+                          disabled={!assignToCategory}
+                          className="px-3 py-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs rounded transition-colors"
+                        >
+                          Sauvegarder
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => setCustomCategoryIcon(null)}
+                        className="text-[10px] text-red-400 hover:text-red-300 transition-colors uppercase tracking-wider self-start"
+                      >
+                        Supprimer l'icône temporaire
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Saved Custom Icons Section */}
+          {Object.keys(savedCategoryIcons).length > 0 && (
+            <div className="mt-4 pt-4 border-t border-neutral-800">
+              <label className="block text-xs text-neutral-500 mb-3 uppercase tracking-wider">Icônes personnalisées sauvegardées</label>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(savedCategoryIcons).map(([category, iconUrl]) => (
+                  <div key={category} className="flex items-center gap-2 bg-[#0a0a0a] border border-neutral-800 rounded px-2 py-2">
+                    <img src={iconUrl} alt={category} className="w-8 h-8 object-contain" />
+                    <span className="text-xs text-neutral-300 flex-grow">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                    <button
+                      onClick={() => handleRemoveSavedIcon(category)}
+                      className="text-red-400 hover:text-red-300 text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {(selectedCategory || isCustomCategory) && (
             <button
               onClick={() => {
                 if (selectedCategory) {
@@ -274,6 +474,8 @@ export function Top5Generator() {
                   }));
                 }
                 setSelectedCategory(null);
+                setIsCustomCategory(false);
+                setCustomCategoryIcon(null);
                 setCategorySubtitle('YOUR CATEGORY HERE');
               }}
               className="mt-3 text-[10px] text-neutral-500 hover:text-emerald-500 transition-colors uppercase tracking-widest"
@@ -338,7 +540,7 @@ export function Top5Generator() {
         )}
 
         <div className="flex flex-col gap-3 pb-8">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <button onClick={() => handleDownload('png')} disabled={isDownloading}
               className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
               {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} PNG
@@ -346,6 +548,10 @@ export function Top5Generator() {
             <button onClick={() => handleDownload('jpg')} disabled={isDownloading}
               className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
               {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} JPEG
+            </button>
+            <button onClick={handleExportTxt}
+              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+              <FileText className="w-4 h-4" /> TXT
             </button>
           </div>
           <button onClick={handleSaveToLibrary} disabled={isSaving}
@@ -430,8 +636,37 @@ export function Top5Generator() {
                 marginTop: 30,
               }}>
                 {(() => {
-                  const Icon = selectedCategory ? (CATEGORY_ICONS[selectedCategory] || Target) : Target;
-                  return <Icon size={42} color="#888" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} />;
+                  // Check custom mode first, then saved custom icons for selected category, then defaults
+                  if (isCustomCategory && customCategoryIcon) {
+                    return (
+                      <img
+                        src={customCategoryIcon}
+                        alt="Custom Icon"
+                        style={{
+                          width: 42,
+                          height: 42,
+                          objectFit: 'contain',
+                          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))'
+                        }}
+                      />
+                    );
+                  } else if (selectedCategory && savedCategoryIcons[selectedCategory]) {
+                    return (
+                      <img
+                        src={savedCategoryIcons[selectedCategory]}
+                        alt={`${selectedCategory} Icon`}
+                        style={{
+                          width: 42,
+                          height: 42,
+                          objectFit: 'contain',
+                          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))'
+                        }}
+                      />
+                    );
+                  } else {
+                    const Icon = selectedCategory ? (CATEGORY_ICONS[selectedCategory] || Target) : Target;
+                    return <Icon size={42} color="#888" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} />;
+                  }
                 })()}
                 <span style={{
                   fontSize: 36, fontWeight: 900,
@@ -442,8 +677,37 @@ export function Top5Generator() {
                   {categorySubtitle || 'YOUR CATEGORY HERE'}
                 </span>
                 {(() => {
-                  const Icon = selectedCategory ? (CATEGORY_ICONS[selectedCategory] || Target) : Target;
-                  return <Icon size={42} color="#888" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} />;
+                  // Check custom mode first, then saved custom icons for selected category, then defaults
+                  if (isCustomCategory && customCategoryIcon) {
+                    return (
+                      <img
+                        src={customCategoryIcon}
+                        alt="Custom Icon"
+                        style={{
+                          width: 42,
+                          height: 42,
+                          objectFit: 'contain',
+                          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))'
+                        }}
+                      />
+                    );
+                  } else if (selectedCategory && savedCategoryIcons[selectedCategory]) {
+                    return (
+                      <img
+                        src={savedCategoryIcons[selectedCategory]}
+                        alt={`${selectedCategory} Icon`}
+                        style={{
+                          width: 42,
+                          height: 42,
+                          objectFit: 'contain',
+                          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))'
+                        }}
+                      />
+                    );
+                  } else {
+                    const Icon = selectedCategory ? (CATEGORY_ICONS[selectedCategory] || Target) : Target;
+                    return <Icon size={42} color="#888" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} />;
+                  }
                 })()}
               </div>
 

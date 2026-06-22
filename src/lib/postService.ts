@@ -342,3 +342,94 @@ export async function shiftMagazineIssueNumbersFrom(startIssueNumber: number): P
     })
   );
 }
+
+// --- Custom Category Icons ---
+
+const CUSTOM_ICONS_TABLE = 'custom_category_icons';
+
+export async function getCustomCategoryIcons(userId: string): Promise<Record<string, string>> {
+  try {
+    const { data, error } = await supabase
+      .from(CUSTOM_ICONS_TABLE)
+      .select('category, icon_data')
+      .or(`user_id.eq.${isUuid(userId) ? userId : `null,firebase_uid.eq.${userId}`}`);
+
+    if (error) {
+      console.error('Error fetching custom category icons:', error);
+      return {};
+    }
+
+    return data.reduce((acc, item) => {
+      acc[item.category] = item.icon_data;
+      return acc;
+    }, {} as Record<string, string>);
+  } catch (error) {
+    console.error('Failed to get custom category icons:', error);
+    return {};
+  }
+}
+
+export async function saveCustomCategoryIcon(
+  userId: string,
+  category: string,
+  iconData: string
+): Promise<boolean> {
+  try {
+    const payload: Record<string, unknown> = {
+      category,
+      icon_data: iconData,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (isUuid(userId)) {
+      payload.user_id = userId;
+    } else {
+      payload.firebase_uid = userId;
+    }
+
+    // Check if icon already exists for this category
+    const { data: existing } = await supabase
+      .from(CUSTOM_ICONS_TABLE)
+      .select('id')
+      .or(`user_id.eq.${isUuid(userId) ? userId : `null,firebase_uid.eq.${userId}`}`)
+      .eq('category', category)
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing icon
+      const { error } = await supabase
+        .from(CUSTOM_ICONS_TABLE)
+        .update(payload)
+        .eq('id', existing.id);
+      return !error;
+    } else {
+      // Insert new icon
+      const { error } = await supabase.from(CUSTOM_ICONS_TABLE).insert([payload]);
+      return !error;
+    }
+  } catch (error) {
+    console.error('Error saving custom category icon:', error);
+    return false;
+  }
+}
+
+export async function deleteCustomCategoryIcon(userId: string, category: string): Promise<boolean> {
+  try {
+    let query = supabase
+      .from(CUSTOM_ICONS_TABLE)
+      .delete()
+      .eq('category', category);
+
+    if (isUuid(userId)) {
+      query = query.eq('user_id', userId);
+    } else {
+      query = query.eq('firebase_uid', userId);
+    }
+
+    const { error } = await query;
+    return !error;
+  } catch (error) {
+    console.error('Error deleting custom category icon:', error);
+    return false;
+  }
+}

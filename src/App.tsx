@@ -7,6 +7,7 @@ import { MagazineLibrary } from './components/MagazineLibrary';
 import { RedPillGenerator } from './components/RedPillGenerator';
 import { MisyFaTsyGenerator } from './components/MisyFaTsyGenerator';
 import { Top5Generator } from './components/Top5Generator';
+import { Top5Library } from './components/Top5Library';
 import { SavedPost } from './types';
 import { auth, signInWithGoogle, logOut } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -373,7 +374,16 @@ export default function App() {
         ) : activeTab === 'misyfatsy' ? (
           <MisyFaTsyGenerator />
         ) : activeTab === 'top5' ? (
-          <Top5Generator />
+          <>
+            <Top5Generator />
+            <div className="mt-20 pt-10 border-t border-neutral-200">
+              <h2 className="text-2xl font-semibold text-neutral-800 mb-8">Top 5 Library</h2>
+              <Top5Library 
+                onSelectTop5={() => {}} // We'll implement this later
+                currentUserId={user?.uid}
+              />
+            </div>
+          </>
         ) : (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
