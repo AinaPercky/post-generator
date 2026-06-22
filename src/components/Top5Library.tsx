@@ -140,7 +140,6 @@ export function Top5Library({ onSelectTop5, currentUserId }: Top5LibraryProps) {
                   src={top5.imageUrl}
                   alt={top5.title}
                   className="w-full h-auto rounded-lg shadow-md object-cover"
-                  style={{ aspectRatio: '1080 / 1620 }}
                 />
               )}
             </div>
