@@ -349,10 +349,17 @@ const CUSTOM_ICONS_TABLE = 'custom_category_icons';
 
 export async function getCustomCategoryIcons(userId: string): Promise<Record<string, string>> {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from(CUSTOM_ICONS_TABLE)
-      .select('category, icon_data')
-      .or(`user_id.eq.${isUuid(userId) ? userId : `null,firebase_uid.eq.${userId}`}`);
+      .select('category, icon_data');
+
+    if (isUuid(userId)) {
+      query = query.eq('user_id', userId);
+    } else {
+      query = query.eq('firebase_uid', userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching custom category icons:', error);
@@ -388,12 +395,18 @@ export async function saveCustomCategoryIcon(
     }
 
     // Check if icon already exists for this category
-    const { data: existing } = await supabase
+    let checkQuery = supabase
       .from(CUSTOM_ICONS_TABLE)
       .select('id')
-      .or(`user_id.eq.${isUuid(userId) ? userId : `null,firebase_uid.eq.${userId}`}`)
-      .eq('category', category)
-      .maybeSingle();
+      .eq('category', category);
+
+    if (isUuid(userId)) {
+      checkQuery = checkQuery.eq('user_id', userId);
+    } else {
+      checkQuery = checkQuery.eq('firebase_uid', userId);
+    }
+
+    const { data: existing } = await checkQuery.maybeSingle();
 
     if (existing) {
       // Update existing icon
