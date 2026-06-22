@@ -216,49 +216,29 @@ export function Top5Generator() {
     reader.readAsDataURL(file);
   };
 
-  // Assign custom icon to one or more categories
+  // Assign custom icon to a specific category
   const handleAssignIconToCategories = async () => {
     if (!customCategoryIcon || !assignToCategory || !user) return;
-    // Assign to selected category and also "basket" if "nba" is selected (or vice versa)
-    const categoriesToUpdate: string[] = [assignToCategory];
-    if (assignToCategory === 'nba') {
-      categoriesToUpdate.push('basket');
-    } else if (assignToCategory === 'basket') {
-      categoriesToUpdate.push('nba');
-    }
     
-    // Save to Supabase
-    let successCount = 0;
-    for (const cat of categoriesToUpdate) {
-      const saved = await saveCustomCategoryIcon(user.uid, cat, customCategoryIcon);
-      if (saved) successCount++;
-    }
+    // Save to Supabase for the selected category only
+    const saved = await saveCustomCategoryIcon(user.uid, assignToCategory, customCategoryIcon);
 
     // Refresh local state
     await loadSavedIcons(user.uid);
     
-    if (successCount === categoriesToUpdate.length) {
-      alert(`Icône sauvegardée pour ${categoriesToUpdate.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(' et ')} !`);
+    if (saved) {
+      alert(`Icône sauvegardée pour ${assignToCategory.charAt(0).toUpperCase() + assignToCategory.slice(1)} !`);
     } else {
-      alert(`Certaines icônes n'ont pas pu être sauvegardées.`);
+      alert(`L'icône n'a pas pu être sauvegardée.`);
     }
   };
 
   // Remove saved icon for a category
   const handleRemoveSavedIcon = async (category: string) => {
     if (!user) return;
-    // Remove from paired category if applicable
-    const categoriesToRemove: string[] = [category];
-    if (category === 'nba') {
-      categoriesToRemove.push('basket');
-    } else if (category === 'basket') {
-      categoriesToRemove.push('nba');
-    }
 
-    // Delete from Supabase
-    for (const cat of categoriesToRemove) {
-      await deleteCustomCategoryIcon(user.uid, cat);
-    }
+    // Delete from Supabase for this category only
+    await deleteCustomCategoryIcon(user.uid, category);
 
     // Refresh local state
     await loadSavedIcons(user.uid);
