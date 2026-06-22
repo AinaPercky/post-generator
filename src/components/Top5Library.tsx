@@ -23,7 +23,7 @@ export function Top5Library({ onSelectTop5, currentUserId }: Top5LibraryProps) {
   const sortedTop5s = useMemo(() => {
     return [...top5s].sort((a, b) => {
       return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-    };
+    });
   }, [top5s]);
 
   useEffect(() => {
