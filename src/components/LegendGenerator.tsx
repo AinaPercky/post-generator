@@ -1,15 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, Loader as Loader2, Image as ImageIcon, Save, Sword, Compass, BookOpen, Palette, Sparkles, Brain, Crown, Dumbbell } from 'lucide-react';
+import { Download, Loader as Loader2, Image as ImageIcon, Save, Sword, Compass, BookOpen, Palette, Sparkles, Brain, Crown, Dumbbell, Calendar, Globe, Shield, Trophy, TriangleAlert as AlertTriangle, Flag, Target, Star, Zap, Flame, Wind, ChevronRight } from 'lucide-react';
 import { toPng, toJpeg } from 'html-to-image';
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost, LegendCard } from '../types';
 import { savePost, getNextLegendCardNumber } from '../lib/postService';
 
-const CANVAS_W = 1080;
-const CANVAS_H = 1350;
+// Canvas size matching Guerrier frame proportions (769×1070)
+const CANVAS_W = 770;
+const CANVAS_H = 1075;
 
-const CLASSES: LegendCard['characterClass'][] = ['Guerrier', 'Explorateur', 'Savant', 'Artiste', 'Fictionnel', 'Penseur', 'Dirigeant', 'Athlete'];
+// Frame border thickness
+const B = 11;
+
+const CLASSES: LegendCard['characterClass'][] = [
+  'Guerrier', 'Explorateur', 'Savant', 'Artiste',
+  'Fictionnel', 'Penseur', 'Dirigeant', 'Athlete',
+];
 const RARITIES: LegendCard['rarity'][] = ['Commun', 'Rare', 'Epique', 'Legendaire', 'Mythique'];
 
 const RARITY_STARS: Record<LegendCard['rarity'], number> = {
@@ -22,15 +29,23 @@ const RARITY_EDITION: Record<LegendCard['rarity'], string> = {
   Commun: '2500', Rare: '1000', Epique: '500', Legendaire: '5000', Mythique: '100',
 };
 
-const CLASS_ACCENT: Record<LegendCard['characterClass'], string> = {
-  Guerrier:    '#bf4040',
-  Explorateur: '#3a9e5f',
-  Savant:      '#3a7abf',
-  Artiste:     '#bf407a',
-  Fictionnel:  '#7a40bf',
-  Penseur:     '#c9a84c',
-  Dirigeant:   '#c97040',
-  Athlete:     '#40b8a8',
+// Class-specific theme
+const CLASS_THEME: Record<LegendCard['characterClass'], {
+  accent: string;    // main accent (text, icons)
+  frameDark: string; // outer/dark frame color
+  frameMid: string;  // mid frame color
+  frameBright: string; // inner bright frame edge
+  divider: string;   // section divider gradient
+  icon: React.ComponentType<any>;
+}> = {
+  Guerrier:    { accent: '#e83020', frameDark: '#1a0606', frameMid: '#701808', frameBright: '#c84018', divider: '#8b1808', icon: Sword },
+  Explorateur: { accent: '#20c050', frameDark: '#06160a', frameMid: '#0a4818', frameBright: '#18a038', divider: '#0a5820', icon: Compass },
+  Savant:      { accent: '#2080e8', frameDark: '#060a18', frameMid: '#0a2060', frameBright: '#1848c0', divider: '#0a2868', icon: BookOpen },
+  Artiste:     { accent: '#e830a0', frameDark: '#160608', framMid: '#500820', frameBright: '#c02080', divider: '#600818', icon: Palette } as any,
+  Fictionnel:  { accent: '#9030e0', frameDark: '#0c0618', frameMid: '#280860', frameBright: '#6018c0', divider: '#300870', icon: Sparkles },
+  Penseur:     { accent: '#d4a030', frameDark: '#14100a', frameMid: '#483010', frameBright: '#c08020', divider: '#504010', icon: Brain },
+  Dirigeant:   { accent: '#e06020', frameDark: '#180a06', frameMid: '#602010', frameBright: '#c05018', divider: '#682010', icon: Crown },
+  Athlete:     { accent: '#20b8a0', frameDark: '#061412', frameMid: '#0a4840', frameBright: '#18a090', divider: '#0a5048', icon: Dumbbell },
 };
 
 const CLASS_ICONS: Record<LegendCard['characterClass'], React.ComponentType<any>> = {
@@ -38,307 +53,259 @@ const CLASS_ICONS: Record<LegendCard['characterClass'], React.ComponentType<any>
   Fictionnel: Sparkles, Penseur: Brain, Dirigeant: Crown, Athlete: Dumbbell,
 };
 
+const SPEC_ICON_LIST = [
+  { id: 'sword', Icon: Sword }, { id: 'shield', Icon: Shield }, { id: 'target', Icon: Target },
+  { id: 'star', Icon: Star }, { id: 'trophy', Icon: Trophy }, { id: 'zap', Icon: Zap },
+  { id: 'flame', Icon: Flame }, { id: 'compass', Icon: Compass }, { id: 'globe', Icon: Globe },
+  { id: 'wind', Icon: Wind }, { id: 'brain', Icon: Brain }, { id: 'flag', Icon: Flag },
+];
+
+type SpecIcon = typeof SPEC_ICON_LIST[number]['id'];
+
+const DEFAULT_SPEC_ICONS: Record<LegendCard['characterClass'], [SpecIcon, SpecIcon, SpecIcon]> = {
+  Guerrier:    ['sword', 'shield', 'flag'],
+  Explorateur: ['compass', 'globe', 'star'],
+  Savant:      ['brain', 'target', 'star'],
+  Artiste:     ['star', 'wind', 'flame'],
+  Fictionnel:  ['star', 'zap', 'wind'],
+  Penseur:     ['brain', 'target', 'flag'],
+  Dirigeant:   ['crown' as any, 'flag', 'shield'],
+  Athlete:     ['zap', 'flame', 'target'],
+};
+
 const initialCard: LegendCard = {
-  name: 'NOM DU PENSEUR',
-  surname: 'NOM DE RÉFÉRENCE',
-  era: 'ÈRE DE LA RÉFLEXION',
-  origin: "LIEU DE L'ACADÉMIE",
-  characterClass: 'Penseur',
+  name: '',
+  surname: '',
+  era: '',
+  origin: '',
+  characterClass: 'Guerrier',
   rarity: 'Legendaire',
-  specialties: ['ANALYSE SYSTÉMIQUE', 'VISION PHILOSOPHIQUE', 'TRANSFORMATION SOCIALE'],
-  keyAchievement: 'UN ÉCRIT MAJEUR OU UNE IDÉE QUI A CHANGÉ LE MONDE',
-  flaw: "UNE FAIBLESSE PSYCHOLOGIQUE OU L'INCAPACITÉ D'AGIR",
-  quote: 'CITATION ARCHÉTYPALE EN FRANÇAIS SUR LA PENSÉE',
+  specialties: ['', '', ''],
+  keyAchievement: '',
+  flaw: '',
+  quote: '',
   portraitUrl: null,
   cardNumber: 1,
 };
 
-// ──────────────────────────────────────────────────────
-// SVG Components for the card canvas
-// ──────────────────────────────────────────────────────
+// ──────────────────────────────────────
+// Sub-components used in the canvas
+// ──────────────────────────────────────
 
-/** Large ornate metallic ring enclosing the circular portrait */
-function PortraitRing({ diam, accent }: { diam: number; accent: string }) {
-  const cx = diam / 2;
-  const cy = diam / 2;
-  const outerR = diam / 2 - 4;
-  const ringW = 46;
-  const innerR = outerR - ringW;
+/** Hexagonal shape clip-path (flat top & bottom) */
+const HEX_CLIP = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
 
-  // Tick marks around circumference
-  const ticks = Array.from({ length: 120 }, (_, i) => {
-    const angle = (i / 120) * Math.PI * 2 - Math.PI / 2;
-    const major = i % 10 === 0;
-    const medium = i % 5 === 0;
-    const rOut = outerR - 2;
-    const rIn = rOut - (major ? 14 : medium ? 9 : 5);
-    return { angle, rOut, rIn, major, medium };
-  });
-
-  // Scroll ornament paths at bottom of ring (baroque flourishes)
-  // These curve outward from below the ring at bottom
-  const scrollW = 180;
-  const scrollY = cy + outerR - 12;
-
+/** Stylized double-chevron quote mark (66/99 style) */
+function QuoteMark({ mirror = false }: { mirror?: boolean }) {
+  const d = mirror
+    ? 'M 22 6 L 12 18 L 22 18 M 10 6 L 0 18 L 10 18'
+    : 'M 0 6 L 10 18 L 0 18 M 12 6 L 22 18 L 12 18';
   return (
-    <svg width={diam} height={diam + 40} viewBox={`0 0 ${diam} ${diam + 40}`} style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible' }}>
-      <defs>
-        <linearGradient id="ring-metal" x1="20%" y1="0%" x2="80%" y2="100%">
-          <stop offset="0%"   stopColor="#b0b0b0" />
-          <stop offset="20%"  stopColor="#e8e8e8" />
-          <stop offset="40%"  stopColor="#c8c8c8" />
-          <stop offset="60%"  stopColor="#a0a0a0" />
-          <stop offset="80%"  stopColor="#d0d0d0" />
-          <stop offset="100%" stopColor="#909090" />
-        </linearGradient>
-        <linearGradient id="ring-inner" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%"   stopColor="#505050" />
-          <stop offset="50%"  stopColor="#2a2a2a" />
-          <stop offset="100%" stopColor="#404040" />
-        </linearGradient>
-        <radialGradient id="ring-shadow" cx="50%" cy="50%" r="50%">
-          <stop offset="80%" stopColor="transparent" />
-          <stop offset="100%" stopColor="rgba(0,0,0,0.5)" />
-        </radialGradient>
-        <filter id="ring-drop" x="-10%" y="-10%" width="120%" height="120%">
-          <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="rgba(0,0,0,0.8)" />
-        </filter>
-        <filter id="scroll-glow">
-          <feGaussianBlur stdDeviation="1.5" result="b" />
-          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-        <clipPath id="portrait-clip">
-          <circle cx={cx} cy={cy} r={innerR} />
-        </clipPath>
-      </defs>
-
-      {/* Drop shadow beneath ring */}
-      <circle cx={cx} cy={cy} r={outerR + 8} fill="rgba(0,0,0,0.55)" filter="url(#ring-drop)" />
-
-      {/* Ring body: metallic gradient fill */}
-      <circle cx={cx} cy={cy} r={outerR} fill="url(#ring-metal)" />
-
-      {/* Outer engraved groove */}
-      <circle cx={cx} cy={cy} r={outerR - 4} fill="none" stroke="rgba(0,0,0,0.35)" strokeWidth="3" />
-
-      {/* Tick marks */}
-      {ticks.map(({ angle, rOut, rIn, major, medium }, i) => (
-        <line
-          key={i}
-          x1={cx + Math.cos(angle) * rOut}
-          y1={cy + Math.sin(angle) * rOut}
-          x2={cx + Math.cos(angle) * rIn}
-          y2={cy + Math.sin(angle) * rIn}
-          stroke={major ? accent : medium ? '#b0b0b0' : '#787878'}
-          strokeWidth={major ? 2.5 : medium ? 1.8 : 1}
-          strokeOpacity={major ? 1 : 0.7}
-        />
-      ))}
-
-      {/* Diamond gems at 4 cardinal points */}
-      {[0, 90, 180, 270].map((deg, i) => {
-        const a = (deg * Math.PI) / 180;
-        const rx = cx + Math.cos(a) * (outerR - ringW / 2);
-        const ry = cy + Math.sin(a) * (outerR - ringW / 2);
-        const size = 11;
-        return (
-          <polygon
-            key={i}
-            points={`${rx},${ry - size} ${rx + size * 0.65},${ry} ${rx},${ry + size} ${rx - size * 0.65},${ry}`}
-            fill={accent}
-            opacity="0.95"
-          />
-        );
-      })}
-
-      {/* Inner border groove */}
-      <circle cx={cx} cy={cy} r={innerR + 4} fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="3" />
-      <circle cx={cx} cy={cy} r={innerR + 1} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
-
-      {/* Ring inner dark fill (behind portrait) */}
-      <circle cx={cx} cy={cy} r={innerR} fill="#0c1018" />
-
-      {/* Scroll ornaments at bottom of ring */}
-      {/* Left scroll arm */}
-      <g filter="url(#scroll-glow)" opacity="0.85">
-        <path
-          d={`M ${cx} ${scrollY + 10}
-              C ${cx - 40} ${scrollY + 8} ${cx - 80} ${scrollY + 22} ${cx - 110} ${scrollY + 18}
-              C ${cx - 140} ${scrollY + 14} ${cx - 155} ${scrollY - 2} ${cx - 145} ${scrollY - 14}
-              C ${cx - 135} ${scrollY - 26} ${cx - 110} ${scrollY - 24} ${cx - 100} ${scrollY - 12}
-              C ${cx - 90} ${scrollY} ${cx - 105} ${scrollY + 14} ${cx - 120} ${scrollY + 10}`}
-          stroke="#c8c8c8" strokeWidth="2.5" fill="none" strokeLinecap="round"
-        />
-        <path
-          d={`M ${cx - 50} ${scrollY + 14}
-              C ${cx - 55} ${scrollY + 24} ${cx - 65} ${scrollY + 32} ${cx - 80} ${scrollY + 28}
-              C ${cx - 95} ${scrollY + 24} ${cx - 98} ${scrollY + 10} ${cx - 88} ${scrollY + 4}`}
-          stroke="#b0b0b0" strokeWidth="2" fill="none" strokeLinecap="round"
-        />
-        {/* Small leaf/petal accents */}
-        <path d={`M ${cx - 130} ${scrollY} C ${cx - 148} ${scrollY - 10} ${cx - 148} ${scrollY - 22} ${cx - 130} ${scrollY - 16}`}
-          stroke={accent} strokeWidth="1.8" fill="none" strokeOpacity="0.8" />
-      </g>
-
-      {/* Right scroll arm (mirror) */}
-      <g filter="url(#scroll-glow)" opacity="0.85">
-        <path
-          d={`M ${cx} ${scrollY + 10}
-              C ${cx + 40} ${scrollY + 8} ${cx + 80} ${scrollY + 22} ${cx + 110} ${scrollY + 18}
-              C ${cx + 140} ${scrollY + 14} ${cx + 155} ${scrollY - 2} ${cx + 145} ${scrollY - 14}
-              C ${cx + 135} ${scrollY - 26} ${cx + 110} ${scrollY - 24} ${cx + 100} ${scrollY - 12}
-              C ${cx + 90} ${scrollY} ${cx + 105} ${scrollY + 14} ${cx + 120} ${scrollY + 10}`}
-          stroke="#c8c8c8" strokeWidth="2.5" fill="none" strokeLinecap="round"
-        />
-        <path
-          d={`M ${cx + 50} ${scrollY + 14}
-              C ${cx + 55} ${scrollY + 24} ${cx + 65} ${scrollY + 32} ${cx + 80} ${scrollY + 28}
-              C ${cx + 95} ${scrollY + 24} ${cx + 98} ${scrollY + 10} ${cx + 88} ${scrollY + 4}`}
-          stroke="#b0b0b0" strokeWidth="2" fill="none" strokeLinecap="round"
-        />
-        <path d={`M ${cx + 130} ${scrollY} C ${cx + 148} ${scrollY - 10} ${cx + 148} ${scrollY - 22} ${cx + 130} ${scrollY - 16}`}
-          stroke={accent} strokeWidth="1.8" fill="none" strokeOpacity="0.8" />
-      </g>
-
-      {/* Center ornament at bottom */}
-      <path d={`M ${cx - 18} ${scrollY + 22} L ${cx} ${scrollY + 32} L ${cx + 18} ${scrollY + 22}`}
-        stroke={accent} strokeWidth="2" fill="none" strokeOpacity="0.7" />
-      <circle cx={cx} cy={scrollY + 34} r="4" fill={accent} opacity="0.7" />
+    <svg width={24} height={24} viewBox="0 0 24 24">
+      <path d={d} stroke="#c9a84c" strokeWidth="2.5" fill="none" strokeLinecap="square" />
     </svg>
   );
 }
 
-/** Scroll/manuscript illustration for top-left corner */
-function ScrollIllustration() {
-  return (
-    <svg width="150" height="130" viewBox="0 0 150 130" style={{ opacity: 0.45 }}>
-      {/* Main scroll body */}
-      <path d="M 30 20 Q 20 16 22 28 L 38 100 Q 40 112 52 108 L 120 92 Q 132 88 128 76 L 112 20 Q 108 8 96 10 L 38 14 Q 26 12 30 20 Z"
-        fill="#3a3018" stroke="#6a5830" strokeWidth="1.5" />
-      {/* Scroll curl top-left */}
-      <path d="M 30 20 Q 22 10 28 8 Q 36 6 38 14" fill="#4a4022" stroke="#7a6840" strokeWidth="1.2" />
-      {/* Scroll curl bottom-left */}
-      <path d="M 38 100 Q 28 108 28 114 Q 30 118 38 114 Q 46 110 40 104" fill="#4a4022" stroke="#7a6840" strokeWidth="1.2" />
-      {/* Text lines on scroll */}
-      <line x1="55" y1="32" x2="110" y2="26" stroke="#9a8040" strokeWidth="1" opacity="0.7" />
-      <line x1="56" y1="44" x2="112" y2="38" stroke="#9a8040" strokeWidth="1" opacity="0.6" />
-      <line x1="57" y1="56" x2="113" y2="50" stroke="#9a8040" strokeWidth="1" opacity="0.5" />
-      <line x1="58" y1="68" x2="114" y2="62" stroke="#9a8040" strokeWidth="1" opacity="0.5" />
-      <line x1="60" y1="80" x2="116" y2="74" stroke="#9a8040" strokeWidth="1" opacity="0.4" />
-      {/* Second small scroll */}
-      <path d="M 60 104 Q 54 98 56 108 L 64 130 Q 66 138 74 136 L 140 122 Q 146 120 144 112 L 136 90 Q 134 82 126 84 L 68 96 Q 58 98 60 104 Z"
-        fill="#382c14" stroke="#5a4820" strokeWidth="1.2" />
-    </svg>
-  );
-}
-
-/** Owl illustration for top-right corner */
-function OwlIllustration() {
-  return (
-    <svg width="100" height="120" viewBox="0 0 100 120" style={{ opacity: 0.45 }}>
-      {/* Body */}
-      <ellipse cx="50" cy="78" rx="30" ry="36" fill="#2a2218" stroke="#5a4830" strokeWidth="1.5" />
-      {/* Head */}
-      <ellipse cx="50" cy="38" rx="26" ry="24" fill="#2a2218" stroke="#5a4830" strokeWidth="1.5" />
-      {/* Ear tufts */}
-      <path d="M 34 20 L 28 6 L 38 16" fill="#2a2218" stroke="#5a4830" strokeWidth="1.2" />
-      <path d="M 66 20 L 72 6 L 62 16" fill="#2a2218" stroke="#5a4830" strokeWidth="1.2" />
-      {/* Eyes */}
-      <circle cx="40" cy="38" r="10" fill="#1a1408" stroke="#c9a020" strokeWidth="1.5" />
-      <circle cx="60" cy="38" r="10" fill="#1a1408" stroke="#c9a020" strokeWidth="1.5" />
-      <circle cx="40" cy="38" r="5" fill="#e0c040" />
-      <circle cx="60" cy="38" r="5" fill="#e0c040" />
-      <circle cx="40" cy="38" r="2.5" fill="#0a0808" />
-      <circle cx="60" cy="38" r="2.5" fill="#0a0808" />
-      {/* Beak */}
-      <path d="M 44 46 L 50 52 L 56 46 Q 50 43 44 46 Z" fill="#9a7820" />
-      {/* Wing feathers */}
-      <path d="M 22 62 C 14 68 12 82 18 90 C 22 96 32 96 36 88" fill="none" stroke="#4a3c20" strokeWidth="2" />
-      <path d="M 78 62 C 86 68 88 82 82 90 C 78 96 68 96 64 88" fill="none" stroke="#4a3c20" strokeWidth="2" />
-      {/* Feather detail lines on body */}
-      {[60, 70, 80, 90, 100].map((y, i) => (
-        <path key={i} d={`M ${26 + i * 2} ${y} Q 50 ${y - 6} ${74 - i * 2} ${y}`}
-          fill="none" stroke="#4a3c20" strokeWidth="1" opacity="0.5" />
-      ))}
-      {/* Perch */}
-      <rect x="30" y="110" width="40" height="6" rx="3" fill="#3a2c14" stroke="#5a4020" strokeWidth="1" />
-    </svg>
-  );
-}
-
-/** Specialty badge with metallic look and gold left accent */
-function SpecialtyBadge({ text, accent }: { text: string; accent: string }) {
+/** Pentagon class badge for the top-left corner */
+function PentagonBadge({ size, accent, frameMid, frameBright, Icon }:
+  { size: number; accent: string; frameMid: string; frameBright: string; Icon: React.ComponentType<any> }) {
   return (
     <div style={{
-      flex: 1,
+      width: size, height: size,
       position: 'relative',
-      background: 'linear-gradient(180deg, #323232 0%, #242424 50%, #2c2c2c 100%)',
-      border: '1.5px solid #606060',
-      borderRadius: 6,
-      padding: '11px 10px 11px 18px',
-      textAlign: 'center',
-      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 6px rgba(0,0,0,0.6)',
-      overflow: 'hidden',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      {/* Gold left accent triangle */}
+      {/* Outer pentagon */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)',
+        background: `linear-gradient(160deg, ${frameBright} 0%, ${frameMid} 60%, #0a0404 100%)`,
+        boxShadow: `inset 0 0 8px rgba(0,0,0,0.8)`,
+      }} />
+      {/* Inner pentagon */}
       <div style={{
         position: 'absolute',
-        left: 0, top: 0, bottom: 0,
-        width: 8,
-        background: `linear-gradient(180deg, ${accent}cc, ${accent}ee, ${accent}cc)`,
-        boxShadow: `2px 0 6px ${accent}60`,
+        top: '8%', left: '8%', right: '8%', bottom: '8%',
+        clipPath: 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)',
+        background: `linear-gradient(160deg, #1a0808 0%, #0a0404 100%)`,
       }} />
-      {/* Inner highlight */}
-      <div style={{
-        position: 'absolute',
-        top: 0, left: 0, right: 0, height: 1,
-        background: 'rgba(255,255,255,0.12)',
-      }} />
-      <span style={{
-        fontSize: 15,
-        fontWeight: 800,
-        color: '#d8d8d8',
-        fontFamily: '"Arial", sans-serif',
-        letterSpacing: '0.5px',
-        lineHeight: 1.25,
-        display: 'block',
-        textTransform: 'uppercase',
-      }}>
-        {text || 'SPÉCIALITÉ'}
-      </span>
+      {/* Rivet dots at pentagon vertices */}
+      {[
+        { x: '50%', y: '3%' }, { x: '91%', y: '38%' }, { x: '78%', y: '95%' },
+        { x: '22%', y: '95%' }, { x: '9%',  y: '38%' },
+      ].map((pt, i) => (
+        <div key={i} style={{
+          position: 'absolute', left: pt.x, top: pt.y,
+          width: 6, height: 6, borderRadius: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: `radial-gradient(circle at 35% 35%, ${frameBright}, ${frameMid})`,
+          boxShadow: `0 0 4px ${accent}80`,
+        }} />
+      ))}
+      {/* Icon */}
+      <Icon size={size * 0.4} style={{ color: accent, position: 'relative', zIndex: 1, filter: `drop-shadow(0 0 4px ${accent})` }} />
     </div>
   );
 }
 
-/** Celtic knot side ornament for achievement block */
-function CelticKnot({ height }: { height: number }) {
-  const w = 28;
+/** Metallic hexagonal specialty badge */
+function SpecBadge({ size, accent, frameMid, frameBright, Icon }:
+  { size: number; accent: string; frameMid: string; frameBright: string; Icon: React.ComponentType<any> }) {
   return (
-    <svg width={w} height={height} viewBox={`0 0 ${w} ${height}`}>
-      {Array.from({ length: Math.floor(height / 22) }).map((_, i) => {
-        const y = i * 22 + 11;
-        return (
-          <g key={i}>
-            <path d={`M ${w / 2 - 8} ${y - 8} C ${w / 2 + 2} ${y - 4} ${w / 2 + 2} ${y + 4} ${w / 2 - 8} ${y + 8}`}
-              stroke="#888" strokeWidth="2" fill="none" />
-            <path d={`M ${w / 2 + 8} ${y - 8} C ${w / 2 - 2} ${y - 4} ${w / 2 - 2} ${y + 4} ${w / 2 + 8} ${y + 8}`}
-              stroke="#888" strokeWidth="2" fill="none" />
-            <path d={`M ${w / 2 - 8} ${y} C ${w / 2 - 4} ${y - 3} ${w / 2 + 4} ${y - 3} ${w / 2 + 8} ${y}`}
-              stroke="#666" strokeWidth="1.5" fill="none" />
-          </g>
-        );
-      })}
+    <div style={{
+      width: size, height: size * 0.87,
+      position: 'relative',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {/* Outer hex */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        clipPath: HEX_CLIP,
+        background: `linear-gradient(160deg, ${frameBright}cc 0%, ${frameMid} 50%, #080404 100%)`,
+      }} />
+      {/* Inner hex */}
+      <div style={{
+        position: 'absolute',
+        top: '8%', left: '8%', right: '8%', bottom: '8%',
+        clipPath: HEX_CLIP,
+        background: `linear-gradient(160deg, #1c0808 0%, #0a0404 100%)`,
+      }} />
+      <Icon size={size * 0.38} style={{ color: accent, position: 'relative', zIndex: 1, filter: `drop-shadow(0 0 5px ${accent}bb)` }} />
+    </div>
+  );
+}
+
+/** Large hexagonal badge for achievement/flaw sections */
+function LargeHexBadge({ size, accent, frameMid, frameBright, Icon }:
+  { size: number; accent: string; frameMid: string; frameBright: string; Icon: React.ComponentType<any> }) {
+  return (
+    <div style={{
+      width: size, height: size * 0.87,
+      position: 'relative',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      {/* Outer hex (metallic ring) */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        clipPath: HEX_CLIP,
+        background: `linear-gradient(160deg, ${frameBright} 0%, ${frameMid} 50%, #060202 100%)`,
+      }} />
+      {/* Inner hex (dark) */}
+      <div style={{
+        position: 'absolute',
+        top: '10%', left: '10%', right: '10%', bottom: '10%',
+        clipPath: HEX_CLIP,
+        background: 'linear-gradient(160deg, #1a0808, #090404)',
+      }} />
+      <Icon size={size * 0.42} style={{ color: accent, position: 'relative', zIndex: 1, filter: `drop-shadow(0 0 6px ${accent})` }} />
+    </div>
+  );
+}
+
+/** Small info row icon */
+function InfoIcon({ size, accent, frameMid, Icon }:
+  { size: number; accent: string; frameMid: string; Icon: React.ComponentType<any> }) {
+  return (
+    <div style={{
+      width: size, height: size,
+      borderRadius: '50%',
+      background: `radial-gradient(circle at 35% 35%, ${frameMid}cc, #080404)`,
+      border: `1.5px solid ${frameMid}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0,
+    }}>
+      <Icon size={size * 0.5} style={{ color: accent, opacity: 0.9 }} />
+    </div>
+  );
+}
+
+/** Section divider bar */
+function Divider({ frameDark, frameBright }: { frameDark: string; frameBright: string }) {
+  return (
+    <div style={{
+      height: 4, width: '100%',
+      background: `linear-gradient(90deg, ${frameDark} 0%, ${frameBright} 20%, ${frameBright} 80%, ${frameDark} 100%)`,
+      boxShadow: `0 0 8px ${frameBright}80`,
+    }} />
+  );
+}
+
+/** SVG Corner bracket ornament */
+function CornerBracket({ pos, accent, frameBright }: { pos: 'tl' | 'tr' | 'bl' | 'br'; accent: string; frameBright: string }) {
+  const W = 52;
+  const sx = pos === 'tr' || pos === 'br' ? -1 : 1;
+  const sy = pos === 'bl' || pos === 'br' ? -1 : 1;
+  const ox = pos === 'tr' || pos === 'br' ? W : 0;
+  const oy = pos === 'bl' || pos === 'br' ? W : 0;
+
+  const corner: React.CSSProperties = {
+    position: 'absolute',
+    top: pos.startsWith('t') ? 0 : undefined,
+    bottom: pos.startsWith('b') ? 0 : undefined,
+    left: pos.endsWith('l') ? 0 : undefined,
+    right: pos.endsWith('r') ? 0 : undefined,
+  };
+
+  return (
+    <svg width={W} height={W} viewBox={`0 0 ${W} ${W}`} style={corner}>
+      <g transform={`translate(${ox}, ${oy}) scale(${sx}, ${sy})`}>
+        {/* Main L-bracket */}
+        <path d={`M 6 46 L 6 6 L 46 6`}
+          stroke={frameBright} strokeWidth="7" fill="none" strokeLinecap="square" />
+        {/* Inner highlight */}
+        <path d={`M 6 44 L 6 6 L 44 6`}
+          stroke={accent} strokeWidth="2" fill="none" strokeLinecap="square" opacity="0.6" />
+        {/* End rivet on right arm */}
+        <circle cx="46" cy="6" r="5" fill={frameBright} />
+        <circle cx="46" cy="6" r="2.5" fill={accent} opacity="0.8" />
+        {/* End rivet on bottom arm */}
+        <circle cx="6" cy="46" r="5" fill={frameBright} />
+        <circle cx="6" cy="46" r="2.5" fill={accent} opacity="0.8" />
+        {/* Corner center bolt */}
+        <circle cx="6" cy="6" r="7" fill={frameBright} />
+        <circle cx="6" cy="6" r="4" fill="#0a0404" />
+        <circle cx="6" cy="6" r="2" fill={accent} opacity="0.9" />
+      </g>
     </svg>
   );
 }
 
-// ──────────────────────────────────────────────────────
+/** Edge rivets row/column */
+function EdgeRivets({ axis, length, count, frameBright, accent }: {
+  axis: 'h' | 'v'; length: number; count: number; frameBright: string; accent: string;
+}) {
+  const spacing = length / (count + 1);
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => {
+        const offset = spacing * (i + 1);
+        const style: React.CSSProperties = {
+          position: 'absolute',
+          width: 8, height: 8,
+          borderRadius: '50%',
+          background: `radial-gradient(circle at 35% 35%, ${frameBright}, #301808)`,
+          boxShadow: `0 0 3px ${accent}60`,
+          transform: 'translate(-50%, -50%)',
+          ...(axis === 'h'
+            ? { left: offset, top: '50%' }
+            : { top: offset, left: '50%' }),
+        };
+        return <div key={i} style={style} />;
+      })}
+    </>
+  );
+}
+
+// ──────────────────────────────────────
 // Main Component
-// ──────────────────────────────────────────────────────
+// ──────────────────────────────────────
 
 export function LegendGenerator() {
   const [user, setUser] = useState<User | null>(null);
   const [card, setCard] = useState<LegendCard>(initialCard);
+  const [specIcons, setSpecIcons] = useState<[SpecIcon, SpecIcon, SpecIcon]>(['sword', 'shield', 'flag']);
   const [nextCardNumber, setNextCardNumber] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -370,13 +337,17 @@ export function LegendGenerator() {
     });
   }, []);
 
+  useEffect(() => {
+    setSpecIcons(DEFAULT_SPEC_ICONS[card.characterClass] as [SpecIcon, SpecIcon, SpecIcon]);
+  }, [card.characterClass]);
+
   const update = (field: keyof LegendCard, value: string | number) =>
     setCard(prev => ({ ...prev, [field]: value }));
 
   const updateSpec = (i: number, v: string) =>
     setCard(prev => {
       const s = [...prev.specialties] as [string, string, string];
-      s[i] = v.toUpperCase();
+      s[i] = v;
       return { ...prev, specialties: s };
     });
 
@@ -391,7 +362,8 @@ export function LegendGenerator() {
   };
 
   const exportOpts = {
-    cacheBust: true, pixelRatio: 2, width: CANVAS_W, height: CANVAS_H,
+    cacheBust: true, pixelRatio: 2,
+    width: CANVAS_W, height: CANVAS_H,
     style: { transform: 'scale(1)', transformOrigin: 'top left' },
   };
 
@@ -404,14 +376,10 @@ export function LegendGenerator() {
         ? await toJpeg(previewRef.current, { ...exportOpts, quality: 0.96 })
         : await toPng(previewRef.current, exportOpts);
       const a = document.createElement('a');
-      a.download = `legend-${card.name.replace(/\s+/g, '-')}-${String(card.cardNumber).padStart(4, '0')}.${format}`;
-      a.href = url;
-      a.click();
-    } catch (err) {
-      console.error('Download failed', err);
-    } finally {
-      setIsDownloading(false);
-    }
+      a.download = `legend-${(card.name || 'card').replace(/\s+/g, '-')}-${String(card.cardNumber).padStart(3, '0')}.${format}`;
+      a.href = url; a.click();
+    } catch (err) { console.error(err); }
+    finally { setIsDownloading(false); }
   };
 
   const handleSave = async () => {
@@ -422,35 +390,32 @@ export function LegendGenerator() {
       await new Promise(r => setTimeout(r, 150));
       const img = await toPng(previewRef.current!, exportOpts);
       await savePost({
-        type: 'legend', title: `${card.name} — ${card.surname}`,
+        type: 'legend', title: `${card.name || 'Légende'} — ${card.surname}`,
         imageUrl: img, authorName: user.displayName || 'Anonymous',
-        metadata: { firebaseUid: user.uid, card: { ...card, portraitUrl: '' } },
+        metadata: { firebaseUid: user.uid, card: { ...card, portraitUrl: '' }, specIcons },
       });
       alert('Carte sauvegardée !');
       const n = await getNextLegendCardNumber();
-      setNextCardNumber(n);
-      update('cardNumber', n);
+      setNextCardNumber(n); update('cardNumber', n);
     } catch (err: any) {
-      setSaveError(err?.message || 'Erreur lors de la sauvegarde');
-    } finally {
-      setIsSaving(false);
-    }
+      setSaveError(err?.message || 'Erreur');
+    } finally { setIsSaving(false); }
   };
 
-  const accent = CLASS_ACCENT[card.characterClass];
-  const stars = RARITY_STARS[card.rarity];
-  const rarityLabel = RARITY_FR[card.rarity];
-  const edition = RARITY_EDITION[card.rarity];
-  const cardNumStr = String(card.cardNumber).padStart(4, '0');
+  const theme = CLASS_THEME[card.characterClass];
+  const { accent, frameDark, frameMid, frameBright } = theme;
   const ClassIcon = CLASS_ICONS[card.characterClass];
+  const stars = RARITY_STARS[card.rarity];
+  const cardNumStr = String(card.cardNumber).padStart(3, '0');
+  const edition = RARITY_EDITION[card.rarity];
 
-  // Ring layout constants
-  const RING_DIAM = 876;
-  const RING_TOP = 90;
-  const RING_LEFT = (CANVAS_W - RING_DIAM) / 2; // 102px on each side
-  const RING_OUTER_R = RING_DIAM / 2 - 4;
-  const RING_INNER_R = RING_OUTER_R - 46;
-  const PORTRAIT_DIAM = RING_INNER_R * 2;
+  // Resolved spec icons
+  const spec1Icon = SPEC_ICON_LIST.find(x => x.id === specIcons[0])?.Icon ?? Sword;
+  const spec2Icon = SPEC_ICON_LIST.find(x => x.id === specIcons[1])?.Icon ?? Shield;
+  const spec3Icon = SPEC_ICON_LIST.find(x => x.id === specIcons[2])?.Icon ?? Flag;
+
+  const cinzel = '"Cinzel", "Georgia", serif';
+  const sansSerif = '"Arial", "Helvetica", sans-serif';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 bg-[#0a0a0a] text-white min-h-[calc(100vh-4rem)] p-6 rounded-2xl font-sans">
@@ -467,16 +432,16 @@ export function LegendGenerator() {
 
         {/* Class */}
         <div className="bg-[#141414] p-4 rounded-xl border border-neutral-800 space-y-3">
-          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Classe</p>
+          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Classe du personnage</p>
           <div className="grid grid-cols-4 gap-2">
             {CLASSES.map(cls => {
-              const a = CLASS_ACCENT[cls];
+              const t = CLASS_THEME[cls];
               const Icon = CLASS_ICONS[cls];
               return (
                 <button key={cls} onClick={() => update('characterClass', cls)}
                   className="flex flex-col items-center gap-1 p-2 rounded-lg border transition-all text-[10px] text-neutral-400"
-                  style={{ borderColor: card.characterClass === cls ? a : '#333', background: card.characterClass === cls ? `${a}25` : 'transparent' }}>
-                  <Icon size={16} style={{ color: a }} />
+                  style={{ borderColor: card.characterClass === cls ? t.accent : '#333', background: card.characterClass === cls ? `${t.accent}20` : 'transparent' }}>
+                  <Icon size={16} style={{ color: t.accent }} />
                   {cls}
                 </button>
               );
@@ -491,42 +456,43 @@ export function LegendGenerator() {
             {RARITIES.map(r => (
               <button key={r} onClick={() => update('rarity', r)}
                 className="px-3 py-1.5 rounded-full text-xs font-semibold border uppercase transition-all"
-                style={{
-                  borderColor: card.rarity === r ? accent : '#333',
-                  background: card.rarity === r ? `${accent}25` : 'transparent',
-                  color: card.rarity === r ? accent : '#555',
-                }}>
+                style={{ borderColor: card.rarity === r ? accent : '#333', background: card.rarity === r ? `${accent}25` : 'transparent', color: card.rarity === r ? accent : '#555' }}>
                 {RARITY_FR[r]}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Basic Info */}
+        {/* Basic info */}
         <div className="bg-[#141414] p-4 rounded-xl border border-neutral-800 space-y-3">
           <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Informations</p>
           {[
-            { label: 'NOM', field: 'name' as const },
-            { label: 'SURNOM / TITRE', field: 'surname' as const },
-            { label: 'ÈRE', field: 'era' as const },
-            { label: 'ORIGINE', field: 'origin' as const },
-          ].map(({ label, field }) => (
+            { label: '1. Nom', field: 'name' as const, placeholder: 'EX: ALEXANDRE LE GRAND' },
+            { label: '4. Surnom / Titre', field: 'surname' as const, placeholder: 'Le Conquérant du Monde' },
+            { label: 'Ère', field: 'era' as const, placeholder: '356 av. J.-C. — 323 av. J.-C.' },
+            { label: 'Origine', field: 'origin' as const, placeholder: 'Macédoine / Royaume Argéade' },
+          ].map(({ label, field, placeholder }) => (
             <div key={field}>
               <label className="block text-[10px] text-neutral-600 mb-1 uppercase tracking-wider">{label}</label>
               <input type="text" value={card[field] as string} onChange={e => update(field, e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none"
-                style={{ '--tw-ring-color': accent } as any}
-              />
+                placeholder={placeholder}
+                className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" />
             </div>
           ))}
+          <div>
+            <label className="block text-[10px] text-neutral-600 mb-1 uppercase tracking-wider">Sous-type (classe détaillée)</label>
+            <input type="text" value={card.surname} onChange={e => update('surname', e.target.value)}
+              placeholder="ex: Conquérant / Stratège"
+              className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none" />
+          </div>
         </div>
 
         {/* Portrait */}
         <div className="bg-[#141414] p-4 rounded-xl border border-neutral-800 space-y-3">
-          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Portrait</p>
+          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Portrait (4. Illustration)</p>
           <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
           <div onClick={() => fileInputRef.current?.click()}
-            className="w-full h-40 bg-[#0a0a0a] border-2 border-dashed border-neutral-800 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden hover:border-neutral-600">
+            className="w-full h-40 bg-[#0a0a0a] border-2 border-dashed border-neutral-800 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-neutral-600 transition-all overflow-hidden">
             {card.portraitUrl
               ? <img src={card.portraitUrl} alt="" className="w-full h-full object-cover object-top" />
               : <><ImageIcon className="w-8 h-8 text-neutral-700 mb-2" /><span className="text-xs text-neutral-600">Cliquer pour uploader le portrait</span></>}
@@ -535,33 +501,54 @@ export function LegendGenerator() {
 
         {/* Specialties */}
         <div className="bg-[#141414] p-4 rounded-xl border border-neutral-800 space-y-3">
-          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Spécialités (3)</p>
-          {card.specialties.map((s, i) => (
-            <div key={i}>
-              <label className="block text-[10px] text-neutral-600 mb-1 uppercase tracking-wider">Spécialité {i + 1}</label>
-              <input type="text" value={s} onChange={e => updateSpec(i, e.target.value)}
-                className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none uppercase" />
+          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">6. Spécialités (3)</p>
+          {[0, 1, 2].map(i => (
+            <div key={i} className="space-y-1">
+              <label className="block text-[10px] text-neutral-600 uppercase tracking-wider">Spécialité {i + 1}</label>
+              <div className="flex gap-2">
+                <select value={specIcons[i]}
+                  onChange={e => {
+                    const s = [...specIcons] as [SpecIcon, SpecIcon, SpecIcon];
+                    s[i] = e.target.value as SpecIcon;
+                    setSpecIcons(s);
+                  }}
+                  className="bg-[#0a0a0a] border border-neutral-800 rounded-lg px-2 py-2 text-white text-xs focus:outline-none w-28">
+                  {SPEC_ICON_LIST.map(o => <option key={o.id} value={o.id}>{o.id}</option>)}
+                </select>
+                <input type="text" value={card.specialties[i]} onChange={e => updateSpec(i, e.target.value)}
+                  placeholder="Ex: COMBAT PHYSIQUE"
+                  className="flex-1 bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none uppercase" />
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Details */}
+        {/* Achievement & Flaw */}
         <div className="bg-[#141414] p-4 rounded-xl border border-neutral-800 space-y-3">
-          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">Détails</p>
-          {[
-            { label: 'Réalisation Clef', field: 'keyAchievement' as const },
-            { label: 'Faille Légendaire', field: 'flaw' as const },
-            { label: 'Citation', field: 'quote' as const },
-          ].map(({ label, field }) => (
-            <div key={field}>
-              <label className="block text-[10px] text-neutral-600 mb-1 uppercase tracking-wider">{label}</label>
-              <textarea value={card[field] as string} onChange={e => update(field, e.target.value)}
-                rows={2} className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none resize-none uppercase" />
-            </div>
-          ))}
+          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">7 & 8 — Réalisation & Faille</p>
+          <div>
+            <label className="block text-[10px] text-neutral-600 mb-1 uppercase tracking-wider">7. Réalisation Clef</label>
+            <textarea value={card.keyAchievement} onChange={e => update('keyAchievement', e.target.value)} rows={2}
+              className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none resize-none"
+              placeholder="Conquit un empire de 5 millions de km² en 13 ans..." />
+          </div>
+          <div>
+            <label className="block text-[10px] text-neutral-600 mb-1 uppercase tracking-wider">8. Faille Légendaire</label>
+            <textarea value={card.flaw} onChange={e => update('flaw', e.target.value)} rows={2}
+              className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none resize-none"
+              placeholder="Son orgueil croissant le poussa à l'épuisement fatal..." />
+          </div>
         </div>
 
-        {/* Card number */}
+        {/* Citation */}
+        <div className="bg-[#141414] p-4 rounded-xl border border-neutral-800 space-y-2">
+          <label className="block text-[10px] text-neutral-600 uppercase tracking-wider">9. Citation</label>
+          <textarea value={card.quote} onChange={e => update('quote', e.target.value)} rows={2}
+            className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none resize-none italic"
+            placeholder="Il n'y a rien d'impossible à celui qui essaie." />
+        </div>
+
+        {/* Card Number */}
         <div className="bg-[#141414] p-4 rounded-xl border border-neutral-800">
           <label className="block text-[10px] text-neutral-600 mb-1 uppercase tracking-wider">Numéro de carte</label>
           <input type="number" value={card.cardNumber} onChange={e => update('cardNumber', parseInt(e.target.value) || 1)}
@@ -585,353 +572,350 @@ export function LegendGenerator() {
             className="py-2.5 px-4 text-white font-medium rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
             style={{ background: accent }}>
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {user ? 'Sauvegarder la carte' : 'Se connecter pour sauvegarder'}
+            {user ? 'Sauvegarder' : 'Se connecter pour sauvegarder'}
           </button>
         </div>
       </div>
 
-      {/* ─── PREVIEW ─── */}
+      {/* ─── CARD PREVIEW ─── */}
       <div className="lg:col-span-7 flex justify-center items-start overflow-auto">
         <div ref={containerRef}
-          className="w-full max-w-[410px] xl:max-w-[440px] aspect-[4/5] relative rounded-2xl overflow-hidden"
-          style={{ boxShadow: '0 0 60px rgba(0,0,0,0.9), 0 0 120px rgba(0,0,0,0.6)' }}>
+          style={{ aspectRatio: `${CANVAS_W}/${CANVAS_H}` }}
+          className="w-full max-w-[380px] xl:max-w-[410px] relative rounded overflow-hidden"
+          style2={{ boxShadow: `0 0 80px ${accent}40, 0 20px 60px rgba(0,0,0,0.8)` } as any}>
 
-          {/* ──────────────── CANVAS 1080 × 1350 ──────────────── */}
+          {/* ──────────── CANVAS ──────────── */}
           <div ref={previewRef} style={{
             position: 'absolute', top: 0, left: 0,
             width: `${CANVAS_W}px`, height: `${CANVAS_H}px`,
-            transform: `scale(${previewScale})`, transformOrigin: 'top left',
-            fontFamily: '"Arial", "Helvetica", sans-serif',
+            transform: `scale(${previewScale})`,
+            transformOrigin: 'top left',
+            background: frameDark,
             overflow: 'hidden',
-            background: '#1a2030',
           }}>
 
-            {/* ── Background: dark slate with topographic texture ── */}
+            {/* ── OUTER FRAME (background gradient) ── */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'linear-gradient(160deg, #1c2438 0%, #141926 45%, #10161e 70%, #181e2c 100%)',
+              background: `linear-gradient(160deg, ${frameDark} 0%, ${frameMid} 30%, ${frameBright} 50%, ${frameMid} 70%, ${frameDark} 100%)`,
             }} />
-            {/* Map/topo grid lines */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              backgroundImage: `
-                linear-gradient(rgba(80,100,140,0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(80,100,140,0.035) 1px, transparent 1px)
-              `,
-              backgroundSize: '60px 60px',
-            }} />
-            {/* Subtle contour map curves (organic blobs simulating topo lines) */}
-            <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.06 }} viewBox="0 0 1080 1350">
-              <path d="M 0 800 Q 200 750 400 820 Q 600 890 800 830 Q 950 790 1080 850" stroke="#8090a0" strokeWidth="1" fill="none" />
-              <path d="M 0 830 Q 250 775 450 845 Q 650 915 850 855 Q 1000 815 1080 875" stroke="#8090a0" strokeWidth="1" fill="none" />
-              <path d="M 0 860 Q 300 800 500 870 Q 700 940 900 880 Q 1020 840 1080 900" stroke="#8090a0" strokeWidth="1" fill="none" />
-              <path d="M 100 1100 Q 300 1050 500 1120 Q 700 1190 900 1130 Q 1020 1090 1080 1150" stroke="#8090a0" strokeWidth="0.8" fill="none" />
-              <path d="M 0 200 Q 200 180 350 220 Q 500 260 700 200 Q 900 140 1080 180" stroke="#8090a0" strokeWidth="0.8" fill="none" />
-            </svg>
-
-            {/* ── Holographic rainbow border (left and right edges) ── */}
-            {/* Left edge shimmer */}
-            <div style={{
-              position: 'absolute', top: 0, left: 0, bottom: 0, width: 10,
-              background: 'linear-gradient(180deg, #ff0040 0%, #ff7000 12%, #ffd700 25%, #40ff40 38%, #00cfff 50%, #7040ff 62%, #ff0080 75%, #ff5500 88%, #ffd700 100%)',
-              opacity: 0.7,
-            }} />
-            {/* Right edge shimmer */}
-            <div style={{
-              position: 'absolute', top: 0, right: 0, bottom: 0, width: 10,
-              background: 'linear-gradient(180deg, #ffd700 0%, #ff0080 12%, #7040ff 25%, #00cfff 38%, #40ff40 50%, #ffd700 62%, #ff7000 75%, #ff0040 88%, #7040ff 100%)',
-              opacity: 0.7,
-            }} />
-
-            {/* ── Outer card frame ── */}
+            {/* Inner card surface */}
             <div style={{
               position: 'absolute',
-              top: 14, left: 14, right: 14, bottom: 14,
-              border: '2px solid #3a3a3a',
-              borderRadius: 16,
-              boxShadow: 'inset 0 0 0 1px rgba(180,160,80,0.15)',
-              pointerEvents: 'none',
-            }} />
-            {/* Inner thin line */}
-            <div style={{
-              position: 'absolute',
-              top: 20, left: 20, right: 20, bottom: 20,
-              border: '1px solid rgba(160,140,60,0.2)',
-              borderRadius: 12,
-              pointerEvents: 'none',
+              top: B, left: B, right: B, bottom: B,
+              background: '#0f0c0c',
             }} />
 
-            {/* ── Corner bracket ornaments ── */}
-            {([
-              { top: 18, left: 18 },
-              { top: 18, right: 18 },
-              { bottom: 18, left: 18 },
-              { bottom: 18, right: 18 },
-            ] as React.CSSProperties[]).map((pos, i) => (
-              <svg key={i} width="36" height="36" viewBox="0 0 36 36"
-                style={{ position: 'absolute', ...pos, opacity: 0.7 }}>
-                {/* Outer corner */}
-                <path d={`M 2 20 L 2 4 Q 2 2 4 2 L 20 2`}
-                  stroke="#c9a84c" strokeWidth="2" fill="none"
-                  transform={i === 1 || i === 3 ? 'scale(-1,1) translate(-36,0)' : i === 2 || i === 3 ? 'scale(1,-1) translate(0,-36)' : ''}
-                />
-                {i === 2 || i === 3
-                  ? <path d={`M 2 20 L 2 4 Q 2 2 4 2 L 20 2`} stroke="#c9a84c" strokeWidth="2" fill="none" transform={`scale(${i === 3 ? -1 : 1},-1) translate(${i === 3 ? -36 : 0},-36)`} />
-                  : null}
-                <circle cx={i % 2 === 0 ? 6 : 30} cy={i < 2 ? 6 : 30} r="3" fill="#c9a84c" opacity="0.8" />
-              </svg>
+            {/* ── FRAME EDGE RIVETS ── */}
+            {/* Top edge */}
+            <div style={{ position: 'absolute', top: 0, left: 55, right: 55, height: B }}>
+              <EdgeRivets axis="h" length={CANVAS_W - 110} count={5} frameBright={frameBright} accent={accent} />
+            </div>
+            {/* Bottom edge */}
+            <div style={{ position: 'absolute', bottom: 0, left: 55, right: 55, height: B }}>
+              <EdgeRivets axis="h" length={CANVAS_W - 110} count={5} frameBright={frameBright} accent={accent} />
+            </div>
+            {/* Left edge */}
+            <div style={{ position: 'absolute', left: 0, top: 55, bottom: 55, width: B }}>
+              <EdgeRivets axis="v" length={CANVAS_H - 110} count={8} frameBright={frameBright} accent={accent} />
+            </div>
+            {/* Right edge */}
+            <div style={{ position: 'absolute', right: 0, top: 55, bottom: 55, width: B }}>
+              <EdgeRivets axis="v" length={CANVAS_H - 110} count={8} frameBright={frameBright} accent={accent} />
+            </div>
+
+            {/* ── CORNER BRACKETS ── */}
+            {(['tl', 'tr', 'bl', 'br'] as const).map(pos => (
+              <CornerBracket key={pos} pos={pos} accent={accent} frameBright={frameBright} />
             ))}
 
-            {/* ── Corner illustrations ── */}
-            {/* Scrolls top-left */}
-            <div style={{ position: 'absolute', top: 80, left: 18 }}>
-              <ScrollIllustration />
-            </div>
-            {/* Owl top-right */}
-            <div style={{ position: 'absolute', top: 78, right: 18 }}>
-              <OwlIllustration />
-            </div>
-
-            {/* ── DOSSIER BANNER ── */}
-            <div style={{
-              position: 'absolute', top: 30, left: '50%',
-              transform: 'translateX(-50%)',
-              whiteSpace: 'nowrap',
-              zIndex: 10,
-            }}>
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 14,
-                background: 'linear-gradient(180deg, #2c2c2c 0%, #1c1c1c 40%, #161616 100%)',
-                border: '1px solid #5a5a5a',
-                borderRadius: 6,
-                padding: '9px 26px',
-                boxShadow: '0 2px 16px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1)',
-              }}>
-                <div style={{
-                  width: 10, height: 10, borderRadius: '50%',
-                  background: `radial-gradient(circle at 35% 35%, ${accent}ff, ${accent}99)`,
-                  boxShadow: `0 0 8px ${accent}cc`,
-                }} />
-                <span style={{
-                  fontSize: 18, fontWeight: 700, letterSpacing: '3px',
-                  fontFamily: '"Arial", sans-serif', textTransform: 'uppercase',
-                  background: 'linear-gradient(180deg, #dcdcdc 0%, #b0b0b0 50%, #989898 100%)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                }}>
-                  DOSSIER N° {card.cardNumber} • NIVEAU : {rarityLabel}
-                </span>
-                <div style={{
-                  width: 10, height: 10, borderRadius: '50%',
-                  background: `radial-gradient(circle at 35% 35%, ${accent}ff, ${accent}99)`,
-                  boxShadow: `0 0 8px ${accent}cc`,
-                }} />
-              </div>
-            </div>
-
-            {/* ── PORTRAIT RING + IMAGE ── */}
+            {/* ──────────── CARD CONTENT (inside frame border) ──────────── */}
             <div style={{
               position: 'absolute',
-              top: RING_TOP,
-              left: RING_LEFT,
-              width: RING_DIAM,
-              height: RING_DIAM,
-              zIndex: 2,
-            }}>
-              {/* Portrait image (circular, clipped) */}
-              <div style={{
-                position: 'absolute',
-                top: (RING_DIAM / 2) - RING_INNER_R,
-                left: (RING_DIAM / 2) - RING_INNER_R,
-                width: PORTRAIT_DIAM,
-                height: PORTRAIT_DIAM,
-                borderRadius: '50%',
-                overflow: 'hidden',
-                background: 'linear-gradient(160deg, #141824, #0c1018)',
-                zIndex: 1,
-              }}>
-                {card.portraitUrl
-                  ? <img src={card.portraitUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
-                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 10 }}>
-                      <ImageIcon size={80} style={{ color: '#282830' }} />
-                      <span style={{ fontSize: 16, color: '#383840', fontFamily: 'sans-serif' }}>Portrait</span>
-                    </div>
-                }
-              </div>
-
-              {/* Ornate ring on top */}
-              <div style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
-                <PortraitRing diam={RING_DIAM} accent={accent} />
-              </div>
-            </div>
-
-            {/* ── INFO SECTION ── */}
-            <div style={{
-              position: 'absolute',
-              top: RING_TOP + RING_DIAM + 10,
-              left: 60, right: 60,
-              zIndex: 3,
+              top: B, left: B, right: B, bottom: B,
+              display: 'flex', flexDirection: 'column',
+              overflow: 'hidden',
             }}>
 
-              {/* NOM + ÈRE */}
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 16, marginBottom: 6, flexWrap: 'wrap' }}>
-                <span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: accent, letterSpacing: '1.5px' }}>NOM </span>
-                  <span style={{ fontSize: 16, fontWeight: 400, color: '#ddd', fontStyle: 'normal' }}>[{card.name}]</span>
-                </span>
-                <span style={{ color: '#3a3a3a', fontSize: 12 }}>•</span>
-                <span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: accent, letterSpacing: '1.5px' }}>ÈRE </span>
-                  <span style={{ fontSize: 14, fontWeight: 400, color: '#aaa' }}>[{card.era}]</span>
-                </span>
-              </div>
-
-              {/* ORIGINE + CLASSE */}
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
-                <span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: accent, letterSpacing: '1.5px' }}>ORIGINE </span>
-                  <span style={{ fontSize: 14, fontWeight: 400, color: '#aaa' }}>[{card.origin}]</span>
-                </span>
-                <span style={{ color: '#3a3a3a', fontSize: 12 }}>•</span>
-                <span>
-                  <span style={{ fontSize: 16, fontWeight: 800, color: accent, letterSpacing: '1.5px' }}>CLASSE </span>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: '#e0e0e0' }}>{card.characterClass.toUpperCase()}</span>
-                </span>
-              </div>
-
-              {/* SURNOM banner */}
+              {/* ═══ SECTION 1: HEADER ═══ */}
               <div style={{
-                display: 'flex', alignItems: 'center', gap: 0,
-                marginBottom: 14, overflow: 'hidden',
-              }}>
-                {/* Left ornament line */}
-                <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, transparent, ${accent}80)` }} />
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '7px 16px',
-                  background: 'rgba(0,0,0,0.4)',
-                  border: `1px solid ${accent}60`,
-                  borderRadius: 4,
-                  flexShrink: 0,
-                }}>
-                  <span style={{ color: accent, fontSize: 16, opacity: 0.8 }}>❧</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: accent, letterSpacing: '2px', textTransform: 'uppercase' }}>
-                    SURNOM / TITRE :
-                  </span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: '#e0d8c0', fontStyle: 'italic', textTransform: 'uppercase' }}>
-                    [{card.surname}]
-                  </span>
-                  <span style={{ color: accent, fontSize: 16, opacity: 0.8, transform: 'scaleX(-1)', display: 'inline-block' }}>❧</span>
-                </div>
-                {/* Right ornament line */}
-                <div style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${accent}80, transparent)` }} />
-              </div>
-
-              {/* SPECIALTY BADGES */}
-              <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-                {card.specialties.map((spec, i) => (
-                  <SpecialtyBadge key={i} text={spec} accent={accent} />
-                ))}
-              </div>
-
-              {/* ACHIEVEMENT & FLAW BLOCK with Celtic side knots */}
-              <div style={{ display: 'flex', alignItems: 'stretch', gap: 6, marginBottom: 12 }}>
-                {/* Left Celtic knot */}
-                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                  <CelticKnot height={86} />
-                </div>
-
-                <div style={{
-                  flex: 1,
-                  background: 'linear-gradient(180deg, rgba(10,12,18,0.8), rgba(16,20,28,0.8))',
-                  border: `1px solid ${accent}50`,
-                  borderRadius: 4,
-                  padding: '12px 16px',
-                  position: 'relative',
-                }}>
-                  {/* Corner accents */}
-                  {[{tl: true}, {tr: true}, {bl: true}, {br: true}].map((_, ci) => (
-                    <svg key={ci} width="12" height="12" viewBox="0 0 12 12" style={{
-                      position: 'absolute',
-                      top: ci < 2 ? -1 : undefined, bottom: ci >= 2 ? -1 : undefined,
-                      left: ci % 2 === 0 ? -1 : undefined, right: ci % 2 === 1 ? -1 : undefined,
-                    }}>
-                      <path d={ci % 2 === 0
-                        ? (ci < 2 ? 'M 1 10 L 1 1 L 10 1' : 'M 1 2 L 1 11 L 10 11')
-                        : (ci < 2 ? 'M 11 10 L 11 1 L 2 1' : 'M 11 2 L 11 11 L 2 11')}
-                        stroke={accent} strokeWidth="2" fill="none" />
-                    </svg>
-                  ))}
-
-                  {/* Réalisation Clef */}
-                  <div style={{ marginBottom: 8, lineHeight: 1.35 }}>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: accent }}>RÉALISATION CLEF : </span>
-                    <span style={{ fontSize: 14, fontWeight: 400, color: '#d8d0c0' }}>[{card.keyAchievement}]</span>
-                  </div>
-                  {/* Faille Légendaire */}
-                  <div style={{ lineHeight: 1.35 }}>
-                    <span style={{ fontSize: 14, fontWeight: 800, color: accent }}>FAILLE LÉGENDAIRE : </span>
-                    <span style={{ fontSize: 14, fontWeight: 400, color: '#d8d0c0' }}>[{card.flaw}]</span>
-                  </div>
-                </div>
-
-                {/* Right Celtic knot */}
-                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                  <CelticKnot height={86} />
-                </div>
-              </div>
-
-              {/* QUOTE BOX */}
-              <div style={{
-                border: `2px solid ${accent}90`,
-                borderRadius: 4,
-                padding: '12px 18px',
-                background: 'rgba(0,0,0,0.45)',
-                textAlign: 'center',
-                marginBottom: 12,
+                height: 108,
+                display: 'flex',
+                alignItems: 'stretch',
                 position: 'relative',
-                boxShadow: `inset 0 0 20px rgba(0,0,0,0.4), 0 0 12px ${accent}20`,
+                flexShrink: 0,
               }}>
-                {/* Inner inset line */}
+                {/* Pentagon badge */}
                 <div style={{
-                  position: 'absolute', inset: 3,
-                  border: `1px solid ${accent}35`,
-                  borderRadius: 2,
-                  pointerEvents: 'none',
-                }} />
-                <span style={{
-                  fontSize: 15, fontStyle: 'italic',
-                  color: '#ddd8c0', fontFamily: '"Georgia", "Times New Roman", serif',
-                  lineHeight: 1.4,
+                  width: 96, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: 8,
                 }}>
-                  « [{card.quote}] »
-                </span>
+                  <PentagonBadge size={80} accent={accent} frameMid={frameMid} frameBright={frameBright} Icon={ClassIcon} />
+                </div>
+
+                {/* Name area */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '8px 12px 8px 4px' }}>
+                  <div style={{ fontSize: 12, color: '#888', fontFamily: sansSerif, marginBottom: 4 }}>1. NOM :</div>
+                  <div style={{
+                    fontSize: card.name ? 26 : 20,
+                    fontWeight: 700,
+                    color: '#e8e0d8',
+                    fontFamily: cinzel,
+                    letterSpacing: '1px',
+                    lineHeight: 1.1,
+                    textTransform: 'uppercase',
+                  }}>
+                    {card.name || <span style={{ color: '#333', fontStyle: 'italic', fontSize: 16, fontFamily: sansSerif }}>NOM DU PERSONNAGE</span>}
+                  </div>
+                </div>
+
+                {/* Vertical divider */}
+                <div style={{
+                  width: 2, alignSelf: 'stretch', margin: '8px 0',
+                  background: `linear-gradient(180deg, transparent, ${frameBright}, ${frameBright}, transparent)`,
+                }} />
+
+                {/* Rarity + Number */}
+                <div style={{
+                  width: 168, flexShrink: 0,
+                  display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                  padding: '8px 14px',
+                  gap: 6,
+                }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: accent, fontFamily: sansSerif, letterSpacing: '1px' }}>RARETÉ :</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#e0d8d0', fontFamily: cinzel, textTransform: 'uppercase' }}>
+                      {RARITY_FR[card.rarity]}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#888', fontFamily: sansSerif }}>
+                    N° : <span style={{ color: '#c8c0b8', fontWeight: 600 }}>{cardNumStr}</span>
+                  </div>
+                </div>
               </div>
 
-              {/* STARS */}
-              <div style={{ textAlign: 'center', marginBottom: 8 }}>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <span key={i} style={{
-                    fontSize: 22, margin: '0 4px',
-                    color: i < stars ? accent : '#2a2a2a',
-                    textShadow: i < stars ? `0 0 10px ${accent}bb` : 'none',
-                  }}>★</span>
-                ))}
-              </div>
-            </div>
+              {/* ─── Divider ─── */}
+              <Divider frameDark={frameDark} frameBright={frameBright} />
 
-            {/* ── FOOTER ── */}
-            <div style={{
-              position: 'absolute', bottom: 22,
-              left: 0, right: 0, textAlign: 'center',
-            }}>
-              <span style={{
-                fontSize: 11, fontFamily: '"Arial", sans-serif',
-                color: '#3a3a3a', letterSpacing: '2.5px', textTransform: 'uppercase',
+              {/* ═══ SECTION 2: PORTRAIT ═══ */}
+              <div style={{
+                flex: '0 0 396px',
+                background: '#050404',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                position: 'relative', overflow: 'hidden',
               }}>
-                TCG COLLECTOR • PREMIUM EDITION • {cardNumStr}/{edition}
-              </span>
-            </div>
-          </div>
+                {card.portraitUrl ? (
+                  <img src={card.portraitUrl} alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                    <ImageIcon size={64} style={{ color: '#1e1818' }} />
+                    <div style={{ color: '#2a2020', fontFamily: sansSerif, fontSize: 14, textAlign: 'center' }}>
+                      4. PORTRAIT D'ACTION
+                      <br />
+                      <span style={{ fontSize: 12 }}>(Illustration du personnage)</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ─── Divider ─── */}
+              <Divider frameDark={frameDark} frameBright={frameBright} />
+
+              {/* ═══ SECTION 3: INFO ROWS ═══ */}
+              <div style={{
+                flexShrink: 0,
+                padding: '4px 0',
+                background: '#0f0c0c',
+              }}>
+                {[
+                  { label: '4. SURNOM / APPELLATION / TITRE / PSEUDONYME :', value: card.surname, Icon: ClassIcon },
+                  { label: 'ÈRE :', value: card.era, Icon: Calendar },
+                  { label: 'ORIGINE :', value: card.origin, Icon: Globe },
+                  { label: `5. CLASSE : ${card.characterClass.toUpperCase()} —`, value: '', Icon: Shield },
+                ].map(({ label, value, Icon: RowIcon }, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center',
+                    padding: '5px 10px 5px 8px',
+                    minHeight: 46,
+                    borderBottom: i < 3 ? `1px solid ${frameDark}` : 'none',
+                  }}>
+                    <InfoIcon size={32} accent={accent} frameMid={frameMid} Icon={RowIcon} />
+                    <div style={{ marginLeft: 8, flex: 1 }}>
+                      <span style={{
+                        fontSize: 11, color: '#888', fontFamily: sansSerif, letterSpacing: '0.3px',
+                      }}>
+                        {label}{' '}
+                      </span>
+                      {value && (
+                        <span style={{ fontSize: 13, color: '#d8d0c8', fontFamily: cinzel }}>
+                          {value}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {/* Sous-type */}
+                <div style={{
+                  textAlign: 'center', padding: '4px 10px',
+                  fontSize: 12, color: '#666', fontFamily: sansSerif, fontStyle: 'italic',
+                }}>
+                  ({card.surname || 'Sous-type'})
+                </div>
+              </div>
+
+              {/* ─── Divider ─── */}
+              <Divider frameDark={frameDark} frameBright={frameBright} />
+
+              {/* ═══ SECTION 4: SPECIALTIES ═══ */}
+              <div style={{
+                flexShrink: 0,
+                background: '#0c0a0a',
+                padding: '6px 8px 8px',
+              }}>
+                {/* Header */}
+                <div style={{
+                  textAlign: 'center', fontSize: 12,
+                  color: '#888', fontFamily: sansSerif,
+                  letterSpacing: '1.5px', marginBottom: 6,
+                  borderBottom: `1px solid ${frameDark}40`,
+                  paddingBottom: 4,
+                }}>
+                  6. SPÉCIALITÉS (3)
+                </div>
+                {/* 3 Badges */}
+                <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-start' }}>
+                  {[
+                    { Icon: spec1Icon, text: card.specialties[0] || '' },
+                    { Icon: spec2Icon, text: card.specialties[1] || '' },
+                    { Icon: spec3Icon, text: card.specialties[2] || '' },
+                  ].map(({ Icon: BIcon, text }, i) => (
+                    <div key={i} style={{
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                      gap: 4, flex: 1, padding: '0 4px',
+                    }}>
+                      <SpecBadge size={68} accent={accent} frameMid={frameMid} frameBright={frameBright} Icon={BIcon} />
+                      {/* Underline bar */}
+                      <div style={{ width: '80%', height: 1, background: `linear-gradient(90deg, transparent, ${frameBright}, transparent)` }} />
+                      <div style={{
+                        fontSize: 9, color: '#a09090', fontFamily: sansSerif,
+                        textAlign: 'center', lineHeight: 1.3, textTransform: 'uppercase',
+                        letterSpacing: '0.3px', minHeight: 22,
+                      }}>
+                        {text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ─── Divider ─── */}
+              <Divider frameDark={frameDark} frameBright={frameBright} />
+
+              {/* ═══ SECTION 5: ACHIEVEMENT ═══ */}
+              <div style={{
+                flexShrink: 0, height: 78,
+                display: 'flex', alignItems: 'stretch',
+                background: 'linear-gradient(90deg, #6a4a28 0%, #8a6038 40%, #7a5430 100%)',
+                position: 'relative', overflow: 'hidden',
+              }}>
+                {/* Texture overlay */}
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 1px, transparent 1px, transparent 6px)',
+                }} />
+                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', padding: '6px 8px', zIndex: 1 }}>
+                  <LargeHexBadge size={58} accent={accent} frameMid={frameMid} frameBright={frameBright} Icon={Trophy} />
+                </div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '8px 10px 8px 4px', zIndex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: accent, fontFamily: sansSerif, letterSpacing: '0.5px', marginBottom: 3 }}>
+                    7. RÉALISATION CLEF :
+                  </div>
+                  <div style={{ fontSize: 11, color: '#1a0f08', fontFamily: sansSerif, lineHeight: 1.4 }}>
+                    {card.keyAchievement || <span style={{ color: '#3a2818', fontStyle: 'italic' }}>Description de la réalisation majeure...</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* ─── Divider ─── */}
+              <Divider frameDark={frameDark} frameBright={frameBright} />
+
+              {/* ═══ SECTION 6: FLAW ═══ */}
+              <div style={{
+                flexShrink: 0, height: 78,
+                display: 'flex', alignItems: 'stretch',
+                background: 'linear-gradient(90deg, #5a3820 0%, #7a5030 40%, #6a4428 100%)',
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'repeating-linear-gradient(45deg, rgba(0,0,0,0.08) 0px, rgba(0,0,0,0.08) 1px, transparent 1px, transparent 6px)',
+                }} />
+                <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', padding: '6px 8px', zIndex: 1 }}>
+                  <LargeHexBadge size={58} accent={accent} frameMid={frameMid} frameBright={frameBright} Icon={AlertTriangle} />
+                </div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '8px 10px 8px 4px', zIndex: 1 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: accent, fontFamily: sansSerif, letterSpacing: '0.5px', marginBottom: 3 }}>
+                    8. FAILLE :
+                  </div>
+                  <div style={{ fontSize: 11, color: '#1a0f08', fontFamily: sansSerif, lineHeight: 1.4 }}>
+                    {card.flaw || <span style={{ color: '#3a2818', fontStyle: 'italic' }}>Description de la faiblesse légendaire...</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* ─── Divider ─── */}
+              <Divider frameDark={frameDark} frameBright={frameBright} />
+
+              {/* ═══ SECTION 7: CITATION ═══ */}
+              <div style={{
+                flex: 1,
+                background: '#0c0a0a',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                padding: '6px 16px',
+                gap: 6,
+                position: 'relative',
+                minHeight: 68,
+              }}>
+                {/* Citation content */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
+                  <QuoteMark />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, color: '#777', fontFamily: sansSerif, marginBottom: 2 }}>9. CITATION :</div>
+                    <div style={{ fontSize: 12, fontStyle: 'italic', color: '#c8c0b0', fontFamily: cinzel, lineHeight: 1.3 }}>
+                      {card.quote || <span style={{ color: '#3a3030' }}>La citation du personnage...</span>}
+                    </div>
+                  </div>
+                  <QuoteMark mirror />
+                </div>
+
+                {/* Stars + spartan helmet */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, width: '100%', position: 'relative' }}>
+                  {/* Spartan helmet SVG centered */}
+                  <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: 0 }}>
+                    <svg width="28" height="28" viewBox="0 0 28 28" opacity="0.5">
+                      <path d="M 14 2 C 8 2 4 6 4 11 C 4 14 5 16 6 18 L 6 24 L 10 24 L 10 20 C 11 21 12.5 22 14 22 C 15.5 22 17 21 18 20 L 18 24 L 22 24 L 22 18 C 23 16 24 14 24 11 C 24 6 20 2 14 2 Z"
+                        fill={frameBright} />
+                      <path d="M 4 11 C 4 7 6 4 9 3 L 8 8 C 6 9 5 10 5 13 Z" fill={accent} opacity="0.6" />
+                      <rect x="10" y="16" width="8" height="2" rx="1" fill="#0a0404" />
+                    </svg>
+                  </div>
+                  {/* Stars row */}
+                  <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <span key={i} style={{
+                        fontSize: 16,
+                        color: i < stars ? '#d4af37' : '#2a2020',
+                        textShadow: i < stars ? '0 0 8px #d4af3780' : 'none',
+                      }}>★</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+            </div>{/* end card content */}
+          </div>{/* end canvas */}
         </div>
       </div>
     </div>
