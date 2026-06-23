@@ -72,7 +72,7 @@ export interface LegendCard {
   origin: string;
   characterClass: 'Guerrier' | 'Explorateur' | 'Savant' | 'Artiste' | 'Fictionnel' | 'Penseur' | 'Dirigeant' | 'Athlete';
   rarity: 'Commun' | 'Rare' | 'Epique' | 'Legendaire' | 'Mythique';
-  specialties: [string, string, string];
+  specialties: [string, string, string, string];
   keyAchievement: string;
   flaw: string;
   quote: string;
