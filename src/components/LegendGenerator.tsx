@@ -772,7 +772,7 @@ export default function LegendGenerator() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [rarityFilter, setRarityFilter] = useState<string>('ALL');
+
   const [isExporting, setIsExporting] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
@@ -807,8 +807,7 @@ export default function LegendGenerator() {
       card.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       card.surnom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       card.classe.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRarity = rarityFilter === 'ALL' || card.rarete === rarityFilter;
-    return matchesSearch && matchesRarity;
+    return matchesSearch;
   });
 
   const handleSelectCard = (indexInFiltered: number) => {
@@ -843,8 +842,8 @@ export default function LegendGenerator() {
     const newCard: WarriorCard = {
       id: newId,
       numero: String(newId).padStart(3, '0'),
-      nom: "NOUVEAU GUERRIER",
-      rarete: "C",
+      nom: "NOUVELLE LÉGENDE",
+      rarete: "L",
       surnom: "Le Héros de l'Ombre",
       portraitUrl: "https://images.unsplash.com/photo-1618336753974-aae8e04506aa?auto=format&fit=crop&w=500&q=80",
       classe: "Guerrier / Soldat",
@@ -1034,7 +1033,7 @@ export default function LegendGenerator() {
               <Swords className="w-5 h-5" />
             </span>
             <h1 className="text-2xl sm:text-3xl font-serif font-bold text-amber-500 tracking-wider uppercase">
-              Studio des 100 Guerriers
+              Studio des Légendes
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1.5 tracking-widest font-semibold uppercase">
@@ -1053,11 +1052,7 @@ export default function LegendGenerator() {
             <RotateCcw className="w-4 h-4" />
             Réinitialiser
           </button>
-          <div className="bg-neutral-900 border border-neutral-800 px-4 py-2 rounded-md text-xs font-bold flex items-center gap-2 shadow-inner ml-auto md:ml-0">
-            <span className="text-neutral-500 uppercase tracking-widest text-[10px]">UNITÉS CRÉÉES :</span>
-            <span className="text-amber-500 font-bold font-mono">{cards.length}</span>
-            <span className="text-neutral-600 font-mono">/ 100</span>
-          </div>
+
         </div>
       </header>
 
@@ -1083,35 +1078,23 @@ export default function LegendGenerator() {
           {/* RECHERCHE & LISTE */}
           <div className="bg-neutral-900/40 border border-neutral-800 rounded-2xl p-5 flex flex-col gap-4 shadow-lg backdrop-blur-sm">
             <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-500" />
                 <input type="text" placeholder="RECHERCHER PAR NOM, CLASSE, SURNOM..."
                   value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg pl-9 pr-4 py-2.5 text-xs font-bold tracking-wider text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-amber-500 transition-colors"
                 />
               </div>
-              <div className="flex gap-2 items-center">
-                <Filter className="w-3.5 h-3.5 text-neutral-500" />
-                <select value={rarityFilter} onChange={(e) => setRarityFilter(e.target.value)}
-                  className="bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-xs text-amber-500 font-bold focus:outline-none focus:border-amber-500 transition-colors cursor-pointer">
-                  <option value="ALL">TOUTES RARETÉS</option>
-                  <option value="C">C - COMMUN</option>
-                  <option value="R">R - RARE</option>
-                  <option value="E">E - ÉPIQUE</option>
-                  <option value="L">L - LÉGENDAIRE</option>
-                  <option value="G">G - DIVIN</option>
-                </select>
-              </div>
             </div>
 
             <div className="relative">
               <span className="block text-[10px] font-black uppercase text-neutral-500 tracking-widest mb-2">
-                SÉLECTIONNER PARMI LES GUERRIERS ({filteredCards.length})
+                SÉLECTIONNER PARMI LES LÉGENDES ({filteredCards.length})
               </span>
               <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-amber-600 scrollbar-track-neutral-950 max-h-[110px]">
                 {filteredCards.length === 0 ? (
                   <div className="w-full text-center py-4 text-xs text-neutral-500 italic bg-neutral-950/40 rounded-xl border border-neutral-800/50">
-                    Aucun guerrier ne correspond à vos critères.
+                    Aucune légende ne correspond à vos critères.
                   </div>
                 ) : (
                   filteredCards.map((c, i) => {
@@ -1128,7 +1111,6 @@ export default function LegendGenerator() {
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 justify-between">
                             <span className="text-[10px] text-neutral-500 font-mono font-bold">#{c.numero}</span>
-                            <span className={`text-[9px] font-black uppercase tracking-tight px-1 rounded border ${rType.color.split(' ')[0]} ${rType.color.split(' ')[1]}`}>{c.rarete}</span>
                           </div>
                           <h4 className="text-xs font-serif font-black text-neutral-200 uppercase truncate mt-0.5">{c.nom}</h4>
                           <p className="text-[9px] text-neutral-400 truncate italic">{c.surnom}</p>
@@ -1144,7 +1126,7 @@ export default function LegendGenerator() {
               <button type="button" onClick={handleAddNewCard}
                 className="flex items-center gap-1.5 text-xs bg-amber-600 hover:bg-amber-500 text-black font-black uppercase tracking-tight px-5 py-2.5 rounded-md transition shadow-md active:scale-95 cursor-pointer">
                 <Plus className="w-4 h-4 stroke-[3px]" />
-                + Nouveau Guerrier
+                + Nouvelle Légende
               </button>
             </div>
           </div>
@@ -1165,30 +1147,20 @@ export default function LegendGenerator() {
             <div className="flex items-center gap-2 mb-6 border-b border-neutral-800 pb-3">
               <Settings className="w-5 h-5 text-amber-500" />
               <h2 className="text-sm font-serif font-bold text-neutral-200 uppercase tracking-widest">
-                Caractéristiques de <span className="text-amber-500">{formData.nom || "Nouveau Guerrier"}</span>
+                Caractéristiques de <span className="text-amber-500">{formData.nom || "Nouvelle Légende"}</span>
               </h2>
             </div>
 
             <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
               
               {/* NOM, RARETÉ, INDEX */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest block mb-1.5">Nom du Guerrier</label>
+                  <label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest block mb-1.5">Nom de la Légende</label>
                   <input type="text" name="nom" value={formData.nom} onChange={handleInputChange}
                     className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3.5 py-2.5 text-xs uppercase font-serif tracking-wider font-bold focus:border-amber-500 focus:outline-none transition-colors" required />
                 </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest block mb-1.5">Rareté</label>
-                  <select name="rarete" value={formData.rarete} onChange={handleInputChange}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-xs font-bold text-amber-500 focus:border-amber-500 focus:outline-none transition-colors cursor-pointer">
-                    <option value="C">C - Commun</option>
-                    <option value="R">R - Rare</option>
-                    <option value="E">E - Épique</option>
-                    <option value="L">L - Légendaire</option>
-                    <option value="G">G - Divin</option>
-                  </select>
-                </div>
+
                 <div>
                   <label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest block mb-1.5">N° Index</label>
                   <input type="text" name="numero" value={formData.numero} onChange={handleInputChange}
@@ -1222,7 +1194,7 @@ export default function LegendGenerator() {
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500 flex items-center gap-1">
                     <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
-                    Portrait du Guerrier
+                    Portrait de la Légende
                   </span>
                   <span className="text-[9px] text-neutral-500 font-medium uppercase tracking-wider">Format : Portrait (4:5 ou 1:1)</span>
                 </div>
@@ -1256,7 +1228,7 @@ export default function LegendGenerator() {
               </div>
 
               {/* CLASSE & STATS */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className="flex flex-col gap-2.5">
                   <div>
                     <label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest block mb-1">Classe (Archétype)</label>
@@ -1318,23 +1290,7 @@ export default function LegendGenerator() {
                   })()}
                 </div>
 
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest">Attaque (ATK)</label>
-                    <span className="text-[10px] font-mono font-bold text-red-500">{formData.atk} / 100</span>
-                  </div>
-                  <input type="range" name="atk" min="0" max="100" value={formData.atk} onChange={handleInputChange}
-                    className="w-full accent-red-600 cursor-pointer h-1.5 bg-neutral-950 rounded-lg" />
-                </div>
 
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest">Santé (HP)</label>
-                    <span className="text-[10px] font-mono font-bold text-emerald-500">{formData.hp} / 100</span>
-                  </div>
-                  <input type="range" name="hp" min="0" max="100" value={formData.hp} onChange={handleInputChange}
-                    className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-neutral-950 rounded-lg" />
-                </div>
               </div>
 
               {/* SPÉCIALITÉS */}
@@ -1698,7 +1654,7 @@ export default function LegendGenerator() {
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.05)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0.05)_75%,transparent_75%,transparent)] bg-[length:4px_4px] opacity-15 pointer-events-none" />
                     )}
                   <span className="relative z-10 flex items-center justify-center px-2">
-                    {formData.classe || "GUERRIER / SOLDAT"}
+                    {formData.classe || "SANS CLASSE"}
                   </span>
                   </span>
                 </div>
@@ -1815,7 +1771,7 @@ export default function LegendGenerator() {
                       RÉALISATION CLEF
                     </h4>
                     <p className={`text-[9.5px] sm:text-[10.5px] text-neutral-200 leading-tight line-clamp-2 ${cardAmbiance.fontData}`}>
-                      {formData.realisation || "Aucun fait d'armes connu n'a été répertorié pour ce guerrier."}
+                      {formData.realisation || "Aucun fait d'armes connu n'a été répertorié pour cette légende."}
                     </p>
                   </div>
 
@@ -1871,7 +1827,7 @@ export default function LegendGenerator() {
 
       {/* FOOTER */}
       <footer className="max-w-7xl mx-auto mt-16 border-t border-neutral-900 pt-6 text-center text-xs text-neutral-500 pb-8 flex flex-col sm:flex-row justify-between items-center gap-3">
-        <p className="font-medium">© 2026 Studio des 100 Guerriers • Réalisé de manière artisanale</p>
+        <p className="font-medium">© 2026 Studio des Légendes • Réalisé de manière artisanale</p>
         <div className="flex gap-4 font-bold text-neutral-400">
           <span className="hover:text-amber-500 transition cursor-default">Jeu de Rôle</span>
           <span>•</span>
