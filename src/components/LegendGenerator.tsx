@@ -402,139 +402,114 @@ const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => 
   }
 };
 
-export const getCardAmbiance = (classeStr: string, activeTheme: any) => {
+export interface CardAmbiance {
+  fontTitle: string;
+  fontData: string;
+  fontCitation: string;
+  accentColor: string;
+  accentBorder: string;
+  innerBorder: string;
+  outerBorder: string;
+  themeBgGradient: string;
+  
+  nameSectionStyle: string;
+  textBoxStyle: string;
+  portraitBorderStyle: string;
+  classBadgeStyle: string;
+  specBoxStyle: string;
+  citationBoxStyle: string;
+  iconContainerStyle: string;
+  dividerStyle: string;
+  failleColor: string;
+
+  textBoxBgImage?: string;
+  textBoxBgBlendMode?: string;
+
+  quoteIconStyle: string;
+
+  cornerStyle: 'rivet' | 'compass' | 'none';
+  showScratches: boolean;
+  showBlood: boolean;
+  showEmber: boolean;
+  effectOverlay: React.ReactNode;
+}
+
+export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbiance => {
   const { mainClass } = parseClasse(classeStr);
   
   switch (mainClass) {
     case 'Explorateur':
       return {
-        fontTitle: "font-oswald font-extrabold tracking-wide uppercase",
+        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-[#f3e9d2]",
         fontData: "font-montserrat font-semibold",
         fontCitation: "font-playfair italic",
-        accentColor: "text-[#88d498]",
-        accentBorder: "border-[#1a936f]/70",
-        accentGlow: "shadow-[0_0_18px_rgba(26,147,111,0.5)]",
+        accentColor: "text-[#c6dabf]",
+        accentBorder: "border-[#114b5f]/80",
+        innerBorder: "border-[#114b5f]/30",
+        outerBorder: "border-[#114b5f]/80 shadow-[0_0_24px_rgba(17,75,95,0.45)]",
         themeBgGradient: "from-[#114b5f]/95 via-[#0d2a1f]/90 to-[#0a1e18]/95",
-        outerBorder: "border-[#1a936f]/80 shadow-[0_0_24px_rgba(26,147,111,0.45),inset_0_0_16px_rgba(136,212,152,0.12)]",
-        innerBorder: "border-[#88d498]/20",
-        nameSectionStyle: "border-2 border-[#1a936f]/65 bg-[#0a1e1a]/90 shadow-[0_4px_12px_rgba(0,0,0,0.85),inset_0_1.5px_3px_rgba(136,212,152,0.08)] rounded-xl",
-        textBoxStyle: "border-2 border-[#1a936f]/50 bg-[#081812]/95 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85)] rounded-xl",
-        portraitBorderStyle: "border-2 border-[#1a936f]/70 shadow-[0_0_16px_rgba(26,147,111,0.4),inset_0_0_10px_rgba(136,212,152,0.08)]",
-        showRivets: false,
+        
+        nameSectionStyle: "border-2 border-[#114b5f]/80 bg-[#0a1e1a]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+        textBoxStyle: "border-2 border-[#1a936f]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+        portraitBorderStyle: "border-2 border-[#c6dabf]/60 shadow-[0_0_12px_rgba(198,218,191,0.35)]",
+        classBadgeStyle: "border-2 border-[#c6dabf]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-neutral-500/60",
+        citationBoxStyle: "border border-[#1a936f]/50 bg-[#081812]/55",
+        iconContainerStyle: "border-[#114b5f]/80 shadow-[0_0_8px_rgba(17,75,95,0.4)]",
+        dividerStyle: "via-[#1a936f]/30",
+        failleColor: "text-[#f3e9d2]",
+        
+        textBoxBgImage: `linear-gradient(to bottom, rgba(17, 75, 95, 0.5), rgba(10, 30, 24, 0.92)), url(${explorateurBackground})`,
+        textBoxBgBlendMode: 'normal',
+        quoteIconStyle: "text-[#88d498] drop-shadow-[0_0_6px_rgba(136,212,152,0.6)]",
+        
+        cornerStyle: 'compass',
         showScratches: false,
         showBlood: false,
         showEmber: false,
-        citationBoxStyle: "border border-[#88d498]/25 bg-[#081812]/55",
-        specBoxStyle: "border-2 border-[#1a936f]/55",
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-
-            {/* ── Voile parchemin ancien ── */}
             <div className="absolute inset-0 bg-gradient-to-br from-[#f3e9d2]/[0.04] via-transparent to-[#114b5f]/20 mix-blend-overlay" />
-
-            {/* ── Lignes de latitude/longitude façon vieille carte ── */}
             <svg className="absolute inset-0 w-full h-full opacity-[0.06]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Lignes horizontales (latitudes) */}
-              {[60, 120, 180, 240, 300, 360, 420].map(y => (
-                <line key={`lat-${y}`} x1="0" y1={y} x2="300" y2={y} stroke="#c6dabf" strokeWidth="0.5" strokeDasharray="6 4" />
-              ))}
-              {/* Lignes verticales (longitudes) */}
-              {[50, 100, 150, 200, 250].map(x => (
-                <line key={`lon-${x}`} x1={x} y1="0" x2={x} y2="480" stroke="#c6dabf" strokeWidth="0.5" strokeDasharray="6 4" />
-              ))}
-              {/* Lignes diagonales rhumb (routes de navigation) */}
+              {[60, 120, 180, 240, 300, 360, 420].map(y => <line key={`lat-${y}`} x1="0" y1={y} x2="300" y2={y} stroke="#c6dabf" strokeWidth="0.5" strokeDasharray="6 4" />)}
+              {[50, 100, 150, 200, 250].map(x => <line key={`lon-${x}`} x1={x} y1="0" x2={x} y2="480" stroke="#c6dabf" strokeWidth="0.5" strokeDasharray="6 4" />)}
               <line x1="0" y1="480" x2="300" y2="0" stroke="#88d498" strokeWidth="0.4" strokeDasharray="8 6" opacity="0.5" />
               <line x1="0" y1="0" x2="300" y2="480" stroke="#88d498" strokeWidth="0.4" strokeDasharray="8 6" opacity="0.3" />
               <line x1="0" y1="240" x2="300" y2="60" stroke="#1a936f" strokeWidth="0.35" strokeDasharray="5 8" opacity="0.4" />
             </svg>
-
-            {/* ── Rayons de soleil tropicaux depuis le haut ── */}
             <div className="absolute top-0 left-[18%] w-16 h-56 bg-gradient-to-b from-[#f3e9d2]/10 via-[#88d498]/04 to-transparent rotate-[-10deg] origin-top" />
             <div className="absolute top-0 left-[48%] w-12 h-44 bg-gradient-to-b from-[#c6dabf]/08 via-[#1a936f]/03 to-transparent rotate-[5deg] origin-top" />
             <div className="absolute top-0 right-[14%] w-8 h-36 bg-gradient-to-b from-[#88d498]/07 via-transparent to-transparent rotate-[12deg] origin-top" />
-
-            {/* ── Rose des vents principale — coin bas-droite ── */}
+            
             <div className="absolute bottom-4 right-4 w-24 h-24 opacity-[0.22]">
               <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Cercle extérieur gradué */}
                 <circle cx="48" cy="48" r="44" stroke="#c6dabf" strokeWidth="0.6" strokeDasharray="3 2.5" />
                 <circle cx="48" cy="48" r="34" stroke="#88d498" strokeWidth="0.4" />
                 <circle cx="48" cy="48" r="22" stroke="#1a936f" strokeWidth="0.5" />
-                {/* 16 points cardinaux fins */}
                 {[0,22.5,45,67.5,90,112.5,135,157.5,180,202.5,225,247.5,270,292.5,315,337.5].map((angle, i) => {
                   const rad = (angle - 90) * Math.PI / 180;
                   const inner = i % 4 === 0 ? 26 : i % 2 === 0 ? 30 : 34;
                   const outer = 42;
                   return (
-                    <line key={angle}
-                      x1={48 + inner * Math.cos(rad)} y1={48 + inner * Math.sin(rad)}
-                      x2={48 + outer * Math.cos(rad)} y2={48 + outer * Math.sin(rad)}
-                      stroke={i % 4 === 0 ? "#88d498" : "#c6dabf"} strokeWidth={i % 4 === 0 ? "0.8" : "0.4"}
-                    />
+                    <line key={angle} x1={48 + inner * Math.cos(rad)} y1={48 + inner * Math.sin(rad)} x2={48 + outer * Math.cos(rad)} y2={48 + outer * Math.sin(rad)} stroke={i % 4 === 0 ? "#88d498" : "#c6dabf"} strokeWidth={i % 4 === 0 ? "0.8" : "0.4"} />
                   );
                 })}
-                {/* Grande flèche Nord */}
                 <polygon points="48,6 45,48 48,42 51,48" fill="#88d498" opacity="0.95" />
-                {/* Grande flèche Sud */}
                 <polygon points="48,90 45,48 48,54 51,48" fill="#f3e9d2" opacity="0.55" />
-                {/* Flèche Est */}
                 <polygon points="90,48 48,45 54,48 48,51" fill="#c6dabf" opacity="0.5" />
-                {/* Flèche Ouest */}
                 <polygon points="6,48 48,45 42,48 48,51" fill="#c6dabf" opacity="0.5" />
-                {/* Centre */}
                 <circle cx="48" cy="48" r="3.5" fill="#1a936f" opacity="0.9" />
                 <circle cx="48" cy="48" r="1.5" fill="#f3e9d2" opacity="0.8" />
-                {/* Lettres cardinales */}
                 <text x="46" y="4" fontSize="5" fill="#88d498" opacity="0.8" fontFamily="serif">N</text>
                 <text x="46" y="95" fontSize="5" fill="#c6dabf" opacity="0.6" fontFamily="serif">S</text>
                 <text x="88" y="50" fontSize="5" fill="#c6dabf" opacity="0.6" fontFamily="serif">E</text>
                 <text x="2" y="50" fontSize="5" fill="#c6dabf" opacity="0.6" fontFamily="serif">O</text>
               </svg>
             </div>
-
-            {/* ── Petite boussole secondaire — coin haut-gauche ── */}
-            <div className="absolute top-3 left-3 w-10 h-10 opacity-[0.18]">
-              <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="20" cy="20" r="18" stroke="#88d498" strokeWidth="0.6" strokeDasharray="3 2" />
-                <line x1="20" y1="2" x2="20" y2="8" stroke="#c6dabf" strokeWidth="0.5" />
-                <line x1="20" y1="32" x2="20" y2="38" stroke="#c6dabf" strokeWidth="0.5" />
-                <line x1="2" y1="20" x2="8" y2="20" stroke="#c6dabf" strokeWidth="0.5" />
-                <line x1="32" y1="20" x2="38" y2="20" stroke="#c6dabf" strokeWidth="0.5" />
-                <polygon points="20,5 18.5,20 20,17 21.5,20" fill="#88d498" opacity="0.9" />
-                <polygon points="20,35 18.5,20 20,23 21.5,20" fill="#f3e9d2" opacity="0.5" />
-                <circle cx="20" cy="20" r="1.5" fill="#1a936f" />
-              </svg>
-            </div>
-
-            {/* ── Ornements de coin (style cartouche ancien) ── */}
-            {/* Coin bas-gauche */}
-            <div className="absolute bottom-3 left-3 w-12 h-12 opacity-[0.14]">
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 46 L2 10 Q2 2 10 2 L46 2" stroke="#c6dabf" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-                <path d="M6 46 L6 14 Q6 6 14 6 L46 6" stroke="#88d498" strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                <circle cx="8" cy="8" r="2" stroke="#1a936f" strokeWidth="0.6" />
-                <circle cx="14" cy="14" r="1" fill="#c6dabf" opacity="0.6" />
-              </svg>
-            </div>
-            {/* Coin haut-droit */}
-            <div className="absolute top-3 right-3 w-12 h-12 opacity-[0.14]">
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M46 2 L46 38 Q46 46 38 46 L2 46" stroke="#c6dabf" strokeWidth="0.8" fill="none" strokeLinecap="round" />
-                <path d="M42 2 L42 34 Q42 42 34 42 L2 42" stroke="#88d498" strokeWidth="0.4" fill="none" strokeLinecap="round" />
-                <circle cx="40" cy="40" r="2" stroke="#1a936f" strokeWidth="0.6" />
-              </svg>
-            </div>
-
-            {/* ── Texture grain parchemin — points très fins ── */}
+            
             <div className="absolute inset-0 bg-[radial-gradient(#c6dabf_0.8px,transparent_0.8px)] [background-size:20px_20px] opacity-[0.035]" />
-
-            {/* ── Vieillissement — tache d'encre teal en haut ── */}
             <div className="absolute -top-8 left-[30%] w-40 h-32 bg-[#114b5f]/20 blur-[30px] rounded-full" />
-
-            {/* ── Lueur horizon océan — bas de carte ── */}
             <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#1a936f]/12 via-[#114b5f]/06 to-transparent" />
-
-            {/* ── Vignette bords sombres (parchemin usé) ── */}
             <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(11,30,24,0.65)] rounded-[24px]" />
           </div>
         )
@@ -542,24 +517,30 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any) => {
       
     case 'Savant':
       return {
-        fontTitle: "font-oswald font-bold tracking-wider uppercase",
+        fontTitle: "font-oswald font-bold tracking-wider uppercase text-blue-400",
         fontData: "font-montserrat font-semibold",
         fontCitation: "font-sans font-medium",
         accentColor: "text-cyan-400",
         accentBorder: "border-cyan-500/80",
-        accentGlow: "shadow-[0_0_18px_rgba(6,182,212,0.6)]",
-        themeBgGradient: "from-blue-950/85 via-slate-900/90 to-cyan-950/95",
-        outerBorder: "border-cyan-500/80 shadow-[0_0_25px_rgba(6,182,212,0.65),inset_0_1px_3px_rgba(255,255,255,0.2)]",
         innerBorder: "border-blue-600/40",
+        outerBorder: "border-cyan-500/80 shadow-[0_0_25px_rgba(6,182,212,0.65),inset_0_1px_3px_rgba(255,255,255,0.2)]",
+        themeBgGradient: "from-blue-950/85 via-slate-900/90 to-cyan-950/95",
+        
         nameSectionStyle: "border border-cyan-500/50 bg-slate-950/95 shadow-[0_0_12px_rgba(6,182,212,0.35),inset_0_1px_2px_rgba(255,255,255,0.1)] rounded-md",
         textBoxStyle: "border border-blue-500/40 bg-slate-950/95 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.9),0_0_10px_rgba(30,58,138,0.4)] rounded-md",
         portraitBorderStyle: "border-2 border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.4)]",
-        showRivets: false,
+        classBadgeStyle: "border-2 border-cyan-500/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-cyan-500/50",
+        citationBoxStyle: "border border-blue-500/20 bg-black/45",
+        iconContainerStyle: "border-cyan-500/80",
+        dividerStyle: "via-cyan-500/20",
+        failleColor: "text-[#ff0000]",
+        
+        quoteIconStyle: "text-cyan-400",
+        cornerStyle: 'none',
         showScratches: false,
         showBlood: false,
         showEmber: false,
-        citationBoxStyle: "border border-blue-500/20 bg-black/45",
-        specBoxStyle: "border-2 border-cyan-500/50",
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
             <div className="absolute top-4 left-4 w-6 h-6 border-t border-l border-cyan-400/60" />
@@ -574,24 +555,30 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any) => {
       
     case 'Artiste':
       return {
-        fontTitle: "font-anton tracking-wide uppercase",
+        fontTitle: "font-anton tracking-wide uppercase text-fuchsia-400",
         fontData: "font-montserrat font-semibold",
         fontCitation: "font-playfair italic",
         accentColor: "text-fuchsia-400",
         accentBorder: "border-fuchsia-500/70",
-        accentGlow: "shadow-[0_0_20px_rgba(244,63,94,0.4)]",
-        themeBgGradient: "from-purple-950/85 via-fuchsia-950/80 to-rose-950/90",
-        outerBorder: "border-fuchsia-500/80 shadow-[0_0_25px_rgba(217,70,239,0.5),inset_0_0_10px_rgba(217,70,239,0.3)]",
         innerBorder: "border-purple-500/30",
+        outerBorder: "border-fuchsia-500/80 shadow-[0_0_25px_rgba(217,70,239,0.5),inset_0_0_10px_rgba(217,70,239,0.3)]",
+        themeBgGradient: "from-purple-950/85 via-fuchsia-950/80 to-rose-950/90",
+        
         nameSectionStyle: "border-2 border-fuchsia-500/70 bg-neutral-950/90 shadow-[0_4px_12px_rgba(217,70,239,0.25)] rounded-[18px]",
         textBoxStyle: "border-2 border-purple-500/60 bg-neutral-950/95 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85)] rounded-[18px]",
         portraitBorderStyle: "border-2 border-fuchsia-500/60 shadow-[0_0_12px_rgba(217,70,239,0.3)] rounded-lg",
-        showRivets: false,
+        classBadgeStyle: "border-2 border-fuchsia-500/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-fuchsia-500/50",
+        citationBoxStyle: "border border-fuchsia-500/20 bg-black/45",
+        iconContainerStyle: "border-fuchsia-500/70",
+        dividerStyle: "via-fuchsia-500/20",
+        failleColor: "text-[#ff0000]",
+        
+        quoteIconStyle: "text-fuchsia-400",
+        cornerStyle: 'none',
         showScratches: false,
         showBlood: false,
         showEmber: false,
-        citationBoxStyle: "border border-fuchsia-500/20 bg-black/45",
-        specBoxStyle: "border-2 border-fuchsia-500/50",
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
             <div className="absolute -top-12 -left-12 w-40 h-40 bg-fuchsia-500/10 blur-[40px] rounded-full" />
@@ -603,24 +590,30 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any) => {
       
     case 'Fictionnel':
       return {
-        fontTitle: "font-bebas tracking-wider uppercase",
+        fontTitle: "font-bebas tracking-wider uppercase text-purple-400",
         fontData: "font-montserrat font-semibold",
         fontCitation: "font-serif",
         accentColor: "text-purple-400",
         accentBorder: "border-purple-500/80",
-        accentGlow: "shadow-[0_0_22px_rgba(168,85,247,0.7)]",
-        themeBgGradient: "from-indigo-950/90 via-violet-950/85 to-neutral-950/95",
-        outerBorder: "border-violet-600/90 shadow-[0_0_28px_rgba(139,92,246,0.7),inset_0_0_12px_rgba(139,92,246,0.4)]",
         innerBorder: "border-indigo-500/40",
+        outerBorder: "border-violet-600/90 shadow-[0_0_28px_rgba(139,92,246,0.7),inset_0_0_12px_rgba(139,92,246,0.4)]",
+        themeBgGradient: "from-indigo-950/90 via-violet-950/85 to-neutral-950/95",
+        
         nameSectionStyle: "border-2 border-violet-500/80 bg-neutral-950/90 shadow-[0_4px_15px_rgba(139,92,246,0.3)] rounded-xl",
         textBoxStyle: "border-2 border-indigo-500/60 bg-neutral-950/95 shadow-[inset_0_2.5px_5px_rgba(0,0,0,0.9)] rounded-xl",
         portraitBorderStyle: "border-2 border-violet-500/60 shadow-[0_0_12px_rgba(139,92,246,0.4)]",
-        showRivets: false,
+        classBadgeStyle: "border-2 border-violet-500/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-violet-500/50",
+        citationBoxStyle: "border border-violet-500/20 bg-black/45",
+        iconContainerStyle: "border-purple-500/80",
+        dividerStyle: "via-purple-500/20",
+        failleColor: "text-[#ff0000]",
+        
+        quoteIconStyle: "text-purple-400",
+        cornerStyle: 'none',
         showScratches: false,
         showBlood: false,
         showEmber: false,
-        citationBoxStyle: "border border-violet-500/20 bg-black/45",
-        specBoxStyle: "border-2 border-violet-500/50",
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
             <div className="absolute inset-0 bg-violet-500/5 mix-blend-color-dodge opacity-50" />
@@ -631,24 +624,33 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any) => {
       
     case 'Penseur':
       return {
-        fontTitle: "font-oswald font-extrabold tracking-wide uppercase",
+        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-amber-600",
         fontData: "font-sourcesans font-semibold",
         fontCitation: "font-playfair italic",
         accentColor: "text-amber-600",
         accentBorder: "border-amber-700/60",
-        accentGlow: "shadow-[0_0_10px_rgba(217,119,6,0.3)]",
-        themeBgGradient: "from-stone-900/95 via-amber-950/40 to-stone-950/95",
-        outerBorder: "border-stone-700/80 shadow-[0_0_15px_rgba(120,113,108,0.4)]",
         innerBorder: "border-amber-800/35",
+        outerBorder: "border-stone-700/80 shadow-[0_0_15px_rgba(120,113,108,0.4)]",
+        themeBgGradient: "from-stone-900/95 via-amber-950/40 to-stone-950/95",
+        
         nameSectionStyle: "border-2 border-stone-700 bg-stone-950/95 shadow-[0_4px_8px_rgba(0,0,0,0.85)] rounded-[4px]", 
         textBoxStyle: "border-2 border-stone-700 bg-stone-950/95 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.9)] rounded-[4px]",
         portraitBorderStyle: "border-2 border-stone-700/80 shadow-[0_0_10px_rgba(217,119,6,0.15)]",
-        showRivets: false,
+        classBadgeStyle: "border-2 border-stone-700/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-stone-600/50",
+        citationBoxStyle: "border border-amber-700/20 bg-black/45",
+        iconContainerStyle: "border-amber-700/60",
+        dividerStyle: "via-amber-600/20",
+        failleColor: "text-[#ff0000]",
+        
+        textBoxBgImage: `linear-gradient(to bottom, rgba(217, 119, 6, 0.2), rgba(28, 25, 23, 0.95)), url(${cardBackground})`,
+        textBoxBgBlendMode: 'multiply',
+        quoteIconStyle: "text-amber-600",
+        
+        cornerStyle: 'none',
         showScratches: false,
         showBlood: false,
         showEmber: false,
-        citationBoxStyle: "border border-amber-700/20 bg-black/45",
-        specBoxStyle: "border-2 border-stone-600/50",
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
             <div className="absolute inset-0 bg-[radial-gradient(#f59e0b_1.5px,transparent_1.5px)] [background-size:32px_32px] opacity-[0.06]" />
@@ -659,24 +661,30 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any) => {
       
     case 'Dirigeant':
       return {
-        fontTitle: "font-bebas tracking-widest uppercase",
+        fontTitle: "font-bebas tracking-widest uppercase text-yellow-500",
         fontData: "font-montserrat font-semibold",
         fontCitation: "font-serif",
         accentColor: "text-yellow-500",
         accentBorder: "border-yellow-600/80",
-        accentGlow: "shadow-[0_0_20px_rgba(234,179,8,0.55)]",
-        themeBgGradient: "from-blue-950/80 via-yellow-950/20 to-neutral-950/95",
-        outerBorder: "border-yellow-600/90 shadow-[0_0_30px_rgba(234,179,8,0.6),inset_0_0_15px_rgba(234,179,8,0.3)]",
         innerBorder: "border-yellow-700/40",
+        outerBorder: "border-yellow-600/90 shadow-[0_0_30px_rgba(234,179,8,0.6),inset_0_0_15px_rgba(234,179,8,0.3)]",
+        themeBgGradient: "from-blue-950/80 via-yellow-950/20 to-neutral-950/95",
+        
         nameSectionStyle: "border-2 border-yellow-600 bg-neutral-950/90 shadow-[0_4px_12px_rgba(234,179,8,0.25)] rounded-lg",
         textBoxStyle: "border-2 border-yellow-700/60 bg-neutral-950/95 shadow-[inset_0_2px_4px_rgba(0,0,0,0.9)] rounded-lg",
         portraitBorderStyle: "border-2 border-yellow-600/80 shadow-[0_0_15px_rgba(234,179,8,0.3)]",
-        showRivets: false,
+        classBadgeStyle: "border-2 border-yellow-600/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-yellow-600/50",
+        citationBoxStyle: "border border-yellow-600/20 bg-black/45",
+        iconContainerStyle: "border-yellow-600/80",
+        dividerStyle: "via-yellow-600/20",
+        failleColor: "text-[#ff0000]",
+        
+        quoteIconStyle: "text-yellow-500",
+        cornerStyle: 'none',
         showScratches: false,
         showBlood: false,
         showEmber: false,
-        citationBoxStyle: "border border-yellow-600/20 bg-black/45",
-        specBoxStyle: "border-2 border-yellow-600/50",
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
             <div className="absolute top-0 right-4 w-28 h-64 bg-gradient-to-b from-yellow-300/10 via-transparent to-transparent transform rotate-[25deg] origin-top" />
@@ -687,24 +695,30 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any) => {
       
     case 'Athlète':
       return {
-        fontTitle: "font-anton tracking-wide uppercase",
+        fontTitle: "font-anton tracking-wide uppercase text-emerald-400",
         fontData: "font-montserrat font-semibold",
         fontCitation: "font-sans font-medium",
         accentColor: "text-emerald-400",
         accentBorder: "border-emerald-500/80",
-        accentGlow: "shadow-[0_0_18px_rgba(16,185,129,0.5)]",
-        themeBgGradient: "from-zinc-900/90 via-[#0a0f0d]/90 to-zinc-950/95",
-        outerBorder: "border-emerald-500/90 shadow-[0_0_22px_rgba(16,185,129,0.5),inset_0_0_12px_rgba(16,185,129,0.2)]",
         innerBorder: "border-emerald-600/30",
+        outerBorder: "border-emerald-500/90 shadow-[0_0_22px_rgba(16,185,129,0.5),inset_0_0_12px_rgba(16,185,129,0.2)]",
+        themeBgGradient: "from-zinc-900/90 via-[#0a0f0d]/90 to-zinc-950/95",
+        
         nameSectionStyle: "border-2 border-zinc-800 bg-black/95 shadow-[0_4px_10px_rgba(0,0,0,0.95)] rounded-[4px] skew-x-[-4deg]", 
         textBoxStyle: "border border-zinc-800 bg-black/95 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.9)] rounded-[4px]",
         portraitBorderStyle: "border-2 border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.3)]",
-        showRivets: false,
+        classBadgeStyle: "border-2 border-emerald-500/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-emerald-500/40",
+        citationBoxStyle: "border border-emerald-500/20 bg-black/45",
+        iconContainerStyle: "border-emerald-500/80",
+        dividerStyle: "via-emerald-500/20",
+        failleColor: "text-[#ff0000]",
+        
+        quoteIconStyle: "text-emerald-400",
+        cornerStyle: 'none',
         showScratches: false,
         showBlood: false,
         showEmber: false,
-        citationBoxStyle: "border border-emerald-500/20 bg-black/45",
-        specBoxStyle: "border-2 border-emerald-500/40",
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] [background-size:20px_20px] opacity-40" />
@@ -714,9 +728,6 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any) => {
         )
       };
       
-    // ─────────────────────────────────────────────────────────────────────────
-    // GUERRIER — Styling 100% issu du Code 1 (original / référence)
-    // ─────────────────────────────────────────────────────────────────────────
     case 'Guerrier':
     default:
       return {
@@ -725,37 +736,26 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any) => {
         fontCitation: "font-serif",
         accentColor: "text-amber-500",
 
-        // ① Bordure interne (double liseré métal) — identique au Code 1
         accentBorder: "border-amber-500/80",
-        accentGlow: "shadow-[0_0_12px_rgba(245,158,11,0.35)]",
-
-        // ② Gradient de fond — inchangé (rouge gothique)
+        innerBorder: "border-white/5",
+        outerBorder: "border-[#ff0000] neon-blood-border",
         themeBgGradient: activeTheme.bgGradient || "from-red-950/60 to-black/90",
 
-        // ③ Bordure externe — neon blood rouge du Code 1
-        outerBorder: "border-[#ff0000] neon-blood-border",
-        innerBorder: "border-white/5",
-
-        // ④ Section NOM — exactement celle du Code 1 :
-        //    border amber-500/80, bg-black/85, backdrop-blur-[12px],
-        //    shadow multi-couches avec inset doré, rounded-xl
         nameSectionStyle: "border-2 border-amber-500/80 bg-black/85 backdrop-blur-[12px] shadow-[0_0_12px_rgba(212,175,55,0.2),inset_0_1px_2.5px_rgba(255,255,255,0.2),0_4px_10px_rgba(0,0,0,0.85)] rounded-xl",
-
-        // ⑤ Boîte de texte (réalisations/faille/citation) — exactement celle du Code 1 :
-        //    border amber-600/75, rounded-xl, shadow bevel inset
         textBoxStyle: "border-2 border-amber-600/75 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-
-        // ⑥ Bordure portrait — rouge sang exacte du Code 1
         portraitBorderStyle: "border-2 border-[#ff0000]/60 shadow-[0_0_12px_rgba(255,0,0,0.35),inset_0_0_10px_rgba(138,3,3,0.5)]",
-
-        // ⑦ Spécialités — bordure neutre gris métal, exacte du Code 1
-        //    (pas colorée comme dans le Code 2)
+        classBadgeStyle: "border-2 border-[#8a0303]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
         specBoxStyle: "border-2 border-neutral-500/60",
-
-        // ⑧ Citation — bordure rouge-sang discrète et fond sombre, exacte du Code 1
         citationBoxStyle: "border border-[#8a0303]/30 bg-black/45",
+        iconContainerStyle: "border-amber-500/80 shadow-[0_0_8px_rgba(245,158,11,0.45),inset_0_1px_2px_rgba(255,255,255,0.15)]",
+        dividerStyle: "via-amber-600/20",
+        failleColor: "text-[#ff0000]",
 
-        showRivets: true,
+        textBoxBgImage: `linear-gradient(to bottom, rgba(212, 175, 55, 0.45), rgba(101, 67, 33, 0.9)), url(${cardBackground})`,
+        textBoxBgBlendMode: 'multiply',
+        quoteIconStyle: "text-amber-400 drop-shadow-[0_0_6px_#f59e0b] animate-pulse",
+
+        cornerStyle: 'rivet',
         showScratches: true,
         showBlood: true,
         showEmber: true,
@@ -1475,7 +1475,7 @@ export default function LegendGenerator() {
               {cardAmbiance.effectOverlay}
 
               {/* Rivets (Guerrier seulement) */}
-              {cardAmbiance.showRivets && (
+              {cardAmbiance.cornerStyle === 'rivet' && (
                 <>
                   <div className="armor-rivet top-3.5 left-3.5" />
                   <div className="armor-rivet top-3.5 right-3.5" />
@@ -1483,6 +1483,35 @@ export default function LegendGenerator() {
                   <div className="armor-rivet bottom-3.5 right-3.5" />
                   <div className="armor-rivet top-1/2 -translate-y-1/2 left-3.5" />
                   <div className="armor-rivet top-1/2 -translate-y-1/2 right-3.5" />
+                </>
+              )}
+
+              {/* Map Pins / Compasses (Explorateur seulement) */}
+              {cardAmbiance.cornerStyle === 'compass' && (
+                <>
+                  {['top-3.5 left-3.5', 'top-3.5 right-3.5', 'bottom-3.5 left-3.5', 'bottom-3.5 right-3.5', 'top-1/2 -translate-y-1/2 left-3.5', 'top-1/2 -translate-y-1/2 right-3.5'].map(pos => (
+                    <div key={pos} className={`absolute ${pos} w-[18px] h-[18px] flex items-center justify-center opacity-70 z-20`}>
+                      {/* Globe terrestre minimaliste style astrolabe/sphère armillaire */}
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                        {/* Cercle extérieur (Méridien) */}
+                        <circle cx="12" cy="12" r="10" stroke="#c6dabf" strokeWidth="1" />
+                        {/* Cercle intérieur */}
+                        <circle cx="12" cy="12" r="8" stroke="#114b5f" strokeWidth="0.75" />
+                        
+                        {/* Équateur (ellipse horizontale) */}
+                        <ellipse cx="12" cy="12" rx="10" ry="3" stroke="#88d498" strokeWidth="0.75" transform="rotate(-15 12 12)" />
+                        
+                        {/* Méridien central (ellipse verticale) */}
+                        <ellipse cx="12" cy="12" rx="4" ry="10" stroke="#1a936f" strokeWidth="0.75" transform="rotate(15 12 12)" />
+                        
+                        {/* Axe polaire */}
+                        <line x1="12" y1="1" x2="12" y2="23" stroke="#f3e9d2" strokeWidth="1" transform="rotate(15 12 12)" />
+                        
+                        {/* Pivot central */}
+                        <circle cx="12" cy="12" r="1.5" fill="#f3e9d2" />
+                      </svg>
+                    </div>
+                  ))}
                 </>
               )}
 
@@ -1586,18 +1615,10 @@ export default function LegendGenerator() {
                     
                     {/* Icône de classe + Index */}
                     <div className="flex flex-col items-end gap-0.5 flex-shrink-0 relative z-10 pr-0.5">
-                      {/* ── Guerrier : bouton icône doré avec glow amber (Code 1) ── */}
-                      {parseClasse(formData.classe).mainClass === 'Guerrier' ? (
-                        <div className="bg-gradient-to-b from-[#1a1512] via-[#2d221a] to-[#120e0b] border-[2px] border-amber-500/80 p-1 sm:p-1.5 rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(245,158,11,0.45),inset_0_1px_2px_rgba(255,255,255,0.15)] hover:scale-110 transition-transform relative before:absolute before:inset-[1px] before:border before:border-white/5 before:rounded-full"
-                          title={`Classe: ${formData.classe}`}>
-                          {getClassIcon(formData.classe, "w-4.5 h-4.5 sm:w-5.5 h-5.5 relative z-10")}
-                        </div>
-                      ) : (
-                        <div className={`bg-gradient-to-b from-[#1a1512] via-[#2d221a] to-[#120e0b] border-[2px] p-1 sm:p-1.5 rounded-full flex items-center justify-center hover:scale-110 transition-transform relative before:absolute before:inset-[1px] before:border before:border-white/5 before:rounded-full ${cardAmbiance.accentBorder}`}
-                          title={`Classe: ${formData.classe}`}>
-                          {getClassIcon(formData.classe, "w-4.5 h-4.5 sm:w-5.5 h-5.5 relative z-10")}
-                        </div>
-                      )}
+                      <div className={`bg-gradient-to-b from-[#1a1512] via-[#2d221a] to-[#120e0b] border-[2px] p-1 sm:p-1.5 rounded-full flex items-center justify-center hover:scale-110 transition-transform relative before:absolute before:inset-[1px] before:border before:border-white/5 before:rounded-full ${cardAmbiance.iconContainerStyle}`}
+                        title={`Classe: ${formData.classe}`}>
+                        {getClassIcon(formData.classe, "w-4.5 h-4.5 sm:w-5.5 h-5.5 relative z-10")}
+                      </div>
                       <span className="text-[6.5px] sm:text-[7.5px] text-neutral-400 font-mono tracking-widest bg-black/85 px-1 py-0.5 rounded border border-white/5 mt-0.5">
                         N° {formData.numero}
                       </span>
@@ -1644,13 +1665,9 @@ export default function LegendGenerator() {
 
                 {/* ── BADGE CLASSE ─────────────────────────────────────────── */}
                 <div className="px-4 text-center mt-2.5 mb-1">
-                  <span className={`inline-block text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-black px-4 py-1 rounded-lg border-2 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413] text-[#f5f5f4] backdrop-blur-md relative overflow-hidden shadow-md ${cardAmbiance.fontData} ${
-                    parseClasse(formData.classe).mainClass === 'Guerrier'
-                      ? 'border-[#8a0303]/80'   // ← Code 1 exact : rouge sang pour Guerrier
-                      : cardAmbiance.accentBorder
-                  }`}>
+                  <span className={`inline-block text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-black px-4 py-1 rounded-lg ${cardAmbiance.classBadgeStyle} text-[#f5f5f4] backdrop-blur-md relative overflow-hidden shadow-md ${cardAmbiance.fontData}`}>
                     {/* Texture acier brossé (Guerrier seulement) */}
-                    {cardAmbiance.showRivets && (
+                    {cardAmbiance.cornerStyle === 'rivet' && (
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.05)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0.05)_75%,transparent_75%,transparent)] bg-[length:4px_4px] opacity-15 pointer-events-none" />
                     )}
                   <span className="relative z-10 flex items-center justify-center px-2">
@@ -1662,11 +1679,7 @@ export default function LegendGenerator() {
                 {/* ── SPÉCIALITÉS ──────────────────────────────────────────── */}
                 <div className="grid grid-cols-2 gap-2 px-2 sm:px-3 mt-0.5">
                   {/* Spé 1 */}
-                  <div className={`bg-black/75 backdrop-blur-[4px] rounded-lg py-1 px-2 flex items-center justify-center gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.5)] ${
-                    parseClasse(formData.classe).mainClass === 'Guerrier'
-                      ? 'border-2 border-neutral-500/60'   // ← Code 1 exact : gris métal neutre
-                      : `border-2 ${cardAmbiance.accentBorder}`
-                  }`}>
+                  <div className={`bg-black/75 backdrop-blur-[4px] rounded-lg py-1 px-2 flex items-center justify-center gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.5)] ${cardAmbiance.specBoxStyle}`}>
                     <span className={`${cardAmbiance.accentColor} flex-shrink-0`}>
                       {renderSpecialtyIcon(formData.iconSpecialite1, 'shield', 'w-3.5 h-3.5')}
                     </span>
@@ -1676,11 +1689,7 @@ export default function LegendGenerator() {
                   </div>
 
                   {/* Spé 2 */}
-                  <div className={`bg-black/55 backdrop-blur-[2px] rounded-lg py-1 px-2 flex items-center justify-center gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_1.5px_3px_rgba(0,0,0,0.4)] ${
-                    parseClasse(formData.classe).mainClass === 'Guerrier'
-                      ? 'border-2 border-neutral-500/50'   // ← Code 1 exact : gris métal neutre
-                      : `border-2 ${cardAmbiance.accentBorder}`
-                  }`}>
+                  <div className={`bg-black/55 backdrop-blur-[2px] rounded-lg py-1 px-2 flex items-center justify-center gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_1.5px_3px_rgba(0,0,0,0.4)] ${cardAmbiance.specBoxStyle}`}>
                     <span className={`${cardAmbiance.accentColor} flex-shrink-0`}>
                       {renderSpecialtyIcon(formData.iconSpecialite2, 'sparkles', 'w-3.5 h-3.5')}
                     </span>
@@ -1692,35 +1701,12 @@ export default function LegendGenerator() {
 
                 {/* ── BOÎTE TEXTE (Réalisation / Faille / Citation) ────────── */}
                 <div className={`m-2 p-2 sm:p-2.5 border-2 rounded-xl flex flex-col gap-1.5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)] relative overflow-hidden ${cardAmbiance.textBoxStyle}`}
-                  style={(() => {
-                    const { mainClass } = parseClasse(formData.classe);
-                    // ── Guerrier : fond image gothique doré (Code 1 exact) ──
-                    if (mainClass === 'Guerrier') {
-                      return {
-                        backgroundImage: `linear-gradient(to bottom, rgba(212, 175, 55, 0.45), rgba(101, 67, 33, 0.9)), url(${cardBackground})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundBlendMode: 'multiply',
-                      };
-                    }
-                    if (mainClass === 'Explorateur') {
-                      return {
-                        backgroundImage: `linear-gradient(to bottom, rgba(17, 75, 95, 0.5), rgba(10, 30, 24, 0.92)), url(${explorateurBackground})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundBlendMode: 'normal',
-                      };
-                    }
-                    if (mainClass === 'Penseur') {
-                      return {
-                        backgroundImage: `linear-gradient(to bottom, rgba(217, 119, 6, 0.2), rgba(28, 25, 23, 0.95)), url(${cardBackground})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        backgroundBlendMode: 'multiply',
-                      };
-                    }
-                    return {};
-                  })()}>
+                  style={{
+                    backgroundImage: cardAmbiance.textBoxBgImage,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundBlendMode: cardAmbiance.textBoxBgBlendMode as any,
+                  }}>
 
                   {/* Ember dans la boîte texte (Guerrier) */}
                   {cardAmbiance.showEmber && (
@@ -1775,7 +1761,7 @@ export default function LegendGenerator() {
                     </p>
                   </div>
 
-                  <div className={`h-[1px] bg-gradient-to-r from-transparent ${parseClasse(formData.classe).mainClass === 'Explorateur' ? 'via-[#1a936f]/30' : 'via-amber-600/20'} to-transparent relative z-10`} />
+                  <div className={`h-[1px] bg-gradient-to-r from-transparent ${cardAmbiance.dividerStyle} to-transparent relative z-10`} />
 
                   {/* Traces d'épée sur Faille (Guerrier) */}
                   {cardAmbiance.showScratches && (
@@ -1787,7 +1773,7 @@ export default function LegendGenerator() {
 
                   {/* FAILLE CRITIQUE */}
                   <div className="relative z-10">
-                    <h4 className={`text-[7.5px] sm:text-[8px] font-black tracking-widest uppercase mb-0.5 opacity-100 ${cardAmbiance.fontTitle} ${parseClasse(formData.classe).mainClass === 'Explorateur' ? 'text-[#f3e9d2]' : 'text-[#ff0000]'}`}>
+                    <h4 className={`text-[7.5px] sm:text-[8px] font-black tracking-widest uppercase mb-0.5 opacity-100 ${cardAmbiance.fontTitle} ${cardAmbiance.failleColor}`}>
                       FAILLE CRITIQUE
                     </h4>
                     <p className={`text-[9.5px] sm:text-[10.5px] text-neutral-300 leading-tight line-clamp-2 ${cardAmbiance.fontData}`}>
@@ -1795,16 +1781,11 @@ export default function LegendGenerator() {
                     </p>
                   </div>
 
-                  <div className={`h-[1px] bg-gradient-to-r from-transparent ${parseClasse(formData.classe).mainClass === 'Explorateur' ? 'via-[#1a936f]/30' : 'via-amber-600/20'} to-transparent relative z-10`} />
+                  <div className={`h-[1px] bg-gradient-to-r from-transparent ${cardAmbiance.dividerStyle} to-transparent relative z-10`} />
 
                   {/* ── CITATION ── */}
-                  {/* Guerrier : border sang + bg-black/45 + Quote animate-pulse (Code 1 exact) */}
                   <div className={`pt-1.5 pb-1 text-center flex items-center justify-start gap-2 px-2.5 relative z-10 rounded-lg shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.6),0_0_8px_rgba(138,3,3,0.15)] ${cardAmbiance.citationBoxStyle}`}>
-                    {parseClasse(formData.classe).mainClass === 'Guerrier' ? (
-                      <Quote className="w-4.5 h-4.5 sm:w-5.5 h-5.5 text-amber-400 drop-shadow-[0_0_6px_#f59e0b] flex-shrink-0 animate-pulse" />
-                    ) : (
-                      <Quote className={`w-4 h-4 sm:w-5 h-5 flex-shrink-0 ${cardAmbiance.accentColor}`} />
-                    )}
+                    <Quote className={`w-4.5 h-4.5 sm:w-5 h-5 flex-shrink-0 ${cardAmbiance.quoteIconStyle}`} />
                     <p className={`text-[10px] sm:text-[12px] italic text-rose-100/95 tracking-wide leading-relaxed whitespace-normal text-left w-full max-h-[50px] overflow-y-auto pr-0.5 scrollbar-thin ${cardAmbiance.fontCitation}`}>
                       {formData.citation || "Saisissez votre citation épique..."}
                     </p>

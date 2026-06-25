@@ -206,8 +206,6 @@ export default function LegendBuilder() {
     }
   };
 
-  theme: LegendCard['characterClass'];
-
   const theme = CLASS_THEMES[card.characterClass];
   const rarityConfig = RARITY_CONFIG[card.rarity];
 
