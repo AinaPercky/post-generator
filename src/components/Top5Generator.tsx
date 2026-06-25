@@ -1,12 +1,53 @@
 import React, { useState, useRef, useEffect } from 'react';
-// import { Download, Loader as Loader2, Image as ImageIcon, Sun, TrendingUp, Star, Target, Crown } from 'lucide-react';
-import { Download, Loader as Loader2, Image as ImageIcon, FileText, Ribbon, Award, Medal, Trophy, Crown, Target, Music, Heart, Sparkles, Dumbbell, Globe, TreePine, Film, Landmark, ScrollText, Car, Cpu, Languages, Lightbulb, GraduationCap, Users, Newspaper, User as UserIcon, LineChart, History, PawPrint, Dribbble as BasketballIcon } from 'lucide-react';
+import {
+  Download,
+  Loader as Loader2,
+  Image as ImageIcon,
+  FileText,
+  Ribbon,
+  Award,
+  Medal,
+  Trophy,
+  Crown,
+  Target,
+  Music,
+  Heart,
+  Sparkles,
+  Dumbbell,
+  Globe,
+  TreePine,
+  Film,
+  Landmark,
+  ScrollText,
+  Car,
+  Cpu,
+  Languages,
+  Lightbulb,
+  GraduationCap,
+  Users,
+  Newspaper,
+  User as UserIcon,
+  LineChart,
+  History,
+  PawPrint,
+  Dribbble as BasketballIcon,
+} from 'lucide-react';
+import { toPng, toJpeg } from 'html-to-image';
+import { auth } from '../firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { SavedPost } from '../types';
+import {
+  savePost,
+  getCustomCategoryIcons,
+  saveCustomCategoryIcon,
+  deleteCustomCategoryIcon,
+} from '../lib/postService';
 
 const CATEGORIES = [
-  'sport', 'basket', 'nba', 'environnement', 'loisirs', 'cinema', 'politique', 
-  'géopolitique', 'géographie', 'histoire', 'animaux', 'voitures', 'technologie', 
-  'langues', 'savoir', 'philosophie', 'société', 'culture', 'actualités', 
-  'people', 'économie', 'musique', 'style de vie', 'santé'
+  'sport', 'basket', 'nba', 'environnement', 'loisirs', 'cinema', 'politique',
+  'géopolitique', 'géographie', 'histoire', 'animaux', 'voitures', 'technologie',
+  'langues', 'savoir', 'philosophie', 'société', 'culture', 'actualités',
+  'people', 'économie', 'musique', 'style de vie', 'santé',
 ];
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
@@ -35,21 +76,10 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
   'style de vie': Sparkles,
   'santé': Heart,
 };
-import { toPng, toJpeg } from 'html-to-image';
-import { auth } from '../firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { SavedPost } from '../types';
-import { 
-  savePost, 
-  getCustomCategoryIcons, 
-  saveCustomCategoryIcon, 
-  deleteCustomCategoryIcon 
-} from '../lib/postService';
 
 const CANVAS_W = 1080;
 const CANVAS_H = 1620;
 
-// Exact border colours per spec
 const RANK_COLORS: Record<number, string> = {
   5: '#FF6B00',
   4: '#FFB300',
@@ -57,8 +87,6 @@ const RANK_COLORS: Record<number, string> = {
   2: '#CCFF00',
   1: '#39FF14',
 };
-
-
 
 const RANK_ICONS: Record<number, React.ComponentType<any>> = {
   5: Ribbon,
@@ -68,8 +96,6 @@ const RANK_ICONS: Record<number, React.ComponentType<any>> = {
   1: Crown,
 };
 
-// All equal-height rows except rank 1 (larger, matches reference)
-// Heights at 1080px canvas — 4×222 + 1×268 = 1156; gaps 4×18=72; pad 10+20=30; header 290 → total 1548px ✓
 const ROW_H: Record<number, number> = { 5: 222, 4: 222, 3: 222, 2: 222, 1: 268 };
 
 function hexToRgb(hex: string) {
@@ -77,16 +103,52 @@ function hexToRgb(hex: string) {
   return r ? `${parseInt(r[1], 16)},${parseInt(r[2], 16)},${parseInt(r[3], 16)}` : '255,255,255';
 }
 
-// Mountain/landscape placeholder icon (used when no image uploaded)
 function PlaceholderIcon({ size }: { size: number }) {
   return (
-    <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size * 0.55}
+      height={size * 0.55}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="rgba(255,255,255,0.18)"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="2" y="2" width="20" height="20" rx="3" />
       <circle cx="8.5" cy="8.5" r="1.5" />
       <path d="M2 18l6-7 5 5 3-3 6 5" />
     </svg>
   );
 }
+
+function SaveIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+      <polyline points="17 21 17 13 7 13 7 21" />
+      <polyline points="7 3 7 8 15 8" />
+    </svg>
+  );
+}
+
+const initialItemsFactory = () =>
+  [5, 4, 3, 2, 1].map(rank => ({
+    rank,
+    title: 'YOUR ITEM TITLE HERE',
+    description: 'Your short description or key metric goes here. Keep it simple and easy to understand.',
+    imageUrl: null as string | null,
+  }));
 
 export function Top5Generator() {
   const [user, setUser] = useState<User | null>(null);
@@ -95,63 +157,45 @@ export function Top5Generator() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [categorySubtitle, setCategorySubtitle] = useState('YOUR CATEGORY HERE');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [categoryData, setCategoryData] = useState<Record<string, typeof initialItems>>({});
+  const [categoryData, setCategoryData] = useState<Record<string, ReturnType<typeof initialItemsFactory>>>({});
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategoryIcon, setCustomCategoryIcon] = useState<string | null>(null);
   const [savedCategoryIcons, setSavedCategoryIcons] = useState<Record<string, string>>({});
   const [assignToCategory, setAssignToCategory] = useState<string>('');
   const customIconInputRef = useRef<HTMLInputElement>(null);
+  const [items, setItems] = useState(initialItemsFactory);
 
-  const initialItems = [5, 4, 3, 2, 1].map(rank => ({
-    rank,
-    title: 'YOUR ITEM TITLE HERE',
-    description: 'Your short description or key metric goes here. Keep it simple and easy to understand.',
-    imageUrl: null as string | null,
-  }));
-
-  const [items, setItems] = useState(initialItems);
-
-  // Update items when selected category changes (load saved data or reset)
+  // Load saved items when selected category changes
   useEffect(() => {
     if (selectedCategory) {
-      // Load saved data for this category or use fresh initial items
-      const savedData = categoryData[selectedCategory] || initialItems;
+      const savedData = categoryData[selectedCategory] || initialItemsFactory();
       setItems(savedData);
     }
-  }, [selectedCategory, categoryData]);
+  }, [selectedCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Save current items to categoryData before switching away
-  const handleSelectCategory = (cat: string) => {
-    // Save current items of previous category if any
+  const persistCurrentCategory = () => {
     if (selectedCategory) {
-      setCategoryData(prev => ({
-        ...prev,
-        [selectedCategory]: items
-      }));
+      setCategoryData(prev => ({ ...prev, [selectedCategory]: items }));
     }
-    
+  };
+
+  const handleSelectCategory = (cat: string) => {
+    persistCurrentCategory();
     setIsCustomCategory(false);
     setSelectedCategory(cat);
-    // Set to lowercase, then capitalize only first letter of first word
-    const lowerCat = cat.toLowerCase();
-    const formattedCat = lowerCat.charAt(0).toUpperCase() + lowerCat.slice(1);
-    setCategorySubtitle(formattedCat);
+    const lower = cat.toLowerCase();
+    setCategorySubtitle(lower.charAt(0).toUpperCase() + lower.slice(1));
   };
 
   const handleSelectCustomCategory = () => {
-    if (selectedCategory) {
-      setCategoryData(prev => ({
-        ...prev,
-        [selectedCategory]: items
-      }));
-    }
+    persistCurrentCategory();
     setSelectedCategory(null);
     setIsCustomCategory(true);
     setCategorySubtitle('Custom Category');
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const previewRef  = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [previewScale, setPreviewScale] = useState(0.42);
 
@@ -167,12 +211,8 @@ export function Top5Generator() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => {
       setUser(u);
-      // Load custom icons from Supabase when user is authenticated
-      if (u) {
-        loadSavedIcons(u.uid);
-      } else {
-        setSavedCategoryIcons({});
-      }
+      if (u) loadSavedIcons(u.uid);
+      else setSavedCategoryIcons({});
     });
     return unsub;
   }, []);
@@ -184,15 +224,11 @@ export function Top5Generator() {
 
   const handleItemChange = (index: number, field: string, value: string) => {
     setItems(prev => {
-      const newItems = prev.map((item, i) => i === index ? { ...item, [field]: value } : item);
-      // Also save to categoryData if a category is selected
+      const next = prev.map((item, i) => (i === index ? { ...item, [field]: value } : item));
       if (selectedCategory) {
-        setCategoryData(prevData => ({
-          ...prevData,
-          [selectedCategory]: newItems
-        }));
+        setCategoryData(prevData => ({ ...prevData, [selectedCategory]: next }));
       }
-      return newItems;
+      return next;
     });
   };
 
@@ -216,16 +252,10 @@ export function Top5Generator() {
     reader.readAsDataURL(file);
   };
 
-  // Assign custom icon to a specific category
   const handleAssignIconToCategories = async () => {
     if (!customCategoryIcon || !assignToCategory || !user) return;
-    
-    // Save to Supabase for the selected category only
     const saved = await saveCustomCategoryIcon(user.uid, assignToCategory, customCategoryIcon);
-
-    // Refresh local state
     await loadSavedIcons(user.uid);
-    
     if (saved) {
       alert(`Icône sauvegardée pour ${assignToCategory.charAt(0).toUpperCase() + assignToCategory.slice(1)} !`);
     } else {
@@ -233,14 +263,9 @@ export function Top5Generator() {
     }
   };
 
-  // Remove saved icon for a category
   const handleRemoveSavedIcon = async (category: string) => {
     if (!user) return;
-
-    // Delete from Supabase for this category only
     await deleteCustomCategoryIcon(user.uid, category);
-
-    // Refresh local state
     await loadSavedIcons(user.uid);
   };
 
@@ -257,9 +282,10 @@ export function Top5Generator() {
     try {
       setIsDownloading(true);
       await new Promise(r => setTimeout(r, 100));
-      const dataUrl = format === 'jpg'
-        ? await toJpeg(previewRef.current, { ...exportOptions, quality: 0.95 })
-        : await toPng(previewRef.current, { ...exportOptions, quality: 0.95 });
+      const dataUrl =
+        format === 'jpg'
+          ? await toJpeg(previewRef.current, { ...exportOptions, quality: 0.95 })
+          : await toPng(previewRef.current, { ...exportOptions, quality: 0.95 });
       const a = document.createElement('a');
       a.download = `top-5-${Date.now()}.${format}`;
       a.href = dataUrl;
@@ -300,14 +326,9 @@ export function Top5Generator() {
   };
 
   const handleExportTxt = () => {
-    const txtContent = `TOP 5: ${categorySubtitle || 'YOUR CATEGORY HERE'}
-
-${items.map((item) => `#${item.rank}
-${item.title}
-${item.description}
-`).join('\n')}
-`;
-
+    const txtContent = `TOP 5: ${categorySubtitle || 'YOUR CATEGORY HERE'}\n\n${items
+      .map(item => `#${item.rank}\n${item.title}\n${item.description}\n`)
+      .join('\n')}\n`;
     const blob = new Blob([`\uFEFF${txtContent}`], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -317,6 +338,29 @@ ${item.description}
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+  };
+
+  const renderCategoryIcon = (side: 'left' | 'right') => {
+    if (isCustomCategory && customCategoryIcon) {
+      return (
+        <img
+          src={customCategoryIcon}
+          alt="Custom Icon"
+          style={{ width: 42, height: 42, objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }}
+        />
+      );
+    }
+    if (selectedCategory && savedCategoryIcons[selectedCategory]) {
+      return (
+        <img
+          src={savedCategoryIcons[selectedCategory]}
+          alt={`${selectedCategory} Icon`}
+          style={{ width: 42, height: 42, objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }}
+        />
+      );
+    }
+    const Icon = selectedCategory ? (CATEGORY_ICONS[selectedCategory] ?? Target) : Target;
+    return <Icon size={42} color="#888" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} />;
   };
 
   return (
@@ -395,12 +439,14 @@ ${item.description}
                       <div className="flex gap-2">
                         <select
                           value={assignToCategory}
-                          onChange={(e) => setAssignToCategory(e.target.value)}
+                          onChange={e => setAssignToCategory(e.target.value)}
                           className="flex-grow bg-[#0a0a0a] border border-neutral-800 rounded px-2 py-1 text-xs text-white"
                         >
                           <option value="">Sélectionner une catégorie...</option>
                           {CATEGORIES.map(cat => (
-                            <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+                            <option key={cat} value={cat}>
+                              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                            </option>
                           ))}
                         </select>
                         <button
@@ -424,7 +470,7 @@ ${item.description}
             </div>
           )}
 
-          {/* Saved Custom Icons Section */}
+          {/* Saved Custom Icons */}
           {Object.keys(savedCategoryIcons).length > 0 && (
             <div className="mt-4 pt-4 border-t border-neutral-800">
               <label className="block text-xs text-neutral-500 mb-3 uppercase tracking-wider">Icônes personnalisées sauvegardées</label>
@@ -432,7 +478,9 @@ ${item.description}
                 {Object.entries(savedCategoryIcons).map(([category, iconUrl]) => (
                   <div key={category} className="flex items-center gap-2 bg-[#0a0a0a] border border-neutral-800 rounded px-2 py-2">
                     <img src={iconUrl} alt={category} className="w-8 h-8 object-contain" />
-                    <span className="text-xs text-neutral-300 flex-grow">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                    <span className="text-xs text-neutral-300 flex-grow">
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </span>
                     <button
                       onClick={() => handleRemoveSavedIcon(category)}
                       className="text-red-400 hover:text-red-300 text-xs"
@@ -444,15 +492,11 @@ ${item.description}
               </div>
             </div>
           )}
+
           {(selectedCategory || isCustomCategory) && (
             <button
               onClick={() => {
-                if (selectedCategory) {
-                  setCategoryData(prev => ({
-                    ...prev,
-                    [selectedCategory]: items
-                  }));
-                }
+                persistCurrentCategory();
                 setSelectedCategory(null);
                 setIsCustomCategory(false);
                 setCustomCategoryIcon(null);
@@ -465,6 +509,7 @@ ${item.description}
           )}
         </div>
 
+        {/* Item editors */}
         <div className="space-y-4">
           {items.map((item, index) => {
             const color = RANK_COLORS[item.rank];
@@ -477,7 +522,10 @@ ${item.description}
                 <div className="flex gap-3">
                   <div className="flex-shrink-0">
                     <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Photo</label>
-                    <input type="file" accept="image/*" className="hidden"
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
                       ref={el => { fileInputRefs.current[index] = el; }}
                       onChange={e => handleImageUpload(index, e)}
                     />
@@ -493,7 +541,9 @@ ${item.description}
                   <div className="flex-grow flex flex-col gap-2">
                     <div>
                       <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Title</label>
-                      <input type="text" value={item.title}
+                      <input
+                        type="text"
+                        value={item.title}
                         onChange={e => handleItemChange(index, 'title', e.target.value)}
                         className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-1.5 text-white focus:border-emerald-500 outline-none text-sm"
                         placeholder="YOUR ITEM TITLE HERE"
@@ -501,7 +551,8 @@ ${item.description}
                     </div>
                     <div>
                       <label className="block text-xs text-neutral-500 mb-1 uppercase tracking-wider">Description</label>
-                      <textarea value={item.description}
+                      <textarea
+                        value={item.description}
                         onChange={e => handleItemChange(index, 'description', e.target.value)}
                         rows={2}
                         className="w-full bg-[#0a0a0a] border border-neutral-800 rounded-lg px-3 py-1.5 text-white focus:border-emerald-500 outline-none text-sm resize-none"
@@ -521,21 +572,32 @@ ${item.description}
 
         <div className="flex flex-col gap-3 pb-8">
           <div className="grid grid-cols-3 gap-3">
-            <button onClick={() => handleDownload('png')} disabled={isDownloading}
-              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+            <button
+              onClick={() => handleDownload('png')}
+              disabled={isDownloading}
+              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
               {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} PNG
             </button>
-            <button onClick={() => handleDownload('jpg')} disabled={isDownloading}
-              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+            <button
+              onClick={() => handleDownload('jpg')}
+              disabled={isDownloading}
+              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
               {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} JPEG
             </button>
-            <button onClick={handleExportTxt}
-              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+            <button
+              onClick={handleExportTxt}
+              className="w-full py-2.5 px-4 bg-[#1a1a1a] hover:bg-[#222] border border-neutral-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
               <FileText className="w-4 h-4" /> TXT
             </button>
           </div>
-          <button onClick={handleSaveToLibrary} disabled={isSaving}
-            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+          <button
+            onClick={handleSaveToLibrary}
+            disabled={isSaving}
+            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+          >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <SaveIcon />}
             {user ? 'Save to Library' : 'Sign in to Save'}
           </button>
@@ -544,12 +606,11 @@ ${item.description}
 
       {/* ── Preview ── */}
       <div className="lg:col-span-7 flex justify-center items-start overflow-auto">
-        {/* Responsive shell — maintains 2:3 aspect ratio */}
         <div
           ref={containerRef}
           className="w-full max-w-[420px] xl:max-w-[460px] aspect-[2/3] relative border border-neutral-800 rounded-xl overflow-hidden shadow-2xl"
         >
-          {/* ─────────── CANVAS 1080 × 1620 ─────────── */}
+          {/* CANVAS 1080 × 1620 */}
           <div
             ref={previewRef}
             style={{
@@ -563,7 +624,7 @@ ${item.description}
               overflow: 'hidden',
             }}
           >
-            {/* ── Top arc glow ── */}
+            {/* Top arc glow */}
             <div style={{
               position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
               width: 1100, height: 600,
@@ -574,14 +635,16 @@ ${item.description}
               <path d="M-30 300 Q540 -20 1110 300" stroke="rgba(90,60,200,0.2)" strokeWidth="1.5" fill="none" />
             </svg>
 
-            {/* ── Scattered sparkle dots ── */}
-            {([
-              [108, 410, '#FFB300'],  [972, 440, '#ffffff'],
-              [52,  700, '#ffffff'],  [1028, 680, '#FF6B00'],
-              [78,  960, '#FFD700'],  [1004, 940, '#ffffff'],
-              [95, 1230, '#ffffff'],  [986, 1210, '#CCFF00'],
-              [125,1470, '#39FF14'], [952, 1450, '#ffffff'],
-            ] as [number, number, string][]).map(([x, y, c], i) => (
+            {/* Sparkle dots */}
+            {(
+              [
+                [108, 410, '#FFB300'], [972, 440, '#ffffff'],
+                [52,  700, '#ffffff'], [1028, 680, '#FF6B00'],
+                [78,  960, '#FFD700'], [1004, 940, '#ffffff'],
+                [95, 1230, '#ffffff'], [986, 1210, '#CCFF00'],
+                [125, 1470, '#39FF14'], [952, 1450, '#ffffff'],
+              ] as [number, number, string][]
+            ).map(([x, y, c], i) => (
               <div key={i} style={{
                 position: 'absolute', left: x, top: y,
                 width: 6, height: 6, borderRadius: '50%',
@@ -591,17 +654,11 @@ ${item.description}
               }} />
             ))}
 
-            {/* ══════════════ HEADER ══════════════ */}
-            {/* Total header height budget: ≈ 290px */}
+            {/* HEADER */}
             <div style={{ textAlign: 'center', paddingTop: 44, paddingBottom: 14 }}>
-
-              {/* "TOP 5" — metallic gradient, italic bold */}
               <div style={{
-                fontSize: 100,
-                fontWeight: 900,
-                fontStyle: 'italic',
-                lineHeight: 1,
-                letterSpacing: '-3px',
+                fontSize: 100, fontWeight: 900, fontStyle: 'italic',
+                lineHeight: 1, letterSpacing: '-3px',
                 background: 'linear-gradient(175deg, #ffffff 0%, #e8e8e8 30%, #b8b8b8 65%, #888 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -610,88 +667,17 @@ ${item.description}
                 TOP 5
               </div>
 
-              {/* Subtitle "• CATEGORY •" */}
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24,
-                marginTop: 30,
-              }}>
-                {(() => {
-                  // Check custom mode first, then saved custom icons for selected category, then defaults
-                  if (isCustomCategory && customCategoryIcon) {
-                    return (
-                      <img
-                        src={customCategoryIcon}
-                        alt="Custom Icon"
-                        style={{
-                          width: 42,
-                          height: 42,
-                          objectFit: 'contain',
-                          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))'
-                        }}
-                      />
-                    );
-                  } else if (selectedCategory && savedCategoryIcons[selectedCategory]) {
-                    return (
-                      <img
-                        src={savedCategoryIcons[selectedCategory]}
-                        alt={`${selectedCategory} Icon`}
-                        style={{
-                          width: 42,
-                          height: 42,
-                          objectFit: 'contain',
-                          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))'
-                        }}
-                      />
-                    );
-                  } else {
-                    const Icon = selectedCategory ? (CATEGORY_ICONS[selectedCategory] || Target) : Target;
-                    return <Icon size={42} color="#888" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} />;
-                  }
-                })()}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginTop: 30 }}>
+                {renderCategoryIcon('left')}
                 <span style={{
-                  fontSize: 36, fontWeight: 900,
-                  letterSpacing: '5px',
-                  color: '#aaaaaa',
-                  maxWidth: 700, textAlign: 'center', lineHeight: 1.3,
+                  fontSize: 36, fontWeight: 900, letterSpacing: '5px',
+                  color: '#aaaaaa', maxWidth: 700, textAlign: 'center', lineHeight: 1.3,
                 }}>
                   {categorySubtitle || 'YOUR CATEGORY HERE'}
                 </span>
-                {(() => {
-                  // Check custom mode first, then saved custom icons for selected category, then defaults
-                  if (isCustomCategory && customCategoryIcon) {
-                    return (
-                      <img
-                        src={customCategoryIcon}
-                        alt="Custom Icon"
-                        style={{
-                          width: 42,
-                          height: 42,
-                          objectFit: 'contain',
-                          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))'
-                        }}
-                      />
-                    );
-                  } else if (selectedCategory && savedCategoryIcons[selectedCategory]) {
-                    return (
-                      <img
-                        src={savedCategoryIcons[selectedCategory]}
-                        alt={`${selectedCategory} Icon`}
-                        style={{
-                          width: 42,
-                          height: 42,
-                          objectFit: 'contain',
-                          filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))'
-                        }}
-                      />
-                    );
-                  } else {
-                    const Icon = selectedCategory ? (CATEGORY_ICONS[selectedCategory] || Target) : Target;
-                    return <Icon size={42} color="#888" style={{ filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' }} />;
-                  }
-                })()}
+                {renderCategoryIcon('right')}
               </div>
 
-              {/* Separator — purple → orange, 3px */}
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14 }}>
                 <div style={{
                   width: 260, height: 3, borderRadius: 2,
@@ -700,43 +686,57 @@ ${item.description}
               </div>
             </div>
 
-            {/* ══════════════ CARD LIST ══════════════ */}
-            {/* Container padding: 20px sides; gap 18px; bottom 20px */}
-            <div style={{
-              padding: '30px 20px 20px',
-              display: 'flex', flexDirection: 'column', gap: 18,
-            }}>
+            {/* CARD LIST */}
+            <div style={{ padding: '30px 20px 20px', display: 'flex', flexDirection: 'column', gap: 18 }}>
               {items.map(item => {
-                const color   = RANK_COLORS[item.rank];
-                const rgb     = hexToRgb(color);
-                const rowH    = ROW_H[item.rank];
+                const color = RANK_COLORS[item.rank];
+                const rgb = hexToRgb(color);
+                const rowH = ROW_H[item.rank];
                 const IconComp = RANK_ICONS[item.rank];
                 const isTop4 = item.rank >= 2 && item.rank <= 5;
-               
-
-                // Scale factors derived from card height (222px = baseline)
-                const s = rowH / 222;
-                const imgSize    = Math.round(176 * s);      // icon box side
-                const badgeSize  = Math.round(65 * s);       // badge circle
-                const rankFont   = Math.round(116 * s);      // rank number font
-                const rankColW   = Math.round(148 * s);      // rank number column width
-                const titleFont  = Math.round(34 * s);       // item title
-                const descFont   = Math.round(22 * s);       // description
-                const barW       = Math.round(76 * s);       // underline bar width
-                const padV       = Math.round(20 * s);       // card vertical padding
-                const padH= 24;
                 const isRank1 = item.rank === 1;
+
+                const s = rowH / 222;
+                const imgSize    = Math.round(176 * s);
+                const badgeSize  = Math.round(65 * s);
+                const rankColW   = Math.round(148 * s);
+                const titleFont  = Math.round(34 * s);
+                const descFont   = Math.round(22 * s);
+                const barW       = Math.round(76 * s);
+                const padV       = Math.round(20 * s);
                 const rankNumberSize = isRank1 ? 140 : rankColW;
-                const rankPadding=isRank1 ? 45 : padH;
-                const marginLeft=isRank1 ? 5 : 22;
-                const persoTitleFont=isRank1 ? 36 : titleFont;
+                const rankPadding = isRank1 ? 45 : 24;
+                const marginLeft  = isRank1 ? 5 : 22;
+                const persoTitleFont = isRank1 ? 36 : titleFont;
+
+                const Separator = () => (
+                  <div style={{
+                    flexShrink: 0, width: 2, alignSelf: 'stretch',
+                    margin: `0 ${isRank1 ? 13 : 18}px`,
+                    display: 'flex', alignItems: 'center',
+                  }}>
+                    <div style={{
+                      width: 2, height: '80%', borderRadius: 2,
+                      background: `linear-gradient(180deg, transparent, ${color} 20%, ${color} 80%, transparent)`,
+                      boxShadow: `0 0 8px rgba(${rgb},0.65)`,
+                      position: 'relative',
+                    }}>
+                      <div style={{
+                        position: 'absolute', top: '50%', left: '50%',
+                        transform: 'translate(-50%,-50%)',
+                        width: 8, height: 8, borderRadius: '50%',
+                        background: color,
+                        boxShadow: `0 0 12px ${color}`,
+                      }} />
+                    </div>
+                  </div>
+                );
 
                 return (
                   <div
                     key={item.rank}
                     style={{
-                      height: rowH,
-                      borderRadius: 12,
+                      height: rowH, borderRadius: 12,
                       border: `2px solid ${color}`,
                       background: 'rgba(255,255,255,0.04)',
                       boxShadow: `0 0 18px rgba(${rgb},0.35), 0 0 5px rgba(${rgb},0.18)`,
@@ -747,25 +747,21 @@ ${item.description}
                       gap: 0,
                       boxSizing: 'border-box',
                       margin: isTop4 ? '0px 40px' : '0px 15px',
-
                     }}
                   >
-                    {/* Small glow dot — top-right */}
+                    {/* Glow dot */}
                     <div style={{
                       position: 'absolute', top: 8, right: 16,
                       width: 5, height: 5, borderRadius: '50%',
                       background: color, boxShadow: `0 0 8px ${color}`, opacity: 0.65,
                     }} />
 
-                    {/* ── ICON BOX ── */}
+                    {/* Icon box */}
                     <div style={{ flexShrink: 0, position: 'relative' }}>
                       <div style={{
-                        width: imgSize, height: imgSize,
-                        borderRadius: 10,
-                        background: '#1a1a2e',
-                        border: `1px solid rgba(${rgb},0.25)`,
-                        overflow: 'hidden',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: imgSize, height: imgSize, borderRadius: 10,
+                        background: '#1a1a2e', border: `1px solid rgba(${rgb},0.25)`,
+                        overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
                         flexShrink: 0,
                       }}>
                         {item.imageUrl
@@ -773,7 +769,7 @@ ${item.description}
                           : <PlaceholderIcon size={imgSize} />}
                       </div>
 
-                      {/* Badge — top-left of icon box */}
+                      {/* Badge */}
                       <div style={{
                         position: 'absolute', top: -badgeSize * 0.28, left: -badgeSize * 0.28,
                         width: badgeSize, height: badgeSize, borderRadius: '50%',
@@ -792,105 +788,47 @@ ${item.description}
                       </div>
                     </div>
 
-                  {/* ── SEPARATOR — avant le nombre pour rangs 2-5, après pour rang 1 ── */}
-                  {!isRank1 && (
+                    {/* Separator before rank number (ranks 2–5) */}
+                    {!isRank1 && <Separator />}
+
+                    {/* Rank number */}
                     <div style={{
-                      flexShrink: 0, width: 2, alignSelf: 'stretch',
-                      margin: `0 18px`,
-                      display: 'flex', alignItems: 'center',
+                      width: rankNumberSize, flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <div style={{
-                        width: 2, height: '80%', borderRadius: 2,
-                        background: `linear-gradient(180deg, transparent, ${color} 20%, ${color} 80%, transparent)`,
-                        boxShadow: `0 0 8px rgba(${rgb},0.65)`,
-                        position: 'relative',
+                      <span style={{
+                        fontSize: rankColW, fontWeight: 900, fontStyle: 'italic',
+                        lineHeight: 1, color,
+                        textShadow: `0 0 30px rgba(${rgb},0.7), 0 0 60px rgba(${rgb},0.3)`,
+                        letterSpacing: '-2px', userSelect: 'none',
                       }}>
-                        <div style={{
-                          position: 'absolute', top: '50%', left: '50%',
-                          transform: 'translate(-50%,-50%)',
-                          width: 8, height: 8, borderRadius: '50%',
-                          background: color,
-                          boxShadow: `0 0 12px ${color}`,
-                        }} />
-                      </div>
+                        {item.rank}
+                      </span>
                     </div>
-                  )}
 
-                  {/* ── RANK NUMBER ── */}
-                  <div style={{
-                    width: rankNumberSize, flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <span style={{
-                      fontSize: rankColW,
-                      fontWeight: 900,
-                      fontStyle: 'italic',
-                      lineHeight: 1,
-                      color,
-                      textShadow: `0 0 30px rgba(${rgb},0.7), 0 0 60px rgba(${rgb},0.3)`,
-                      letterSpacing: '-2px',
-                      userSelect: 'none',
-                    }}>
-                      {item.rank}
-                    </span>
-                  </div>
+                    {/* Separator after rank number (rank 1 only) */}
+                    {isRank1 && <Separator />}
 
-                  {/* ── SEPARATOR — après le nombre pour rang 1 seulement ── */}
-                  {isRank1 && (
+                    {/* Text content */}
                     <div style={{
-                      flexShrink: 0, width: 2, alignSelf: 'stretch',
-                      margin: `0 13px`,
-                      display: 'flex', alignItems: 'center',
-                    }}>
-                      <div style={{
-                        width: 2, height: '80%', borderRadius: 2,
-                        background: `linear-gradient(180deg, transparent, ${color} 20%, ${color} 80%, transparent)`,
-                        boxShadow: `0 0 8px rgba(${rgb},0.65)`,
-                        position: 'relative',
-                      }}>
-                        <div style={{
-                          position: 'absolute', top: '50%', left: '50%',
-                          transform: 'translate(-50%,-50%)',
-                          width: 8, height: 8, borderRadius: '50%',
-                          background: color,
-                          boxShadow: `0 0 12px ${color}`,
-                        }} />
-                      </div>
-                    </div>
-                  )}
-
-                    {/* ── TEXT CONTENT ── */}
-                    <div style={{
-                      flex: 1, marginLeft: marginLeft,//modification margin left
+                      flex: 1, marginLeft,
                       display: 'flex', flexDirection: 'column', justifyContent: 'center',
                       gap: 6, overflow: 'hidden',
                     }}>
-                      {/* Title */}
                       <div style={{
-                        fontSize: persoTitleFont,
-                        fontWeight: 800,
-                        textTransform: 'uppercase',
-                        color: '#ffffff',
-                        lineHeight: 1.1,
-                        letterSpacing: '0.3px',
+                        fontSize: persoTitleFont, fontWeight: 800,
+                        textTransform: 'uppercase', color: '#ffffff',
+                        lineHeight: 1.1, letterSpacing: '0.3px',
                       }}>
                         {item.title || 'YOUR ITEM TITLE HERE'}
                       </div>
 
-                      {/* Underline bar — 40px base scaled */}
                       <div style={{
                         width: barW, height: 3, borderRadius: 2,
-                        background: color,
-                        boxShadow: `0 0 7px rgba(${rgb},0.6)`,
+                        background: color, boxShadow: `0 0 7px rgba(${rgb},0.6)`,
                       }} />
 
-                      {/* Description */}
-                      <div style={{
-                        fontSize: descFont,
-                        color: '#aaaaaa',
-                        lineHeight: 1.5,
-                        fontWeight: 400,
-                      }}>
+                      <div style={{ fontSize: descFont, color: '#aaaaaa', lineHeight: 1.5, fontWeight: 400 }}>
                         {item.description || 'Your short description or key metric goes here.'}
                       </div>
                     </div>
@@ -898,31 +836,17 @@ ${item.description}
                 );
               })}
             </div>
-            {/* ── Sol glow — reflet vert sous la carte #1 ── */}
+
+            {/* Ground glow */}
             <div style={{
-              position: 'absolute',
-              bottom: 0,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '90%',
-              height: 120,
+              position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+              width: '90%', height: 120,
               background: 'radial-gradient(ellipse at 50% 100%, rgba(57,255,20,0.45) 0%, rgba(57,255,20,0.15) 40%, transparent 70%)',
-              pointerEvents: 'none',
-              zIndex: 10,
+              pointerEvents: 'none', zIndex: 10,
             }} />
           </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function SaveIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-      <polyline points="17 21 17 13 7 13 7 21" />
-      <polyline points="7 3 7 8 15 8" />
-    </svg>
   );
 }

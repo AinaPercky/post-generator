@@ -8,7 +8,7 @@ import { RedPillGenerator } from './components/RedPillGenerator';
 import { MisyFaTsyGenerator } from './components/MisyFaTsyGenerator';
 import { Top5Generator } from './components/Top5Generator';
 import { Top5Library } from './components/Top5Library';
-import LegendBuilder from './components/LegendBuilder';
+import LegendGenerator from './components/LegendGenerator';
 import { SavedPost } from './types';
 import { auth, signInWithGoogle, logOut } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -399,7 +399,7 @@ export default function App() {
           </>
         ) : activeTab === 'legend' ? (
           <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-8">
-            <LegendBuilder />
+            <LegendGenerator />
           </div>
         ) : (
           <>

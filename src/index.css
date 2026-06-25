@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Playfair+Display:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -37,4 +38,190 @@
       box-shadow: 0 0 40px 10px rgba(255, 77, 77, 0.9), 0 15px 35px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 12px rgba(0,0,0,0.8);
     }
   }
+}
+
+/* ---- WARRIOR CARD CSS ---- */
+
+
+
+@theme {
+  --font-serif: "Cinzel", Georgia, serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-playfair: "Playfair Display", Georgia, serif;
+}
+
+/* Heavy Armor Brushed Metal Effect */
+.heavy-metal-plate {
+  position: relative;
+  background: linear-gradient(135deg, #1f1f1f 0%, #333333 50%, #1a1a1a 100%);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9), 0 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.brushed-metal {
+  background-image: 
+    repeating-linear-gradient(85deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 4px),
+    repeating-linear-gradient(-5deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 1px, transparent 1px, transparent 5px);
+}
+
+/* Steel Rivet */
+.armor-rivet {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #e5e7eb 0%, #4b5563 60%, #1f2937 100%);
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.9), inset -0.5px -0.5px 1px rgba(0,0,0,0.7);
+  border: 1px solid #111827;
+  position: absolute;
+  z-index: 25;
+}
+
+/* Battle scratch */
+.metal-scratch {
+  position: absolute;
+  height: 1.5px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.45) 15%, rgba(255, 255, 255, 0.75) 50%, rgba(255, 255, 255, 0.15) 85%, transparent);
+  box-shadow: 0 1.5px 2px rgba(0,0,0,0.8);
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Red Neon Glow Pulsation for Warrior Card */
+@keyframes neonPulse {
+  0% {
+    box-shadow: 0 0 15px #ff0000, 0 0 30px #b51212, inset 0 0 12px rgba(181,18,18,0.55), 0 15px 40px rgba(0,0,0,0.95);
+    border-color: #ff1c1c;
+  }
+  100% {
+    box-shadow: 0 0 28px #ff2525, 0 0 55px #ff0505, inset 0 0 22px rgba(255,0,0,0.7), 0 15px 45px rgba(0,0,0,0.98);
+    border-color: #ff0000;
+  }
+}
+
+.neon-blood-border {
+  animation: neonPulse 2s ease-in-out infinite alternate;
+}
+
+/* ── Explorateur · Charte Carte Ancienne ───────────────────────────────── */
+:root {
+  --dark-teal:      #114b5f;
+  --sea-green:      #1a936f;
+  --celadon:        #88d498;
+  --tea-green:      #c6dabf;
+  --vanilla-cream:  #f3e9d2;
+}
+
+/* Pulsation douce de la boussole explorateur */
+@keyframes compassPulse {
+  0%   { opacity: 0.16; transform: rotate(0deg) scale(1);    }
+  50%  { opacity: 0.26; transform: rotate(1deg) scale(1.02); }
+  100% { opacity: 0.16; transform: rotate(0deg) scale(1);    }
+}
+.compass-pulse {
+  animation: compassPulse 6s ease-in-out infinite;
+}
+
+/* Lueur de l'horizon océan */
+@keyframes horizonGlow {
+  0%   { opacity: 0.08; }
+  50%  { opacity: 0.18; }
+  100% { opacity: 0.08; }
+}
+.horizon-glow {
+  animation: horizonGlow 5s ease-in-out infinite;
+}
+
+/* Léger flottement des rayons de soleil tropicaux */
+@keyframes sunrayDrift {
+  0%   { transform: rotate(-10deg) scaleX(1);   opacity: 0.10; }
+  50%  { transform: rotate(-8deg)  scaleX(1.08); opacity: 0.14; }
+  100% { transform: rotate(-10deg) scaleX(1);   opacity: 0.10; }
+}
+
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0a09;
+}
+::-webkit-scrollbar-thumb {
+  background: #b45309;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d97706;
+}
+
+@keyframes fireEmber {
+  0% {
+    transform: translateY(10px) translateX(0) scale(0.6);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-160px) translateX(var(--ember-drift, 20px)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+.fire-ember {
+  position: absolute;
+  background: radial-gradient(circle, #ff0000 0%, #b53700 50%, #7a150e 80%, transparent 100%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: fireEmber var(--ember-duration, 4s) ease-in-out infinite;
+}
+
+@keyframes floatSparkle {
+  0% {
+    transform: translateY(20px) translateX(0) rotate(0deg) scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-240px) translateX(var(--drift, 30px)) rotate(180deg) scale(0.25);
+    opacity: 0;
+  }
+}
+
+.fire-sparkle {
+  position: absolute;
+  background: radial-gradient(circle, #ffd466 0%, #f97316 40%, #dc2626 75%, transparent 100%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: floatSparkle var(--duration, 4.5s) linear infinite;
+  z-index: 28;
+}
+
+@keyframes explosionPulse {
+  0% {
+    opacity: 0.05;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.18;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 0.05;
+    transform: scale(1);
+  }
+}
+
+.explosion-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 65%, rgba(220, 38, 38, 0.25) 0%, rgba(249, 115, 22, 0.12) 45%, transparent 75%);
+  pointer-events: none;
+  animation: explosionPulse 4.5s ease-in-out infinite;
+  z-index: 1;
 }
