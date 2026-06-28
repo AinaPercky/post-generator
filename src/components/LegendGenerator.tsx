@@ -440,28 +440,28 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
   switch (mainClass) {
     case 'Explorateur':
       return {
-        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-[#f3e9d2]",
+        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-[#bce784]",
         fontData: "font-montserrat font-semibold",
         fontCitation: "font-playfair italic",
-        accentColor: "text-[#c6dabf]",
-        accentBorder: "border-[#114b5f]/80",
-        innerBorder: "border-[#114b5f]/30",
-        outerBorder: "border-[#114b5f]/80 shadow-[0_0_24px_rgba(17,75,95,0.45)]",
-        themeBgGradient: "from-[#114b5f]/95 via-[#0d2a1f]/90 to-[#0a1e18]/95",
+        accentColor: "text-[#bce784]",
+        accentBorder: "border-[#bce784]/80",
+        innerBorder: "border-[#bce784]/30",
+        outerBorder: "border-[#348aa7]/80 shadow-[0_0_24px_rgba(52,138,167,0.45)]",
+        themeBgGradient: "from-[#513b56]/95 via-[#525174]/90 to-[#171413]/95",
         
-        nameSectionStyle: "border-2 border-[#114b5f]/80 bg-[#0a1e1a]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#1a936f]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#c6dabf]/60 shadow-[0_0_12px_rgba(198,218,191,0.35)]",
-        classBadgeStyle: "border-2 border-[#c6dabf]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-neutral-500/60",
-        citationBoxStyle: "border border-[#1a936f]/50 bg-[#081812]/55",
-        iconContainerStyle: "border-[#114b5f]/80 shadow-[0_0_8px_rgba(17,75,95,0.4)]",
-        dividerStyle: "via-[#1a936f]/30",
-        failleColor: "text-[#f3e9d2]",
+        nameSectionStyle: "border-2 border-[#bce784]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+        textBoxStyle: "border-2 border-[#5dd39e]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+        portraitBorderStyle: "border-2 border-[#bce784]/60 shadow-[0_0_12px_rgba(188,231,132,0.35)]",
+        classBadgeStyle: "border-2 border-[#bce784]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-[#525174]/60",
+        citationBoxStyle: "border border-[#5dd39e]/50 bg-[#171413]/55",
+        iconContainerStyle: "border-[#bce784]/80 shadow-[0_0_8px_rgba(188,231,132,0.4)]",
+        dividerStyle: "via-[#5dd39e]/30",
+        failleColor: "text-[#bce784]",
         
-        textBoxBgImage: `linear-gradient(to bottom, rgba(17, 75, 95, 0.5), rgba(10, 30, 24, 0.92)), url(${explorateurBackground})`,
+        textBoxBgImage: `linear-gradient(to bottom, rgba(81, 59, 86, 0.5), rgba(23, 20, 19, 0.92)), url(${explorateurBackground})`,
         textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#88d498] drop-shadow-[0_0_6px_rgba(136,212,152,0.6)]",
+        quoteIconStyle: "text-[#5dd39e] drop-shadow-[0_0_6px_rgba(93,211,158,0.6)]",
         
         cornerStyle: 'rivet',
         showScratches: false,
@@ -469,48 +469,48 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         showEmber: false,
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#f3e9d2]/[0.04] via-transparent to-[#114b5f]/20 mix-blend-overlay" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#bce784]/[0.04] via-transparent to-[#348aa7]/20 mix-blend-overlay" />
             <svg className="absolute inset-0 w-full h-full opacity-[0.06]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {[60, 120, 180, 240, 300, 360, 420].map(y => <line key={`lat-${y}`} x1="0" y1={y} x2="300" y2={y} stroke="#c6dabf" strokeWidth="0.5" strokeDasharray="6 4" />)}
-              {[50, 100, 150, 200, 250].map(x => <line key={`lon-${x}`} x1={x} y1="0" x2={x} y2="480" stroke="#c6dabf" strokeWidth="0.5" strokeDasharray="6 4" />)}
-              <line x1="0" y1="480" x2="300" y2="0" stroke="#88d498" strokeWidth="0.4" strokeDasharray="8 6" opacity="0.5" />
-              <line x1="0" y1="0" x2="300" y2="480" stroke="#88d498" strokeWidth="0.4" strokeDasharray="8 6" opacity="0.3" />
-              <line x1="0" y1="240" x2="300" y2="60" stroke="#1a936f" strokeWidth="0.35" strokeDasharray="5 8" opacity="0.4" />
+              {[60, 120, 180, 240, 300, 360, 420].map(y => <line key={`lat-${y}`} x1="0" y1={y} x2="300" y2={y} stroke="#bce784" strokeWidth="0.5" strokeDasharray="6 4" />)}
+              {[50, 100, 150, 200, 250].map(x => <line key={`lon-${x}`} x1={x} y1="0" x2={x} y2="480" stroke="#bce784" strokeWidth="0.5" strokeDasharray="6 4" />)}
+              <line x1="0" y1="480" x2="300" y2="0" stroke="#5dd39e" strokeWidth="0.4" strokeDasharray="8 6" opacity="0.5" />
+              <line x1="0" y1="0" x2="300" y2="480" stroke="#5dd39e" strokeWidth="0.4" strokeDasharray="8 6" opacity="0.3" />
+              <line x1="0" y1="240" x2="300" y2="60" stroke="#348aa7" strokeWidth="0.35" strokeDasharray="5 8" opacity="0.4" />
             </svg>
-            <div className="absolute top-0 left-[18%] w-16 h-56 bg-gradient-to-b from-[#f3e9d2]/10 via-[#88d498]/04 to-transparent rotate-[-10deg] origin-top" />
-            <div className="absolute top-0 left-[48%] w-12 h-44 bg-gradient-to-b from-[#c6dabf]/08 via-[#1a936f]/03 to-transparent rotate-[5deg] origin-top" />
-            <div className="absolute top-0 right-[14%] w-8 h-36 bg-gradient-to-b from-[#88d498]/07 via-transparent to-transparent rotate-[12deg] origin-top" />
+            <div className="absolute top-0 left-[18%] w-16 h-56 bg-gradient-to-b from-[#bce784]/10 via-[#5dd39e]/04 to-transparent rotate-[-10deg] origin-top" />
+            <div className="absolute top-0 left-[48%] w-12 h-44 bg-gradient-to-b from-[#bce784]/08 via-[#348aa7]/03 to-transparent rotate-[5deg] origin-top" />
+            <div className="absolute top-0 right-[14%] w-8 h-36 bg-gradient-to-b from-[#5dd39e]/07 via-transparent to-transparent rotate-[12deg] origin-top" />
             
             <div className="absolute bottom-4 right-4 w-24 h-24 opacity-[0.22]">
               <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="48" cy="48" r="44" stroke="#c6dabf" strokeWidth="0.6" strokeDasharray="3 2.5" />
-                <circle cx="48" cy="48" r="34" stroke="#88d498" strokeWidth="0.4" />
-                <circle cx="48" cy="48" r="22" stroke="#1a936f" strokeWidth="0.5" />
+                <circle cx="48" cy="48" r="44" stroke="#bce784" strokeWidth="0.6" strokeDasharray="3 2.5" />
+                <circle cx="48" cy="48" r="34" stroke="#5dd39e" strokeWidth="0.4" />
+                <circle cx="48" cy="48" r="22" stroke="#348aa7" strokeWidth="0.5" />
                 {[0,22.5,45,67.5,90,112.5,135,157.5,180,202.5,225,247.5,270,292.5,315,337.5].map((angle, i) => {
                   const rad = (angle - 90) * Math.PI / 180;
                   const inner = i % 4 === 0 ? 26 : i % 2 === 0 ? 30 : 34;
                   const outer = 42;
                   return (
-                    <line key={angle} x1={48 + inner * Math.cos(rad)} y1={48 + inner * Math.sin(rad)} x2={48 + outer * Math.cos(rad)} y2={48 + outer * Math.sin(rad)} stroke={i % 4 === 0 ? "#88d498" : "#c6dabf"} strokeWidth={i % 4 === 0 ? "0.8" : "0.4"} />
+                    <line key={angle} x1={48 + inner * Math.cos(rad)} y1={48 + inner * Math.sin(rad)} x2={48 + outer * Math.cos(rad)} y2={48 + outer * Math.sin(rad)} stroke={i % 4 === 0 ? "#5dd39e" : "#bce784"} strokeWidth={i % 4 === 0 ? "0.8" : "0.4"} />
                   );
                 })}
-                <polygon points="48,6 45,48 48,42 51,48" fill="#88d498" opacity="0.95" />
-                <polygon points="48,90 45,48 48,54 51,48" fill="#f3e9d2" opacity="0.55" />
-                <polygon points="90,48 48,45 54,48 48,51" fill="#c6dabf" opacity="0.5" />
-                <polygon points="6,48 48,45 42,48 48,51" fill="#c6dabf" opacity="0.5" />
-                <circle cx="48" cy="48" r="3.5" fill="#1a936f" opacity="0.9" />
-                <circle cx="48" cy="48" r="1.5" fill="#f3e9d2" opacity="0.8" />
-                <text x="46" y="4" fontSize="5" fill="#88d498" opacity="0.8" fontFamily="serif">N</text>
-                <text x="46" y="95" fontSize="5" fill="#c6dabf" opacity="0.6" fontFamily="serif">S</text>
-                <text x="88" y="50" fontSize="5" fill="#c6dabf" opacity="0.6" fontFamily="serif">E</text>
-                <text x="2" y="50" fontSize="5" fill="#c6dabf" opacity="0.6" fontFamily="serif">O</text>
+                <polygon points="48,6 45,48 48,42 51,48" fill="#5dd39e" opacity="0.95" />
+                <polygon points="48,90 45,48 48,54 51,48" fill="#bce784" opacity="0.55" />
+                <polygon points="90,48 48,45 54,48 48,51" fill="#348aa7" opacity="0.5" />
+                <polygon points="6,48 48,45 42,48 48,51" fill="#348aa7" opacity="0.5" />
+                <circle cx="48" cy="48" r="3.5" fill="#348aa7" opacity="0.9" />
+                <circle cx="48" cy="48" r="1.5" fill="#bce784" opacity="0.8" />
+                <text x="46" y="4" fontSize="5" fill="#5dd39e" opacity="0.8" fontFamily="serif">N</text>
+                <text x="46" y="95" fontSize="5" fill="#bce784" opacity="0.6" fontFamily="serif">S</text>
+                <text x="88" y="50" fontSize="5" fill="#348aa7" opacity="0.6" fontFamily="serif">E</text>
+                <text x="2" y="50" fontSize="5" fill="#348aa7" opacity="0.6" fontFamily="serif">O</text>
               </svg>
             </div>
             
-            <div className="absolute inset-0 bg-[radial-gradient(#c6dabf_0.8px,transparent_0.8px)] [background-size:20px_20px] opacity-[0.035]" />
-            <div className="absolute -top-8 left-[30%] w-40 h-32 bg-[#114b5f]/20 blur-[30px] rounded-full" />
-            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#1a936f]/12 via-[#114b5f]/06 to-transparent" />
-            <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(11,30,24,0.65)] rounded-[24px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(#bce784_0.8px,transparent_0.8px)] [background-size:20px_20px] opacity-[0.035]" />
+            <div className="absolute -top-8 left-[30%] w-40 h-32 bg-[#348aa7]/20 blur-[30px] rounded-full" />
+            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#5dd39e]/12 via-[#348aa7]/06 to-transparent" />
+            <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(23,20,19,0.65)] rounded-[24px]" />
           </div>
         )
       };
