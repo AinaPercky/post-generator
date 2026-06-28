@@ -463,7 +463,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         textBoxBgBlendMode: 'normal',
         quoteIconStyle: "text-[#88d498] drop-shadow-[0_0_6px_rgba(136,212,152,0.6)]",
         
-        cornerStyle: 'compass',
+        cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
         showEmber: false,
@@ -537,16 +537,12 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         failleColor: "text-[#ff0000]",
         
         quoteIconStyle: "text-cyan-400",
-        cornerStyle: 'none',
+        cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
         showEmber: false,
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute top-4 left-4 w-6 h-6 border-t border-l border-cyan-400/60" />
-            <div className="absolute top-4 right-4 w-6 h-6 border-t border-r border-cyan-400/60" />
-            <div className="absolute bottom-4 left-4 w-6 h-6 border-b border-l border-cyan-400/60" />
-            <div className="absolute bottom-4 right-4 w-6 h-6 border-b border-r border-cyan-400/60" />
             <div className="absolute inset-0 bg-[radial-gradient(#06b6d4_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-[0.08]" />
             <div className="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t from-blue-500/10 to-transparent" />
           </div>
@@ -575,7 +571,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         failleColor: "text-[#ff0000]",
         
         quoteIconStyle: "text-fuchsia-400",
-        cornerStyle: 'none',
+        cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
         showEmber: false,
@@ -610,7 +606,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         failleColor: "text-[#ff0000]",
         
         quoteIconStyle: "text-purple-400",
-        cornerStyle: 'none',
+        cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
         showEmber: false,
@@ -647,7 +643,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         textBoxBgBlendMode: 'multiply',
         quoteIconStyle: "text-amber-600",
         
-        cornerStyle: 'none',
+        cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
         showEmber: false,
@@ -681,7 +677,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         failleColor: "text-[#ff0000]",
         
         quoteIconStyle: "text-yellow-500",
-        cornerStyle: 'none',
+        cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
         showEmber: false,
@@ -715,7 +711,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         failleColor: "text-[#ff0000]",
         
         quoteIconStyle: "text-emerald-400",
-        cornerStyle: 'none',
+        cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
         showEmber: false,
@@ -1474,44 +1470,13 @@ export default function LegendGenerator() {
               {/* Overlays de classe */}
               {cardAmbiance.effectOverlay}
 
-              {/* Rivets (Guerrier seulement) */}
+              {/* Rivets */}
               {cardAmbiance.cornerStyle === 'rivet' && (
                 <>
                   <div className="armor-rivet top-3.5 left-3.5" />
                   <div className="armor-rivet top-3.5 right-3.5" />
                   <div className="armor-rivet bottom-3.5 left-3.5" />
                   <div className="armor-rivet bottom-3.5 right-3.5" />
-                  <div className="armor-rivet top-1/2 -translate-y-1/2 left-3.5" />
-                  <div className="armor-rivet top-1/2 -translate-y-1/2 right-3.5" />
-                </>
-              )}
-
-              {/* Map Pins / Compasses (Explorateur seulement) */}
-              {cardAmbiance.cornerStyle === 'compass' && (
-                <>
-                  {['top-3.5 left-3.5', 'top-3.5 right-3.5', 'bottom-3.5 left-3.5', 'bottom-3.5 right-3.5', 'top-1/2 -translate-y-1/2 left-3.5', 'top-1/2 -translate-y-1/2 right-3.5'].map(pos => (
-                    <div key={pos} className={`absolute ${pos} w-[18px] h-[18px] flex items-center justify-center opacity-70 z-20`}>
-                      {/* Globe terrestre minimaliste style astrolabe/sphère armillaire */}
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                        {/* Cercle extérieur (Méridien) */}
-                        <circle cx="12" cy="12" r="10" stroke="#c6dabf" strokeWidth="1" />
-                        {/* Cercle intérieur */}
-                        <circle cx="12" cy="12" r="8" stroke="#114b5f" strokeWidth="0.75" />
-                        
-                        {/* Équateur (ellipse horizontale) */}
-                        <ellipse cx="12" cy="12" rx="10" ry="3" stroke="#88d498" strokeWidth="0.75" transform="rotate(-15 12 12)" />
-                        
-                        {/* Méridien central (ellipse verticale) */}
-                        <ellipse cx="12" cy="12" rx="4" ry="10" stroke="#1a936f" strokeWidth="0.75" transform="rotate(15 12 12)" />
-                        
-                        {/* Axe polaire */}
-                        <line x1="12" y1="1" x2="12" y2="23" stroke="#f3e9d2" strokeWidth="1" transform="rotate(15 12 12)" />
-                        
-                        {/* Pivot central */}
-                        <circle cx="12" cy="12" r="1.5" fill="#f3e9d2" />
-                      </svg>
-                    </div>
-                  ))}
                 </>
               )}
 
