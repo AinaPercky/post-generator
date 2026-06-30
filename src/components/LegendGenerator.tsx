@@ -370,7 +370,7 @@ const renderSpecialtyIcon = (iconName: string | undefined, defaultIcon: string, 
 const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => {
   const { mainClass } = parseClasse(classeName);
   switch (mainClass) {
-    case 'Explorateur': return <Compass className={`${iconClassName} text-[#88d498]`} />;
+    case 'Explorateur': return <Compass className={`${iconClassName} text-[#bce784]`} />;
     case 'Savant': return <FlaskConical className={`${iconClassName} text-blue-400`} />;
     case 'Artiste': return <Palette className={`${iconClassName} text-fuchsia-400`} />;
     case 'Fictionnel': return <Film className={`${iconClassName} text-purple-400`} />;
@@ -451,7 +451,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         
         nameSectionStyle: "border-2 border-[#bce784]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
         textBoxStyle: "border-2 border-[#5dd39e]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#bce784]/60 shadow-[0_0_12px_rgba(188,231,132,0.35)]",
+        portraitBorderStyle: "border-2 border-[#348aa7]/60 shadow-[0_0_12px_rgba(52,138,167,0.45)]",
         classBadgeStyle: "border-2 border-[#bce784]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
         specBoxStyle: "border-2 border-[#525174]/60",
         citationBoxStyle: "border border-[#5dd39e]/50 bg-[#171413]/55",
