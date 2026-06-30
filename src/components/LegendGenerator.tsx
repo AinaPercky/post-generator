@@ -3,6 +3,7 @@ import { toPng, toJpeg } from 'html-to-image';
 // @ts-ignore
 import cardBackground from '../assets/card_background_1782290811054.jpg';
 import explorateurBackground from '../assets/fond_explorateur.png';
+import savantBackground from '../assets/fond_savant.png';
 import { 
   Sparkles, 
   Upload, 
@@ -371,7 +372,7 @@ const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => 
   const { mainClass } = parseClasse(classeName);
   switch (mainClass) {
     case 'Explorateur': return <Compass className={`${iconClassName} text-[#bce784]`} />;
-    case 'Savant': return <FlaskConical className={`${iconClassName} text-blue-400`} />;
+    case 'Savant': return <FlaskConical className={`${iconClassName} text-[#ffff33]`} />;
     case 'Artiste': return <Palette className={`${iconClassName} text-fuchsia-400`} />;
     case 'Fictionnel': return <Film className={`${iconClassName} text-purple-400`} />;
     case 'Penseur': return <BookOpen className={`${iconClassName} text-amber-600`} />;
@@ -452,14 +453,14 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         nameSectionStyle: "border-2 border-[#bce784]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
         textBoxStyle: "border-2 border-[#5dd39e]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
         portraitBorderStyle: "border-2 border-[#348aa7]/60 shadow-[0_0_12px_rgba(52,138,167,0.45)]",
-        classBadgeStyle: "border-2 border-[#bce784]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        classBadgeStyle: "border-2 border-[#348aa7]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
         specBoxStyle: "border-2 border-[#525174]/60",
         citationBoxStyle: "border border-[#5dd39e]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#bce784]/80 shadow-[0_0_8px_rgba(188,231,132,0.4)]",
+        iconContainerStyle: "border-[#bce784]/80 shadow-[0_0_8px_rgba(188,231,132,0.2)]",
         dividerStyle: "via-[#5dd39e]/30",
         failleColor: "text-[#bce784]",
         
-        textBoxBgImage: `linear-gradient(to bottom, rgba(81, 59, 86, 0.5), rgba(23, 20, 19, 0.92)), url(${explorateurBackground})`,
+        textBoxBgImage: `linear-gradient(to bottom, rgba(81, 59, 86, 0.2), rgba(23, 20, 19, 0.82)), url(${explorateurBackground})`,
         textBoxBgBlendMode: 'normal',
         quoteIconStyle: "text-[#5dd39e] drop-shadow-[0_0_6px_rgba(93,211,158,0.6)]",
         
@@ -517,36 +518,33 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
       
     case 'Savant':
       return {
-        fontTitle: "font-oswald font-bold tracking-wider uppercase text-blue-400",
+        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-[#bce784]",
         fontData: "font-montserrat font-semibold",
-        fontCitation: "font-sans font-medium",
-        accentColor: "text-cyan-400",
-        accentBorder: "border-cyan-500/80",
-        innerBorder: "border-blue-600/40",
-        outerBorder: "border-cyan-500/80 shadow-[0_0_25px_rgba(6,182,212,0.65),inset_0_1px_3px_rgba(255,255,255,0.2)]",
-        themeBgGradient: "from-blue-950/85 via-slate-900/90 to-cyan-950/95",
+        fontCitation: "font-playfair italic",
+        accentColor: "text-[#ffff33]",
+        accentBorder: "border-[#ffff33]/80",
+        innerBorder: "border-[#ffff33]/30",
+        outerBorder: "border-[#00ffff]/80 shadow-[0_0_24px_rgba(0,255,255,0.45)]",
+        themeBgGradient: "from-[#00cccc]/95 via-[#00cccc]/90 to-[#171413]/95",
         
-        nameSectionStyle: "border border-cyan-500/50 bg-slate-950/95 shadow-[0_0_12px_rgba(6,182,212,0.35),inset_0_1px_2px_rgba(255,255,255,0.1)] rounded-md",
-        textBoxStyle: "border border-blue-500/40 bg-slate-950/95 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.9),0_0_10px_rgba(30,58,138,0.4)] rounded-md",
-        portraitBorderStyle: "border-2 border-cyan-500/60 shadow-[0_0_12px_rgba(6,182,212,0.4)]",
-        classBadgeStyle: "border-2 border-cyan-500/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-cyan-500/50",
-        citationBoxStyle: "border border-blue-500/20 bg-black/45",
-        iconContainerStyle: "border-cyan-500/80",
-        dividerStyle: "via-cyan-500/20",
-        failleColor: "text-[#ff0000]",
+        nameSectionStyle: "border-2 border-[#ffff33]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+        textBoxStyle: "border-2 border-[#ffcc33]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+        portraitBorderStyle: "border-2 border-[#00ffff]/60 shadow-[0_0_12px_rgba(0,255,255,0.45)]",
+        classBadgeStyle: "border-2 border-[#00ffff]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-[#525174]/60",
+        citationBoxStyle: "border border-[#ffcc33]/50 bg-[#171413]/55",
+        iconContainerStyle: "border-[#ffff33]/80 shadow-[0_0_8px_rgba(255,255,51,0.4)]",
+        dividerStyle: "via-[#ffcc33]/30",
+        failleColor: "text-[#ffff33]",
         
-        quoteIconStyle: "text-cyan-400",
+        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 204, 51, 0.2), rgba(23, 20, 19, 0.82)), url(${savantBackground})`,
+        textBoxBgBlendMode: 'normal',
+        quoteIconStyle: "text-[#ffcc33] drop-shadow-[0_0_6px_rgba(255,204,51,0.6)]",
+        
         cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
         showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute inset-0 bg-[radial-gradient(#06b6d4_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-[0.08]" />
-            <div className="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-t from-blue-500/10 to-transparent" />
-          </div>
-        )
       };
       
     case 'Artiste':
@@ -1452,7 +1450,9 @@ export default function LegendGenerator() {
               {/* FOND GOTHIQUE */}
               <div className="absolute inset-0 z-0 select-none pointer-events-none">
                 <img
-                  src={parseClasse(formData.classe).mainClass === 'Explorateur' ? explorateurBackground : cardBackground}
+                  src={parseClasse(formData.classe).mainClass === 'Explorateur' ? explorateurBackground :
+                    (parseClasse(formData.classe).mainClass === 'Savant' ?
+                    savantBackground : cardBackground)}
                   alt="Epic Background"
                   className="w-full h-full object-cover brightness-[0.7] contrast-[1.1] saturate-[0.85] transition-all duration-300"
                 />
