@@ -9,44 +9,7 @@ import fictionnelBackground from '../assets/fond_fictionnel.png';
 import penseurBackground from '../assets/fond_penseur.png';
 import dirigeantBackground from '../assets/fond_dirigeant.png';
 import athleteBackground from '../assets/fond_athlete.png';
-import { 
-  Anchor,
-  Sparkles, 
-  Upload, 
-  Download, 
-  Plus, 
-  Trash2, 
-  Copy, 
-  Search, 
-  Image as ImageIcon, 
-  RotateCcw, 
-  Swords, 
-  Shield, 
-  Quote, 
-  Heart, 
-  Check, 
-  AlertTriangle, 
-  Filter,
-  Eye,
-  Settings,
-  HelpCircle,
-  FileImage,
-  Crown,
-  Skull,
-  Crosshair,
-  Axe,
-  Flame,
-  Zap,
-  Wind,
-  Target,
-  Feather,
-  Compass,
-  FlaskConical,
-  Palette,
-  Film,
-  BookOpen,
-  Trophy
-} from 'lucide-react';
+import { Anchor, Sparkles, Upload, Download, Plus, Trash2, Copy, Search, Image as ImageIcon, RotateCcw, Swords, Shield, Quote, Heart, Check, TriangleAlert as AlertTriangle, ListFilter as Filter, Eye, Settings, Circle as HelpCircle, FileImage, Crown, Skull, Crosshair, Axe, Flame, Zap, Wind, Target, Feather, Compass, FlaskConical, Palette, Film, BookOpen, Trophy } from 'lucide-react';
 
 // Structure de données d'une carte de guerrier
 interface WarriorCard {
@@ -1209,9 +1172,185 @@ case 'Fictionnel':
         showEmber: false,
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] [background-size:20px_20px] opacity-40" />
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/5 to-transparent" />
-            <div className="absolute bottom-12 left-0 right-0 h-0.5 bg-emerald-500/20 shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
+            {/* ═══ AMBIANCE DE BASE ═══ */}
+            {/* Teinte d'arène */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00A86B]/[0.04] via-transparent to-[#C08A5A]/10 mix-blend-overlay" />
+
+            {/* Grille technique (lignes de terrain) */}
+            <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(rgba(255,255,255,0.2)_0.5px,transparent_0.5px),linear-gradient(90deg,rgba(255,255,255,0.2)_0.5px,transparent_0.5px)] [background-size:20px_20px]" />
+
+            {/* ═══ BUÉE ET CONDENSATION (bords de vitre) ═══ */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_45%,rgba(220,235,245,0.10)_100%)] mix-blend-screen" />
+            <div className="absolute top-0 inset-x-0 h-10 bg-gradient-to-b from-white/15 to-transparent blur-[2px]" />
+            <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-white/12 to-transparent blur-[2px]" />
+            <div className="absolute left-0 inset-y-0 w-8 bg-gradient-to-r from-white/10 to-transparent blur-[1.5px]" />
+            <div className="absolute right-0 inset-y-0 w-8 bg-gradient-to-l from-white/10 to-transparent blur-[1.5px]" />
+            {/* Gouttelettes de condensation */}
+            {[
+              [6, 12], [12, 28], [4, 45], [10, 62], [7, 78], [14, 88],
+              [94, 10], [88, 24], [96, 40], [90, 58], [93, 74], [86, 90]
+            ].map(([left, top], i) => (
+              <div key={`drop-${i}`} className="absolute rounded-full bg-white/20 blur-[0.5px]"
+                style={{ left: `${left}%`, top: `${top}%`, width: '3px', height: '4px' }} />
+            ))}
+
+            {/* ═══ PARTICULES DE PARKET / POUSSIÈRE (en suspension) ═══ */}
+            {[
+              [18, 22, 2], [32, 35, 1.5], [48, 18, 2.5], [62, 30, 1.5], [78, 25, 2],
+              [25, 48, 1.5], [55, 42, 2], [72, 50, 1.5], [38, 55, 2], [85, 45, 1.5],
+              [15, 68, 2], [42, 72, 1.5], [68, 65, 2], [88, 70, 1.5], [28, 82, 2]
+            ].map(([left, top, size], i) => (
+              <div key={`dust-${i}`} className="absolute rounded-full bg-[#C08A5A]/30"
+                style={{ left: `${left}%`, top: `${top}%`, width: `${size}px`, height: `${size}px`,
+                  boxShadow: '0 0 3px rgba(192,138,90,0.3)' }} />
+            ))}
+
+            {/* ═══ ZONE CONFINÉE : en-tête + portrait (haut 58%) ═══ */}
+            <div className="absolute top-0 left-0 right-0 h-[58%] overflow-hidden">
+
+              {/* ── Vapeur de sueur / Heat Map (aura de chaleur) ── */}
+              <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-40 h-48 bg-[radial-gradient(ellipse_at_center,rgba(255,140,60,0.18)_0%,rgba(255,100,40,0.08)_40%,transparent_70%)] blur-[12px] mix-blend-screen" />
+
+              {/* ── Électrodes / Biométrie ECG (rythme cardiaque) ── */}
+              <svg className="absolute top-[20%] left-[6%] w-[180px] h-[60px] opacity-[0.22]" viewBox="0 0 180 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="0" y1="30" x2="180" y2="30" stroke="#00A86B" strokeWidth="0.4" opacity="0.5" />
+                <path d="M0,30 L30,30 L36,30 L40,10 L46,50 L52,30 L70,30 L76,30 L80,15 L86,45 L92,30 L110,30 L116,30 L120,8 L126,52 L132,30 L150,30 L156,30 L160,18 L166,42 L172,30 L180,30"
+                  stroke="#00A86B" strokeWidth="1" fill="none" />
+              </svg>
+              <svg className="absolute top-[35%] right-[8%] w-[140px] h-[40px] opacity-[0.18]" viewBox="0 0 140 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="0" y1="20" x2="140" y2="20" stroke="#2bc016" strokeWidth="0.4" opacity="0.5" />
+                <path d="M0,20 L20,20 L24,20 L28,8 L32,32 L36,20 L55,20 L59,20 L63,12 L67,28 L71,20 L90,20 L94,20 L98,6 L102,34 L106,20 L125,20 L129,20 L133,14 L137,26 L140,20"
+                  stroke="#2bc016" strokeWidth="0.9" fill="none" />
+              </svg>
+
+              {/* ── Traces de Speed Trails (lignes de mouvement) ── */}
+              <svg className="absolute top-[10%] right-[5%] w-[120px] h-[180px] opacity-[0.20]" viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10,10 Q40,40 30,80 Q20,120 50,160" stroke="#00A86B" strokeWidth="1.5" fill="none" opacity="0.6" />
+                <path d="M25,5 Q55,45 45,85 Q35,125 65,165" stroke="#2bc016" strokeWidth="1" fill="none" opacity="0.5" />
+                <path d="M40,15 Q70,50 60,90 Q50,130 80,170" stroke="#C08A5A" strokeWidth="0.8" fill="none" opacity="0.4" />
+              </svg>
+
+              {/* ── Annotations Coach (cercles, flèches, lignes de passage) ── */}
+              <svg className="absolute top-[8%] left-[8%] w-[100px] h-[100px] opacity-[0.20]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="30" cy="30" r="14" stroke="#C08A5A" strokeWidth="1.2" fill="none" strokeDasharray="3 2" />
+                <circle cx="70" cy="60" r="10" stroke="#C08A5A" strokeWidth="1" fill="none" strokeDasharray="3 2" />
+                <path d="M30,30 Q50,45 70,60" stroke="#C08A5A" strokeWidth="1" fill="none" />
+                <path d="M65,55 L70,60 L65,65" stroke="#C08A5A" strokeWidth="1" fill="none" />
+                <path d="M20,70 L40,80 L60,75" stroke="#C08A5A" strokeWidth="0.8" fill="none" strokeDasharray="2 3" />
+              </svg>
+
+              {/* ── Playbook en filigrane (pages tactiques) ── */}
+              <svg className="absolute top-[30%] left-[10%] w-[80px] h-[100px] opacity-[0.10]" viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="4" width="72" height="92" stroke="#C08A5A" strokeWidth="0.6" fill="none" />
+                <line x1="4" y1="20" x2="76" y2="20" stroke="#C08A5A" strokeWidth="0.4" />
+                <line x1="4" y1="36" x2="76" y2="36" stroke="#C08A5A" strokeWidth="0.4" />
+                <line x1="4" y1="52" x2="76" y2="52" stroke="#C08A5A" strokeWidth="0.4" />
+                <line x1="4" y1="68" x2="76" y2="68" stroke="#C08A5A" strokeWidth="0.4" />
+                <line x1="4" y1="84" x2="76" y2="84" stroke="#C08A5A" strokeWidth="0.4" />
+                <circle cx="25" cy="28" r="4" stroke="#C08A5A" strokeWidth="0.5" fill="none" />
+                <path d="M25,32 L40,45 L55,40" stroke="#C08A5A" strokeWidth="0.5" fill="none" />
+                <path d="M52,36 L55,40 L50,42" stroke="#C08A5A" strokeWidth="0.5" fill="none" />
+              </svg>
+            </div>
+
+            {/* ═══ ZONES DE CHALEUR (Heat Map) ═══ */}
+            <div className="absolute top-[20%] left-[15%] w-24 h-24 bg-[radial-gradient(circle,rgba(59,130,246,0.18)_0%,transparent_70%)] blur-[8px] mix-blend-screen" />
+            <div className="absolute top-[30%] right-[20%] w-28 h-28 bg-[radial-gradient(circle,rgba(250,204,21,0.16)_0%,transparent_70%)] blur-[8px] mix-blend-screen" />
+            <div className="absolute top-[45%] left-[40%] w-32 h-32 bg-[radial-gradient(circle,rgba(239,68,68,0.14)_0%,transparent_70%)] blur-[10px] mix-blend-screen" />
+
+            {/* ═══ LE FILET DE PANIER EN TRAME (maillage) ═══ */}
+            <svg className="absolute inset-0 w-full h-full opacity-[0.06]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <line key={`net-v-${i}`} x1={i * 12.5} y1="0" x2={i * 12.5} y2="480" stroke="#C08A5A" strokeWidth="0.3" />
+              ))}
+              {Array.from({ length: 38 }).map((_, i) => (
+                <line key={`net-h-${i}`} x1="0" y1={i * 12.5} x2="300" y2={i * 12.5} stroke="#C08A5A" strokeWidth="0.3" />
+              ))}
+              {Array.from({ length: 24 }).map((_, i) => (
+                <line key={`net-d-${i}`} x1={i * 12.5} y1="0" x2={i * 12.5 + 480} y2="480" stroke="#C08A5A" strokeWidth="0.2" opacity="0.5" />
+              ))}
+            </svg>
+
+            {/* ═══ LE RUBAN DE VICTOIRE (satin) ═══ */}
+            <div className="absolute top-[8%] -right-2 w-10 h-40 opacity-[0.25]">
+              <svg viewBox="0 0 40 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12,0 Q20,20 12,40 Q4,60 12,80 Q20,100 12,120 Q4,140 12,160" stroke="#C08A5A" strokeWidth="6" fill="none" opacity="0.7" />
+                <path d="M12,0 Q20,20 12,40 Q4,60 12,80 Q20,100 12,120 Q4,140 12,160" stroke="#fcd34d" strokeWidth="2" fill="none" opacity="0.5" />
+                <circle cx="12" cy="20" r="3" fill="#fcd34d" opacity="0.6" />
+                <circle cx="12" cy="80" r="3" fill="#fcd34d" opacity="0.6" />
+                <circle cx="12" cy="140" r="3" fill="#fcd34d" opacity="0.6" />
+              </svg>
+            </div>
+
+            {/* ═══ L'OMBRE DU TROPHÉE ═══ */}
+            <div className="absolute bottom-[18%] left-1/2 -translate-x-1/2 w-24 h-32 opacity-[0.08]">
+              <svg viewBox="0 0 96 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30,8 L66,8 L66,28 Q66,48 48,52 Q30,48 30,28 Z" fill="#C08A5A" opacity="0.6" />
+                <line x1="48" y1="52" x2="48" y2="72" stroke="#C08A5A" strokeWidth="3" opacity="0.6" />
+                <rect x="32" y="72" width="32" height="8" rx="2" fill="#C08A5A" opacity="0.6" />
+                <rect x="24" y="80" width="48" height="12" rx="2" fill="#C08A5A" opacity="0.5" />
+                <path d="M30,20 Q18,22 18,32 Q18,42 30,40" stroke="#C08A5A" strokeWidth="2" fill="none" opacity="0.5" />
+                <path d="M66,20 Q78,22 78,32 Q78,42 66,40" stroke="#C08A5A" strokeWidth="2" fill="none" opacity="0.5" />
+              </svg>
+            </div>
+
+            {/* ═══ EFFET BÉTON ET GRAFF (street-ball) ═══ */}
+            <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(135deg,rgba(200,200,200,0.3)_1px,transparent_1px),linear-gradient(45deg,rgba(200,200,200,0.3)_1px,transparent_1px)] [background-size:4px_4px]" />
+            {/* Lignes de playground peintes à la bombe */}
+            <svg className="absolute top-[50%] left-[5%] w-[90%] h-[40%] opacity-[0.10]" viewBox="0 0 270 160" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10,80 Q135,40 260,80" stroke="#C08A5A" strokeWidth="1.5" fill="none" />
+              <path d="M10,80 Q135,120 260,80" stroke="#C08A5A" strokeWidth="1.5" fill="none" />
+              <line x1="135" y1="20" x2="135" y2="140" stroke="#C08A5A" strokeWidth="1" />
+              <circle cx="135" cy="80" r="20" stroke="#C08A5A" strokeWidth="1" fill="none" />
+              <rect x="40" y="30" width="190" height="100" stroke="#C08A5A" strokeWidth="0.8" fill="none" />
+            </svg>
+
+            {/* ═══ TEXTURE DE BALLON (cuir granuleux) ═══ */}
+            <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(#1a1a1a_0.8px,transparent_0.8px)] [background-size:3px_3px] mix-blend-multiply" />
+
+            {/* ═══ LE JUMBOTRON / SCOREBOARD (ligne défilante) ═══ */}
+            <div className="absolute bottom-3 left-2 right-2 h-5 bg-black/70 rounded-sm overflow-hidden border border-[#00A86B]/30">
+              <div className="absolute inset-0 flex items-center whitespace-nowrap overflow-hidden">
+                <div className="flex items-center gap-8 px-3 text-[8px] font-mono font-bold text-[#00A86B] tracking-wider"
+                  style={{ animation: 'athleteTicker 18s linear infinite' }}>
+                  <span>● LIVE</span>
+                  <span>PTS: 42</span>
+                  <span>REB: 12</span>
+                  <span>AST: 8</span>
+                  <span>STL: 3</span>
+                  <span>BLK: 2</span>
+                  <span>FG%: 58.3</span>
+                  <span>3P%: 41.2</span>
+                  <span>FT%: 87.5</span>
+                  <span>MIN: 34:12</span>
+                  <span>● LIVE</span>
+                  <span>PTS: 42</span>
+                  <span>REB: 12</span>
+                  <span>AST: 8</span>
+                  <span>STL: 3</span>
+                  <span>BLK: 2</span>
+                  <span>FG%: 58.3</span>
+                  <span>3P%: 41.2</span>
+                  <span>FT%: 87.5</span>
+                  <span>MIN: 34:12</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ═══ SPOTLIGHT DU STADE ═══ */}
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-56 h-64 bg-gradient-to-b from-white/10 via-[#00A86B]/[0.04] to-transparent opacity-50 mix-blend-screen"
+              style={{ clipPath: 'polygon(42% 0%, 58% 0%, 100% 100%, 0% 100%)' }} />
+
+            {/* Ombre interne finale */}
+            <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(23,20,19,0.65)] rounded-[24px]" />
+
+            {/* Keyframes pour le ticker */}
+            <style>{`
+              @keyframes athleteTicker {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+              }
+            `}</style>
           </div>
         )
       };
