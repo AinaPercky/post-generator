@@ -9,43 +9,13 @@ import fictionnelBackground from '../assets/fond_fictionnel.png';
 import penseurBackground from '../assets/fond_penseur.png';
 import dirigeantBackground from '../assets/fond_dirigeant.png';
 import athleteBackground from '../assets/fond_athlete.png';
-import { 
-  Sparkles, 
-  Upload, 
-  Download, 
-  Plus, 
-  Trash2, 
-  Copy, 
-  Search, 
-  Image as ImageIcon, 
-  RotateCcw, 
-  Swords, 
-  Shield, 
-  Quote, 
-  Heart, 
-  Check, 
-  AlertTriangle, 
-  Filter,
-  Eye,
-  Settings,
-  HelpCircle,
-  FileImage,
-  Crown,
-  Skull,
-  Crosshair,
-  Axe,
-  Flame,
-  Zap,
-  Wind,
-  Target,
-  Feather,
-  Compass,
-  FlaskConical,
-  Palette,
-  Film,
-  BookOpen,
-  Trophy
-} from 'lucide-react';
+import {
+  getCardAmbianceV2,
+  CLASS_THEMES,
+  CLASS_AMBIANCE_CONFIGS,
+  type CardAmbiance,
+} from '../lib/legendGeneratorLib';
+import { Sparkles, Upload, Download, Plus, Trash2, Copy, Search, Image as ImageIcon, RotateCcw, Swords, Shield, Quote, Heart, Check, TriangleAlert as AlertTriangle, ListFilter as Filter, Eye, Settings, Circle as HelpCircle, FileImage, Crown, Skull, Crosshair, Axe, Flame, Zap, Wind, Target, Feather, Compass, FlaskConical, Palette, Film, BookOpen, Trophy } from 'lucide-react';
 
 // Structure de données d'une carte de guerrier
 interface WarriorCard {
@@ -419,7 +389,7 @@ export interface CardAmbiance {
   innerBorder: string;
   outerBorder: string;
   themeBgGradient: string;
-  
+
   nameSectionStyle: string;
   textBoxStyle: string;
   portraitBorderStyle: string;
@@ -442,338 +412,36 @@ export interface CardAmbiance {
   effectOverlay: React.ReactNode;
 }
 
+// Map des images de fond par classe
+const CLASS_BACKGROUND_IMAGES: Record<string, string> = {
+  Guerrier: cardBackground,
+  Explorateur: explorateurBackground,
+  Savant: savantBackground,
+  Artiste: artisteBackground,
+  Fictionnel: fictionnelBackground,
+  Penseur: penseurBackground,
+  Dirigeant: dirigeantBackground,
+  Athlète: athleteBackground,
+};
+
+/**
+ * Récupère l'ambiance visuelle d'une classe de personnage.
+ *
+ * Cette fonction utilise la nouvelle architecture déclarative (CLASS_AMBIANCE_CONFIGS)
+ * pour générer automatiquement tous les styles et effets visuels d'une classe.
+ *
+ * @param classeStr - Nom de la classe (peut inclure un sous-type: 'Guerrier / Soldat')
+ * @param activeTheme - Thème actif pour les variantes de couleur (optionnel)
+ * @returns Un objet CardAmbiance complet avec tous les styles CSS et effets visuels
+ *
+ * @example
+ * const ambiance = getCardAmbiance('Guerrier / Stratège', themesConfig.gold);
+ */
 export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbiance => {
   const { mainClass } = parseClasse(classeStr);
-  
-  switch (mainClass) {
-    case 'Explorateur':
-      return {
-        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-[#bce784]",
-        fontData: "font-montserrat font-semibold",
-        fontCitation: "font-playfair italic",
-        accentColor: "text-[#bce784]",
-        accentBorder: "border-[#bce784]/80",
-        innerBorder: "border-[#bce784]/30",
-        outerBorder: "border-[#348aa7]/80 shadow-[0_0_24px_rgba(52,138,167,0.45)]",
-        themeBgGradient: "from-[#513b56]/95 via-[#525174]/90 to-[#171413]/95",
-        
-        nameSectionStyle: "border-2 border-[#bce784]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#5dd39e]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#348aa7]/60 shadow-[0_0_12px_rgba(52,138,167,0.45)]",
-        classBadgeStyle: "border-2 border-[#348aa7]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#5dd39e]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#bce784]/80 shadow-[0_0_8px_rgba(188,231,132,0.2)]",
-        dividerStyle: "via-[#5dd39e]/30",
-        failleColor: "text-[#bce784]",
-        
-        textBoxBgImage: `linear-gradient(to bottom, rgba(81, 59, 86, 0.2), rgba(23, 20, 19, 0.82)), url(${explorateurBackground})`,
-        textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#5dd39e] drop-shadow-[0_0_6px_rgba(93,211,158,0.6)]",
-        
-        cornerStyle: 'rivet',
-        showScratches: false,
-        showBlood: false,
-        showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#bce784]/[0.04] via-transparent to-[#348aa7]/20 mix-blend-overlay" />
-            <svg className="absolute inset-0 w-full h-full opacity-[0.06]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {[60, 120, 180, 240, 300, 360, 420].map(y => <line key={`lat-${y}`} x1="0" y1={y} x2="300" y2={y} stroke="#bce784" strokeWidth="0.5" strokeDasharray="6 4" />)}
-              {[50, 100, 150, 200, 250].map(x => <line key={`lon-${x}`} x1={x} y1="0" x2={x} y2="480" stroke="#bce784" strokeWidth="0.5" strokeDasharray="6 4" />)}
-              <line x1="0" y1="480" x2="300" y2="0" stroke="#5dd39e" strokeWidth="0.4" strokeDasharray="8 6" opacity="0.5" />
-              <line x1="0" y1="0" x2="300" y2="480" stroke="#5dd39e" strokeWidth="0.4" strokeDasharray="8 6" opacity="0.3" />
-              <line x1="0" y1="240" x2="300" y2="60" stroke="#348aa7" strokeWidth="0.35" strokeDasharray="5 8" opacity="0.4" />
-            </svg>
-            <div className="absolute top-0 left-[18%] w-16 h-56 bg-gradient-to-b from-[#bce784]/10 via-[#5dd39e]/04 to-transparent rotate-[-10deg] origin-top" />
-            <div className="absolute top-0 left-[48%] w-12 h-44 bg-gradient-to-b from-[#bce784]/08 via-[#348aa7]/03 to-transparent rotate-[5deg] origin-top" />
-            <div className="absolute top-0 right-[14%] w-8 h-36 bg-gradient-to-b from-[#5dd39e]/07 via-transparent to-transparent rotate-[12deg] origin-top" />
-            
-            <div className="absolute bottom-4 right-4 w-24 h-24 opacity-[0.22]">
-              <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="48" cy="48" r="44" stroke="#bce784" strokeWidth="0.6" strokeDasharray="3 2.5" />
-                <circle cx="48" cy="48" r="34" stroke="#5dd39e" strokeWidth="0.4" />
-                <circle cx="48" cy="48" r="22" stroke="#348aa7" strokeWidth="0.5" />
-                {[0,22.5,45,67.5,90,112.5,135,157.5,180,202.5,225,247.5,270,292.5,315,337.5].map((angle, i) => {
-                  const rad = (angle - 90) * Math.PI / 180;
-                  const inner = i % 4 === 0 ? 26 : i % 2 === 0 ? 30 : 34;
-                  const outer = 42;
-                  return (
-                    <line key={angle} x1={48 + inner * Math.cos(rad)} y1={48 + inner * Math.sin(rad)} x2={48 + outer * Math.cos(rad)} y2={48 + outer * Math.sin(rad)} stroke={i % 4 === 0 ? "#5dd39e" : "#bce784"} strokeWidth={i % 4 === 0 ? "0.8" : "0.4"} />
-                  );
-                })}
-                <polygon points="48,6 45,48 48,42 51,48" fill="#5dd39e" opacity="0.95" />
-                <polygon points="48,90 45,48 48,54 51,48" fill="#bce784" opacity="0.55" />
-                <polygon points="90,48 48,45 54,48 48,51" fill="#348aa7" opacity="0.5" />
-                <polygon points="6,48 48,45 42,48 48,51" fill="#348aa7" opacity="0.5" />
-                <circle cx="48" cy="48" r="3.5" fill="#348aa7" opacity="0.9" />
-                <circle cx="48" cy="48" r="1.5" fill="#bce784" opacity="0.8" />
-                <text x="46" y="4" fontSize="5" fill="#5dd39e" opacity="0.8" fontFamily="serif">N</text>
-                <text x="46" y="95" fontSize="5" fill="#bce784" opacity="0.6" fontFamily="serif">S</text>
-                <text x="88" y="50" fontSize="5" fill="#348aa7" opacity="0.6" fontFamily="serif">E</text>
-                <text x="2" y="50" fontSize="5" fill="#348aa7" opacity="0.6" fontFamily="serif">O</text>
-              </svg>
-            </div>
-            
-            <div className="absolute inset-0 bg-[radial-gradient(#bce784_0.8px,transparent_0.8px)] [background-size:20px_20px] opacity-[0.035]" />
-            <div className="absolute -top-8 left-[30%] w-40 h-32 bg-[#348aa7]/20 blur-[30px] rounded-full" />
-            <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#5dd39e]/12 via-[#348aa7]/06 to-transparent" />
-            <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(23,20,19,0.65)] rounded-[24px]" />
-          </div>
-        )
-      };
-      
-    case 'Savant':
-      return {
-        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-[#bce784]",
-        fontData: "font-montserrat font-semibold",
-        fontCitation: "font-playfair italic",
-        accentColor: "text-[#ffff33]",
-        accentBorder: "border-[#ffff33]/80",
-        innerBorder: "border-[#ffff33]/30",
-        outerBorder: "border-[#00ffff]/80 shadow-[0_0_24px_rgba(0,255,255,0.45)]",
-        themeBgGradient: "from-[#00cccc]/95 via-[#00cccc]/90 to-[#171413]/95",
-        
-        nameSectionStyle: "border-2 border-[#ffff33]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#ffcc33]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#00ffff]/60 shadow-[0_0_12px_rgba(0,255,255,0.45)]",
-        classBadgeStyle: "border-2 border-[#00ffff]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#ffcc33]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#ffff33]/80 shadow-[0_0_8px_rgba(255,255,51,0.4)]",
-        dividerStyle: "via-[#ffcc33]/30",
-        failleColor: "text-[#ffff33]",
-        
-        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 204, 51, 0.2), rgba(23, 20, 19, 0.82)), url(${savantBackground})`,
-        textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#ffcc33] drop-shadow-[0_0_6px_rgba(255,204,51,0.6)]",
-        
-        cornerStyle: 'rivet',
-        showScratches: false,
-        showBlood: false,
-        showEmber: false,
-      };
-      
-    case 'Artiste':
-      return {
-        fontTitle: "font-anton tracking-wide uppercase text-[#d90368]",
-        fontData: "font-montserrat font-semibold",
-        fontCitation: "font-playfair italic",
-        accentColor: "text-[#820263]",
-        accentBorder: "border-[#820263]/80",
-        innerBorder: "border-[#820263]/30",
-        outerBorder: "border-[#fb8b24]/80 shadow-[0_0_24px_rgba(251, 139, 36,0.45)]",
-        themeBgGradient: "from-[#820263]/95 via-[#820263]/90 to-[#171413]/95",
-        
-        nameSectionStyle: "border-2 border-[#820263]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#d90368]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#fb8b24]/60 shadow-[0_0_12px_rgba(251, 139, 36,0.45)]",
-        classBadgeStyle: "border-2 border-[#fb8b24]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#d90368]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#820263]/80 shadow-[0_0_8px_rgba(130, 2, 99,0.4)]",
-        dividerStyle: "via-[#d90368]/30",
-        failleColor: "text-[#820263]",
-        
-        textBoxBgImage: `linear-gradient(to bottom, rgba(217, 3, 104, 0.1), rgba(23, 20, 19, 0.82)), url(${artisteBackground})`,
-        textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#d90368] drop-shadow-[0_0_6px_rgba(217, 3, 104,0.6)]",
-        
-        cornerStyle: 'rivet',
-        showScratches: false,
-        showBlood: false,
-        showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute -top-12 -left-12 w-40 h-40 bg-fuchsia-500/10 blur-[40px] rounded-full" />
-            <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-purple-500/10 blur-[45px] rounded-full" />
-            <div className="absolute top-1/3 left-1/4 w-32 h-32 bg-yellow-400/5 blur-[35px] rounded-full" />
-          </div>
-        )
-      };
-      
-    case 'Fictionnel':
-      return {
-        fontData: "font-montserrat font-semibold text-[#ffff]",
-        fontCitation: "font-playfair italic",
-        accentColor: "text-[#7776bc]",
-        accentBorder: "border-[#7776bc]/80",
-        innerBorder: "border-[#7776bc]/30",
-        outerBorder: "border-[#fffbdb]/80 shadow-[0_0_24px_rgba(255, 251, 219,0.45)]",
-        themeBgGradient: "from-[#fffbdb]/95 via-[#fffbdb]/90 to-[#171413]/95",
-        
-        nameSectionStyle: "border-2 border-[#7776bc]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#cdc7e5]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#fffbdb]/60 shadow-[0_0_12px_rgba(255, 251, 219,0.45)]",
-        classBadgeStyle: "border-2 border-[#fffbdb]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#cdc7e5]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#7776bc]/80 shadow-[0_0_8px_rgba(119, 118, 188,0.4)]",
-        dividerStyle: "via-[#cdc7e5]/30",
-        failleColor: "text-[#7776bc]",
-        
-        textBoxBgImage: `linear-gradient(to bottom, rgba(205, 199, 229, 0.08), rgba(23, 20, 19, 0.82)), url(${fictionnelBackground})`,
-        textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#cdc7e5] drop-shadow-[0_0_6px_rgba(205, 199, 229,0.6)]",
-        
-        cornerStyle: 'rivet',
-        showScratches: false,
-        showBlood: false,
-        showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute inset-0 bg-violet-500/5 mix-blend-color-dodge opacity-50" />
-            <div className="absolute -inset-10 border-[6px] border-violet-500/10 blur-xl" />
-          </div>
-        )
-      };
-      
-    case 'Penseur':
-      return {
-        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-[#ffff82]",
-        fontData: "font-montserrat font-semibold",
-        fontCitation: "font-playfair italic",
-        accentColor: "text-[#FFFF82]",
-        accentBorder: "border-[#FFFF82]/80",
-        innerBorder: "border-[#FFFF82]/30",
-        outerBorder: "border-[#d97706]/80 shadow-[0_0_24px_rgba(217, 119, 6.45)]",
-        themeBgGradient: "from-[#d97706]/95 via-[#d97706]/90 to-[#171413]/95",
-        
-        nameSectionStyle: "border-2 border-[#FFFF82]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#A16207]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#d97706]/60 shadow-[0_0_12px_rgba(217, 119, 6.45)]",
-        classBadgeStyle: "border-2 border-[#d97706]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#A16207]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#FFFF82]/80 shadow-[0_0_8px_rgba(255, 255, 130,0.4)]",
-        dividerStyle: "via-[#A16207]/30",
-        failleColor: "text-[#FFFF82]",
-        
-        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 255, 130, 0.07), rgba(23, 20, 19, 0.82)), url(${penseurBackground})`,
-        textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#A16207] drop-shadow-[0_0_6px_rgba(255, 255, 130,0.6)]",
-        
-        cornerStyle: 'rivet',
-        showScratches: false,
-        showBlood: false,
-        showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute inset-0 bg-[radial-gradient(#f59e0b_1.5px,transparent_1.5px)] [background-size:32px_32px] opacity-[0.06]" />
-            <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-amber-200/10 via-transparent to-transparent" />
-          </div>
-        )
-      };
-      
-    case 'Dirigeant':
-      return {
-        fontTitle: "font-bebas tracking-widest uppercase",
-        fontData: "font-montserrat font-semibold",
-        fontCitation: "font-playfair italic",
-        accentColor: "text-[#c670ff]",
-        accentBorder: "border-[#c670ff]/80",
-        innerBorder: "border-[#c670ff]/30",
-        outerBorder: "border-[#ffd500]/80 shadow-[0_0_24px_rgba(255, 213, 0,0.45)]",
-        themeBgGradient: "from-[#ffd500]/95 via-[#ffd500]/90 to-[#171413]/95",
-        
-        nameSectionStyle: "border-2 border-[#c670ff]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#fdc500]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#ffd500]/60 shadow-[0_0_12px_rgba(255, 213, 0,0.45)]",
-        classBadgeStyle: "border-2 border-[#ffd500]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#fdc500]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#c670ff]/80 shadow-[0_0_8px_rgba(61, 0, 102,0.4)]",
-        dividerStyle: "via-[#fdc500]/30",
-        failleColor: "text-[#c670ff]",
-        
-        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 213, 0, 0.08), rgba(23, 20, 19, 0.82)), url(${dirigeantBackground})`,
-        textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#fdc500] drop-shadow-[0_0_6px_rgba(255, 213, 0,0.6)]",
-        
-        cornerStyle: 'rivet',
-        showScratches: false,
-        showBlood: false,
-        showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute top-0 right-4 w-28 h-64 bg-gradient-to-b from-yellow-300/10 via-transparent to-transparent transform rotate-[25deg] origin-top" />
-            <div className="absolute -bottom-10 -left-10 w-36 h-36 border border-yellow-500/15 rounded-full opacity-20" />
-          </div>
-        )
-      };
-      
-    case 'Athlète':
-      return {
-        fontTitle: "font-anton tracking-wide uppercase text-[#C08A5A]",
-        fontData: "font-montserrat font-semibold",
-        fontCitation: "font-playfair italic",
-        accentColor: "text-[#C08A5A]",
-        accentBorder: "border-[#C08A5A]/80",
-        innerBorder: "border-[#C08A5A]/30",
-        outerBorder: "border-[#00A86B]/80 shadow-[0_0_24px_rgba(0, 168, 107,0.45)]",
-        themeBgGradient: "from-[#00A86B]/95 via-[#00A86B]/90 to-[#171413]/95",
-        
-        nameSectionStyle: "border-2 border-[#C08A5A]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#2bc016]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#00A86B]/60 shadow-[0_0_12px_rgba(0, 168, 107,0.45)]",
-        classBadgeStyle: "border-2 border-[#00A86B]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#2bc016]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#C08A5A]/80 shadow-[0_0_8px_rgba(108, 78, 45,0.4)]",
-        dividerStyle: "via-[#2bc016]/30",
-        failleColor: "text-[#C08A5A]",
-        
-        textBoxBgImage: `linear-gradient(to bottom, rgba(43, 192, 22, 0.08), rgba(23, 20, 19, 0.82)), url(${athleteBackground})`,
-        textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#2bc016] drop-shadow-[0_0_6px_rgba(43, 192, 22,0.6)]",
-        
-        cornerStyle: 'rivet',
-        showScratches: false,
-        showBlood: false,
-        showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] [background-size:20px_20px] opacity-40" />
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/5 to-transparent" />
-            <div className="absolute bottom-12 left-0 right-0 h-0.5 bg-emerald-500/20 shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
-          </div>
-        )
-      };
-      
-    case 'Guerrier':
-    default:
-      return {
-        fontTitle: "font-bebas text-amber-500 tracking-wider uppercase",
-        fontData: "font-montserrat font-semibold",
-        fontCitation: "font-serif",
-        accentColor: "text-amber-500",
 
-        accentBorder: "border-amber-500/80",
-        innerBorder: "border-white/5",
-        outerBorder: "border-[#ff0000] neon-blood-border",
-        themeBgGradient: activeTheme.bgGradient || "from-red-950/60 to-black/90",
-
-        nameSectionStyle: "border-2 border-amber-500/80 bg-black/85 backdrop-blur-[12px] shadow-[0_0_12px_rgba(212,175,55,0.2),inset_0_1px_2.5px_rgba(255,255,255,0.2),0_4px_10px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-amber-600/75 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#ff0000]/60 shadow-[0_0_12px_rgba(255,0,0,0.35),inset_0_0_10px_rgba(138,3,3,0.5)]",
-        classBadgeStyle: "border-2 border-[#8a0303]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-neutral-500/60",
-        citationBoxStyle: "border border-[#8a0303]/30 bg-black/45",
-        iconContainerStyle: "border-amber-500/80 shadow-[0_0_8px_rgba(245,158,11,0.45),inset_0_1px_2px_rgba(255,255,255,0.15)]",
-        dividerStyle: "via-amber-600/20",
-        failleColor: "text-[#ff0000]",
-
-        textBoxBgImage: `linear-gradient(to bottom, rgba(212, 175, 55, 0.45), rgba(101, 67, 33, 0.9)), url(${cardBackground})`,
-        textBoxBgBlendMode: 'multiply',
-        quoteIconStyle: "text-amber-400 drop-shadow-[0_0_6px_#f59e0b] animate-pulse",
-
-        cornerStyle: 'rivet',
-        showScratches: true,
-        showBlood: true,
-        showEmber: true,
-        effectOverlay: null
-      };
-  }
+  // Utiliser la nouvelle architecture avec les images de fond
+  return getCardAmbianceV2(mainClass, activeTheme, CLASS_BACKGROUND_IMAGES);
 };
 
 export default function LegendGenerator() {
