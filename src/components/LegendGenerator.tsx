@@ -906,20 +906,25 @@ case 'Fictionnel':
         showEmber: false,
   effectOverlay: (
     <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#FFFF82]/[0.03] via-transparent to-[#d97706]/12 mix-blend-overlay" />
+      {/* ═══ COUCHE DE LISIBILITÉ : voile protecteur sous les zones de texte ═══ */}
+      {/* Renforce le fond derrière les textes pour garantir la lisibilité */}
+      <div className="absolute bottom-0 inset-x-0 h-[42%] bg-gradient-to-t from-[#171413]/55 via-[#171413]/25 to-transparent" />
+
+      {/* Teinte d'ambiance (réduite pour préserver la lisibilité) */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FFFF82]/[0.02] via-transparent to-[#d97706]/[0.06] mix-blend-overlay" />
 
       {/* Texture parchemin de fond — très subtile, pleine carte */}
-      <div className="absolute inset-0 opacity-[0.04] bg-[radial-gradient(#A16207_0.6px,transparent_0.6px)] [background-size:6px_6px]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(101,67,33,0.22)_100%)] mix-blend-multiply" />
+      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#A16207_0.6px,transparent_0.6px)] [background-size:6px_6px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(101,67,33,0.15)_100%)] mix-blend-multiply" />
 
       {/* ═══ ZONE CONFINÉE : en-tête + portrait uniquement ═══ */}
       <div className="absolute top-0 left-0 right-0 h-[58%] overflow-hidden">
 
-        {/* ── Symbole Idée (ampoule) — point focal, coin haut-droit ── */}
-        <div className="absolute top-[6%] right-[82%] w-14 h-14 opacity-[0.5]" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}>
+        {/* ── Symbole Idée (ampoule) — point focal, coin haut-gauche ── */}
+        <div className="absolute top-[6%] right-[82%] w-14 h-14 opacity-[0.45]" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}>
           <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Rayons d'idée */}
-            <g stroke="#FFFF82" strokeWidth="2" strokeLinecap="round" opacity="0.35">
+            {/* Rayons d'idée — animation subtile */}
+            <g stroke="#FFFF82" strokeWidth="2" strokeLinecap="round" opacity="0.35" style={{ animation: 'penseurGlow 4s ease-in-out infinite' }}>
               <line x1="50" y1="2" x2="50" y2="12" />
               <line x1="20" y1="14" x2="27" y2="21" />
               <line x1="80" y1="14" x2="73" y2="21" />
@@ -928,7 +933,7 @@ case 'Fictionnel':
             </g>
             {/* Verre de l'ampoule */}
             <path d="M50,18 C64,18 74,29 74,42 C74,52 68,58 64,64 C61,68 60,72 60,76 L40,76 C40,72 39,68 36,64 C32,58 26,52 26,42 C26,29 36,18 50,18 Z"
-              fill="#A16207" opacity="0.3" stroke="#d97706" strokeWidth="1.4" />
+              fill="#A16207" opacity="0.25" stroke="#d97706" strokeWidth="1.4" />
             {/* Filament stylisé */}
             <path d="M42,52 L46,42 L50,52 L54,42 L58,52" stroke="#FFFF82" strokeWidth="1.3" fill="none" opacity="0.75" />
             {/* Culot / vis */}
@@ -940,7 +945,7 @@ case 'Fictionnel':
         </div>
 
         {/* ── Hiéroglyphes — glyphes redessinés, plus nets et reconnaissables ── */}
-        <svg className="absolute top-[49%] left-[5%] w-10 h-48 opacity-[0.26]" viewBox="0 0 36 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute top-[49%] left-[5%] w-10 h-48 opacity-[0.22]" viewBox="0 0 36 190" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Œil d'Horus (Oudjat) */}
           <g fill="none" stroke="#FFFF82" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round">
             <path d="M2,22 Q18,8 34,22 Q18,32 2,22 Z" />
@@ -957,7 +962,7 @@ case 'Fictionnel':
             <line x1="5" y1="93" x2="31" y2="93" />
           </g>
 
-          {/* Faucon Horus stylisé (au lieu de l'ibis) */}
+          {/* Faucon Horus stylisé */}
           <g fill="none" stroke="#A16207" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18,124 C24,122 29,126 30,132 C31,137 27,140 23,139" />
             <path d="M30,132 L36,129" />
@@ -967,7 +972,7 @@ case 'Fictionnel':
             <path d="M12,143 L11,153" />
           </g>
 
-          {/* Scarabée (khepri) — quatrième glyphe */}
+          {/* Scarabée (khepri) */}
           <g fill="none" stroke="#FFFF82" strokeWidth="1" strokeLinecap="round">
             <ellipse cx="18" cy="170" rx="9" ry="7" opacity="0.7" />
             <path d="M18,163 L18,177" opacity="0.5" />
@@ -979,7 +984,7 @@ case 'Fictionnel':
         </svg>
 
         {/* ── Ombre de plume d'oie — bas-gauche, courbe naturelle ── */}
-        <svg className="absolute bottom-[3%] left-[8%] w-14 h-32 opacity-[0.18]" viewBox="0 0 60 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute bottom-[3%] left-[8%] w-14 h-32 opacity-[0.15]" viewBox="0 0 60 130" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M46,4 C40,26 26,42 20,66 C15,86 18,108 12,126" stroke="#171413" strokeWidth="1.6" fill="none" strokeLinecap="round" />
           {Array.from({ length: 10 }).map((_, i) => {
             const t = i / 9;
@@ -994,8 +999,8 @@ case 'Fictionnel':
           })}
         </svg>
 
-        {/* ── Lettrine enluminée médiévale — cadre orné, bas-droit ── */}
-        <div className="absolute bottom-[56%] right-[4.5%] w-16 h-16 opacity-[0.28]">
+        {/* ── Lettrine enluminée médiévale — cadre orné, haut-droit ── */}
+        <div className="absolute bottom-[56%] right-[4.5%] w-16 h-16 opacity-[0.25]">
           <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* Cadre décoratif */}
             <rect x="3" y="3" width="74" height="74" rx="2" stroke="#d97706" strokeWidth="1.2" fill="#171413" fillOpacity="0.15" />
@@ -1009,10 +1014,39 @@ case 'Fictionnel':
             <circle cx="70" cy="70" r="2" fill="#d97706" opacity="0.7" />
           </svg>
         </div>
+
+        {/* ── NOUVEAU : Rouleau de parchemin déroulé — haut-gauche, subtil ── */}
+        <div className="absolute top-[2%] left-[3%] w-12 h-20 opacity-[0.12]">
+          <svg viewBox="0 0 48 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="8" width="32" height="64" rx="2" fill="#A16207" opacity="0.3" stroke="#d97706" strokeWidth="0.8" />
+            <line x1="12" y1="18" x2="36" y2="18" stroke="#FFFF82" strokeWidth="0.5" opacity="0.5" />
+            <line x1="12" y1="26" x2="32" y2="26" stroke="#FFFF82" strokeWidth="0.5" opacity="0.4" />
+            <line x1="12" y1="34" x2="36" y2="34" stroke="#FFFF82" strokeWidth="0.5" opacity="0.4" />
+            <line x1="12" y1="42" x2="30" y2="42" stroke="#FFFF82" strokeWidth="0.5" opacity="0.4" />
+            <line x1="12" y1="50" x2="34" y2="50" stroke="#FFFF82" strokeWidth="0.5" opacity="0.4" />
+            <line x1="12" y1="58" x2="32" y2="58" stroke="#FFFF82" strokeWidth="0.5" opacity="0.4" />
+            <ellipse cx="8" cy="8" rx="4" ry="3" fill="#d97706" opacity="0.5" />
+            <ellipse cx="40" cy="72" rx="4" ry="3" fill="#d97706" opacity="0.5" />
+          </svg>
+        </div>
+
+        {/* ── NOUVEAU : Compas antique — symbole de quête du savoir, haut-droit ── */}
+        <div className="absolute top-[4%] right-[4%] w-12 h-12 opacity-[0.15]">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="24" cy="24" r="20" stroke="#d97706" strokeWidth="1" fill="none" opacity="0.6" />
+            <circle cx="24" cy="24" r="14" stroke="#A16207" strokeWidth="0.5" fill="none" opacity="0.5" strokeDasharray="2 2" />
+            <path d="M24,8 L20,24 L24,40 L28,24 Z" fill="#FFFF82" opacity="0.4" stroke="#d97706" strokeWidth="0.6" />
+            <circle cx="24" cy="24" r="2" fill="#d97706" opacity="0.7" />
+            <line x1="24" y1="4" x2="24" y2="8" stroke="#FFFF82" strokeWidth="0.8" opacity="0.5" />
+            <line x1="24" y1="40" x2="24" y2="44" stroke="#FFFF82" strokeWidth="0.8" opacity="0.5" />
+            <line x1="4" y1="24" x2="8" y2="24" stroke="#FFFF82" strokeWidth="0.8" opacity="0.5" />
+            <line x1="40" y1="24" x2="44" y2="24" stroke="#FFFF82" strokeWidth="0.8" opacity="0.5" />
+          </svg>
+        </div>
       </div>
 
       {/* ── Ligne d'écriture gothique/médiévale — bandeau fin sous le portrait ── */}
-      <svg className="absolute top-[56%] left-0 w-full h-6 opacity-[0.16]" viewBox="0 0 300 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg className="absolute top-[56%] left-0 w-full h-6 opacity-[0.14]" viewBox="0 0 300 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <text x="10" y="17" fontSize="13" fill="#FFFF82" fontFamily="serif" fontWeight="700" letterSpacing="1"
           style={{ fontFamily: 'Georgia, serif' }}>
           Sapientia · Veritas · Ratio · Lumen
@@ -1020,8 +1054,8 @@ case 'Fictionnel':
       </svg>
 
       {/* ── Constellations éphémères — quelques étoiles nettes, pleine carte ── */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.18]" viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g stroke="#FFFF82" strokeWidth="0.4" opacity="0.6">
+      <svg className="absolute inset-0 w-full h-full opacity-[0.15]" viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="#FFFF82" strokeWidth="0.4" opacity="0.5">
           <line x1="45" y1="55" x2="72" y2="85" />
           <line x1="72" y1="85" x2="58" y2="120" />
           <line x1="238" y1="105" x2="262" y2="135" />
@@ -1029,26 +1063,67 @@ case 'Fictionnel':
         </g>
         {[[45,55],[72,85],[58,120],[238,105],[262,135],[250,168]].map(([x,y], i) => (
           <g key={`star-${i}`}>
-            <circle cx={x} cy={y} r="2.2" fill="#FFFF82" opacity="0.15" />
-            <circle cx={x} cy={y} r="1" fill="#FFFF82" opacity="0.7" />
+            <circle cx={x} cy={y} r="2.2" fill="#FFFF82" opacity="0.12" />
+            <circle cx={x} cy={y} r="1" fill="#FFFF82" opacity="0.6" />
           </g>
         ))}
       </svg>
 
       {/* ── Synapses — discrètes, cantonnées au bas de carte ── */}
-      <svg className="absolute bottom-0 inset-x-0 w-full h-[90px] opacity-[0.12]" viewBox="0 0 300 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg className="absolute bottom-0 inset-x-0 w-full h-[90px] opacity-[0.10]" viewBox="0 0 300 90" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g stroke="#d97706" strokeWidth="0.5" fill="none">
           <path d="M60,20 Q85,8 105,22 Q125,36 148,18" />
           <path d="M148,18 Q160,35 145,50" />
         </g>
         {[[60,20],[105,22],[148,18],[145,50]].map(([x,y], i) => (
-          <circle key={`syn-${i}`} cx={x} cy={y} r="1.8" fill="#FFFF82" opacity="0.6" />
+          <circle key={`syn-${i}`} cx={x} cy={y} r="1.8" fill="#FFFF82" opacity="0.5" />
         ))}
       </svg>
 
-      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-amber-200/6 via-transparent to-transparent" />
-      <div className="absolute -top-8 left-[30%] w-40 h-32 bg-[#d97706]/10 blur-[30px] rounded-full" />
-      <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(23,20,19,0.65)] rounded-[24px]" />
+      {/* ── NOUVEAU : Particules de poussière de parchemin flottante ── */}
+      {[
+        [20, 30], [35, 45], [50, 25], [65, 40], [78, 28], [25, 55], [55, 50], [72, 60], [40, 65], [85, 50]
+      ].map(([left, top], i) => (
+        <div key={`penseur-dust-${i}`} className="absolute rounded-full bg-[#FFFF82]"
+          style={{
+            left: `${left}%`, top: `${top}%`,
+            width: '1.5px', height: '1.5px',
+            opacity: 0.15 + (i % 3) * 0.08,
+            boxShadow: '0 0 3px rgba(255,255,130,0.2)',
+            animation: `penseurDust ${4 + (i % 3)}s infinite ease-in-out`
+          }} />
+      ))}
+
+      {/* ── NOUVEAU : Halo lumineux doré diffus (aura de réflexion) ── */}
+      <div className="absolute top-[15%] left-1/2 -translate-x-1/2 w-48 h-48 bg-[radial-gradient(circle,rgba(255,255,130,0.06)_0%,transparent_70%)] blur-[20px] mix-blend-screen" />
+
+      {/* ── NOUVEAU : Cadre de manuscrit ancien — bordure ornementale fine ── */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.10]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="10" width="280" height="460" rx="18" stroke="#d97706" strokeWidth="0.6" strokeDasharray="3 3" />
+        {/* Ornements de coins */}
+        <path d="M10,30 Q14,14 30,10" stroke="#FFFF82" strokeWidth="0.8" opacity="0.6" />
+        <path d="M290,30 Q286,14 270,10" stroke="#FFFF82" strokeWidth="0.8" opacity="0.6" />
+        <path d="M10,450 Q14,466 30,470" stroke="#FFFF82" strokeWidth="0.8" opacity="0.6" />
+        <path d="M290,450 Q286,466 270,470" stroke="#FFFF82" strokeWidth="0.8" opacity="0.6" />
+      </svg>
+
+      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-amber-200/[0.04] via-transparent to-transparent" />
+      <div className="absolute -top-8 left-[30%] w-40 h-32 bg-[#d97706]/[0.06] blur-[30px] rounded-full" />
+
+      {/* Ombrage interne final — réduit pour préserver la lisibilité */}
+      <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(23,20,19,0.55)] rounded-[24px]" />
+
+      {/* Keyframes */}
+      <style>{`
+        @keyframes penseurGlow {
+          0%, 100% { opacity: 0.35; }
+          50% { opacity: 0.55; }
+        }
+        @keyframes penseurDust {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.15; }
+          50% { transform: translateY(-5px) scale(1.4); opacity: 0.35; }
+        }
+      `}</style>
     </div>
   )
       };
