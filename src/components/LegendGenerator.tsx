@@ -10,6 +10,7 @@ import penseurBackground from '../assets/fond_penseur.png';
 import dirigeantBackground from '../assets/fond_dirigeant.png';
 import athleteBackground from '../assets/fond_athlete.png';
 import { 
+  Anchor,
   Sparkles, 
   Upload, 
   Download, 
@@ -378,7 +379,7 @@ const renderSpecialtyIcon = (iconName: string | undefined, defaultIcon: string, 
 const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => {
   const { mainClass } = parseClasse(classeName);
   switch (mainClass) {
-    case 'Explorateur': return <Compass className={`${iconClassName} text-[#bce784]`} />;
+    case 'Explorateur': return <Anchor className={`${iconClassName} text-[#bce784]`} />;
     case 'Savant': return <FlaskConical className={`${iconClassName} text-[#ffff33]`} />;
     case 'Artiste': return <Palette className={`${iconClassName} text-[#820263]`} />;
     case 'Fictionnel': return <Film className={`${iconClassName} text-[#7776bc]`} />;
@@ -463,7 +464,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         classBadgeStyle: "border-2 border-[#348aa7]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
         specBoxStyle: "border-2 border-[#525174]/60",
         citationBoxStyle: "border border-[#5dd39e]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#bce784]/80 shadow-[0_0_8px_rgba(188,231,132,0.2)]",
+        iconContainerStyle: "border-[#bce784]/80 shadow-[0_0_8px_rgba(188,231,132,0.08)]",
         dividerStyle: "via-[#5dd39e]/30",
         failleColor: "text-[#bce784]",
         
@@ -478,6 +479,12 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
             <div className="absolute inset-0 bg-gradient-to-br from-[#bce784]/[0.04] via-transparent to-[#348aa7]/20 mix-blend-overlay" />
+
+            {/* Voile parcheminé sépia (vieux papier) */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(101,67,33,0.28)_100%)] mix-blend-multiply" />
+            <div className="absolute inset-0 opacity-[0.05] bg-[repeating-linear-gradient(0deg,#5c4425_0px,transparent_1px,transparent_3px)]" />
+
+            {/* Grille de carte ancienne (latitude/longitude) */}
             <svg className="absolute inset-0 w-full h-full opacity-[0.06]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
               {[60, 120, 180, 240, 300, 360, 420].map(y => <line key={`lat-${y}`} x1="0" y1={y} x2="300" y2={y} stroke="#bce784" strokeWidth="0.5" strokeDasharray="6 4" />)}
               {[50, 100, 150, 200, 250].map(x => <line key={`lon-${x}`} x1={x} y1="0" x2={x} y2="480" stroke="#bce784" strokeWidth="0.5" strokeDasharray="6 4" />)}
@@ -485,10 +492,71 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
               <line x1="0" y1="0" x2="300" y2="480" stroke="#5dd39e" strokeWidth="0.4" strokeDasharray="8 6" opacity="0.3" />
               <line x1="0" y1="240" x2="300" y2="60" stroke="#348aa7" strokeWidth="0.35" strokeDasharray="5 8" opacity="0.4" />
             </svg>
+
+            {/* Route maritime pointillée avec ports */}
+            <svg className="absolute inset-0 w-full h-full opacity-[0.16]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M25,420 Q90,360 70,270 T160,150 T130,50" stroke="#bce784" strokeWidth="0.7" strokeDasharray="3 4" fill="none" />
+              <circle cx="25" cy="420" r="2.5" fill="#5dd39e" stroke="#171413" strokeWidth="0.5" />
+              <circle cx="160" cy="150" r="2" fill="#bce784" stroke="#171413" strokeWidth="0.5" />
+              <circle cx="130" cy="50" r="2.5" fill="#5dd39e" stroke="#171413" strokeWidth="0.5" />
+            </svg>
+
+            {/* Rayons de soleil / brume */}
             <div className="absolute top-0 left-[18%] w-16 h-56 bg-gradient-to-b from-[#bce784]/10 via-[#5dd39e]/04 to-transparent rotate-[-10deg] origin-top" />
             <div className="absolute top-0 left-[48%] w-12 h-44 bg-gradient-to-b from-[#bce784]/08 via-[#348aa7]/03 to-transparent rotate-[5deg] origin-top" />
             <div className="absolute top-0 right-[14%] w-8 h-36 bg-gradient-to-b from-[#5dd39e]/07 via-transparent to-transparent rotate-[12deg] origin-top" />
-            
+
+            {/* Semis d'étoiles (navigation céleste) */}
+            {[
+              [12, 8], [78, 14], [34, 22], [90, 30], [8, 42], [55, 6], [65, 48], [20, 55], [92, 60], [45, 65]
+            ].map(([left, top], i) => (
+              <div key={`star-${i}`} className="absolute rounded-full bg-[#bce784]"
+                style={{ left: `${left}%`, top: `${top}%`, width: `${(i % 3) + 1}px`, height: `${(i % 3) + 1}px`, opacity: 0.35 + (i % 3) * 0.1,
+                  boxShadow: '0 0 3px rgba(188,231,132,0.6)' }} />
+            ))}
+
+            {/* ═══ ASTROLABE (haut-gauche) ═══ */}
+            <div className="absolute top-5 left-5 w-[72px] h-[72px] opacity-[0.28]">
+              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Anneau extérieur (limbe gradué) */}
+                <circle cx="50" cy="50" r="47" stroke="#bce784" strokeWidth="1" />
+                <circle cx="50" cy="50" r="41" stroke="#5dd39e" strokeWidth="0.4" strokeDasharray="1 2" />
+                {Array.from({ length: 36 }).map((_, i) => {
+                  const angle = i * 10;
+                  const rad = (angle * Math.PI) / 180;
+                  const isMajor = i % 3 === 0;
+                  const outer = 47;
+                  const inner = isMajor ? 40 : 43.5;
+                  return (
+                    <line key={`tick-${i}`}
+                      x1={50 + outer * Math.cos(rad)} y1={50 + outer * Math.sin(rad)}
+                      x2={50 + inner * Math.cos(rad)} y2={50 + inner * Math.sin(rad)}
+                      stroke="#bce784" strokeWidth={isMajor ? 0.8 : 0.35} />
+                  );
+                })}
+                {/* Mater (plaque de fond) */}
+                <circle cx="50" cy="50" r="30" stroke="#348aa7" strokeWidth="0.6" />
+                <circle cx="50" cy="50" r="17" stroke="#5dd39e" strokeWidth="0.45" strokeDasharray="2 1.5" />
+                {/* Écliptique (cercle excentré) */}
+                <ellipse cx="46" cy="47" rx="20" ry="16" stroke="#bce784" strokeWidth="0.35" opacity="0.6" />
+                {/* Alidade (règle mobile) */}
+                <g transform="rotate(35 50 50)">
+                  <line x1="10" y1="50" x2="90" y2="50" stroke="#bce784" strokeWidth="1" />
+                  <circle cx="10" cy="50" r="2" fill="#bce784" />
+                  <circle cx="90" cy="50" r="2" fill="#bce784" />
+                </g>
+                {/* Rete (étoiles pointeurs) */}
+                <circle cx="66" cy="28" r="1.3" fill="#5dd39e" />
+                <circle cx="28" cy="66" r="1.3" fill="#5dd39e" />
+                <circle cx="72" cy="64" r="1.1" fill="#bce784" />
+                <circle cx="34" cy="30" r="1" fill="#bce784" />
+                {/* Axe central */}
+                <circle cx="50" cy="50" r="2.8" fill="#171413" stroke="#348aa7" strokeWidth="0.8" />
+                <circle cx="50" cy="50" r="1" fill="#5dd39e" />
+              </svg>
+            </div>
+
+            {/* Rose des vents (bas-droite, existante) */}
             <div className="absolute bottom-4 right-4 w-24 h-24 opacity-[0.22]">
               <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="48" cy="48" r="44" stroke="#bce784" strokeWidth="0.6" strokeDasharray="3 2.5" />
@@ -514,7 +582,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
                 <text x="2" y="50" fontSize="5" fill="#348aa7" opacity="0.6" fontFamily="serif">O</text>
               </svg>
             </div>
-            
+
             <div className="absolute inset-0 bg-[radial-gradient(#bce784_0.8px,transparent_0.8px)] [background-size:20px_20px] opacity-[0.035]" />
             <div className="absolute -top-8 left-[30%] w-40 h-32 bg-[#348aa7]/20 blur-[30px] rounded-full" />
             <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#5dd39e]/12 via-[#348aa7]/06 to-transparent" />
@@ -552,81 +620,297 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         showScratches: false,
         showBlood: false,
         showEmber: false,
+        effectOverlay: (
+        <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#00ffff]/[0.04] via-transparent to-[#ffff33]/10 mix-blend-overlay" />
+
+          {/* Grille de papier millimétré (fond scientifique) */}
+          <div className="absolute inset-0 opacity-[0.05] bg-[linear-gradient(rgba(0,255,255,0.2)_0.5px,transparent_0.5px),linear-gradient(90deg,rgba(0,255,255,0.2)_0.5px,transparent_0.5px)] [background-size:14px_14px]" />
+          <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(rgba(0,255,255,0.2)_0.5px,transparent_0.5px),linear-gradient(90deg,rgba(0,255,255,0.2)_0.5px,transparent_0.5px)] [background-size:70px_70px]" />
+
+          {/* ═══ CIRCUIT IMPRIMÉ (PCB) — coin haut-droit ═══ */}
+          <svg className="absolute top-4 right-4 w-[130px] h-[150px] opacity-[0.22]" viewBox="0 0 130 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10,10 H50 V35 H90" stroke="#00ffff" strokeWidth="1.2" fill="none" />
+            <path d="M90,35 V70 H120" stroke="#00ffff" strokeWidth="1.2" fill="none" />
+            <path d="M10,10 V45 H30 V80" stroke="#ffff33" strokeWidth="1" fill="none" />
+            <path d="M30,80 H65 V110" stroke="#ffff33" strokeWidth="1" fill="none" />
+            <path d="M65,110 H100 V140" stroke="#00ffff" strokeWidth="1" fill="none" />
+            <path d="M50,35 V60 H15 V95" stroke="#ffcc33" strokeWidth="0.8" fill="none" />
+            <path d="M15,95 H45" stroke="#ffcc33" strokeWidth="0.8" fill="none" />
+            <path d="M90,70 V100 H60" stroke="#ffcc33" strokeWidth="0.8" fill="none" />
+            {/* Puce centrale */}
+            <rect x="55" y="55" width="22" height="22" rx="2" stroke="#00ffff" strokeWidth="1" fill="#00ffff" fillOpacity="0.05" />
+            {[0,1,2,3].map(i => <line key={`pin-t-${i}`} x1={60+i*5} y1="55" x2={60+i*5} y2="50" stroke="#00ffff" strokeWidth="0.7" />)}
+            {[0,1,2,3].map(i => <line key={`pin-b-${i}`} x1={60+i*5} y1="77" x2={60+i*5} y2="82" stroke="#00ffff" strokeWidth="0.7" />)}
+            {/* Vias / points de soudure */}
+            {[[10,10],[50,35],[90,35],[120,70],[10,45],[30,80],[65,110],[100,140],[15,95],[45,95],[60,100]].map(([x,y],i) => (
+              <circle key={`via-${i}`} cx={x} cy={y} r="1.8" fill="#ffff33" opacity="0.85" />
+            ))}
+          </svg>
+
+          {/* ═══ ADN (double hélice) — bas-gauche ═══ */}
+          <svg className="absolute bottom-6 left-4 w-[46px] h-[170px] opacity-[0.22]" viewBox="0 0 46 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8,0 C8,20 38,20 38,40 C38,60 8,60 8,80 C8,100 38,100 38,120 C38,140 8,140 8,160" stroke="#00ffff" strokeWidth="1.1" fill="none" />
+            <path d="M38,0 C38,20 8,20 8,40 C8,60 38,60 38,80 C38,100 8,100 8,120 C8,140 38,140 38,160" stroke="#ffff33" strokeWidth="1.1" fill="none" />
+            {Array.from({ length: 9 }).map((_, i) => {
+              const y = i * 20;
+              const phase = Math.sin((i * Math.PI) / 2);
+              const x1 = 23 + phase * 15;
+              const x2 = 23 - phase * 15;
+              return <line key={`rung-${i}`} x1={x1} y1={y} x2={x2} y2={y} stroke="#ffcc33" strokeWidth="0.6" opacity="0.7" />;
+            })}
+          </svg>
+
+          {/* ═══ Courbe de fonction (sinusoïde + parabole) ═══ */}
+          <svg className="absolute top-[38%] left-[8%] w-[140px] h-[90px] opacity-[0.16]" viewBox="0 0 140 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="45" x2="140" y2="45" stroke="#00ffff" strokeWidth="0.5" />
+            <line x1="10" y1="0" x2="10" y2="90" stroke="#00ffff" strokeWidth="0.5" />
+            <path d="M10,45 C25,10 40,10 55,45 C70,80 85,80 100,45 C115,10 125,10 135,45" stroke="#ffff33" strokeWidth="1" fill="none" />
+            <path d="M10,80 Q72,-10 135,80" stroke="#ffcc33" strokeWidth="0.8" fill="none" opacity="0.7" />
+          </svg>
+
+          {/* ═══ Formules scientifiques éparpillées ═══ */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.24]" viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="165" y="55" fontSize="11" fill="#00ffff" fontFamily="serif" fontStyle="italic">E = mc²</text>
+            <text x="30" y="150" fontSize="9" fill="#ffff33" fontFamily="serif" fontStyle="italic">F = ma</text>
+            <text x="180" y="190" fontSize="10" fill="#ffcc33" fontFamily="serif" fontStyle="italic">∫f(x)dx</text>
+            <text x="20" y="245" fontSize="9" fill="#00ffff" fontFamily="serif" fontStyle="italic">λ = h/mv</text>
+            <text x="195" y="270" fontSize="10" fill="#ffff33" fontFamily="serif" fontStyle="italic">e^(iπ)+1=0</text>
+            <text x="35" y="345" fontSize="9" fill="#ffcc33" fontFamily="serif" fontStyle="italic">ΔS ≥ 0</text>
+            <text x="175" y="400" fontSize="9" fill="#00ffff" fontFamily="serif" fontStyle="italic">∇×E = -∂B/∂t</text>
+            <text x="25" y="430" fontSize="10" fill="#ffff33" fontFamily="serif" fontStyle="italic">a² + b² = c²</text>
+          </svg>
+
+          {/* ═══ Extraits de code informatique ═══ */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.14]" viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="205" y="120" fontSize="7" fill="#00ffff" fontFamily="monospace">if (x &gt; 0) &#123;</text>
+            <text x="205" y="132" fontSize="7" fill="#00ffff" fontFamily="monospace">&nbsp;&nbsp;return true;</text>
+            <text x="205" y="144" fontSize="7" fill="#00ffff" fontFamily="monospace">&#125;</text>
+            <text x="15" y="200" fontSize="7" fill="#ffcc33" fontFamily="monospace">01001 10110</text>
+            <text x="15" y="212" fontSize="7" fill="#ffcc33" fontFamily="monospace">11010 00101</text>
+            <text x="180" y="330" fontSize="7" fill="#ffff33" fontFamily="monospace">function f(x) =&gt;</text>
+            <text x="30" y="380" fontSize="7" fill="#00ffff" fontFamily="monospace">&lt;system&gt;OK&lt;/system&gt;</text>
+          </svg>
+
+          {/* Halo lumineux central (énergie bleue) */}
+          <div className="absolute -top-8 right-[25%] w-40 h-32 bg-[#00ffff]/15 blur-[35px] rounded-full" />
+          <div className="absolute bottom-0 left-[20%] w-32 h-28 bg-[#ffff33]/10 blur-[30px] rounded-full" />
+
+          <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(23,20,19,0.35)] rounded-[24px]" />
+        </div>
+      ),
       };
-      
+
     case 'Artiste':
       return {
-        fontTitle: "font-anton tracking-wide uppercase text-[#d90368]",
-        fontData: "font-montserrat font-semibold",
-        fontCitation: "font-playfair italic",
-        accentColor: "text-[#820263]",
-        accentBorder: "border-[#820263]/80",
-        innerBorder: "border-[#820263]/30",
-        outerBorder: "border-[#fb8b24]/80 shadow-[0_0_24px_rgba(251, 139, 36,0.45)]",
-        themeBgGradient: "from-[#820263]/95 via-[#820263]/90 to-[#171413]/95",
-        
-        nameSectionStyle: "border-2 border-[#820263]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#d90368]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#fb8b24]/60 shadow-[0_0_12px_rgba(251, 139, 36,0.45)]",
-        classBadgeStyle: "border-2 border-[#fb8b24]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#d90368]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#820263]/80 shadow-[0_0_8px_rgba(130, 2, 99,0.4)]",
-        dividerStyle: "via-[#d90368]/30",
-        failleColor: "text-[#820263]",
-        
-        textBoxBgImage: `linear-gradient(to bottom, rgba(217, 3, 104, 0.1), rgba(23, 20, 19, 0.82)), url(${artisteBackground})`,
-        textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#d90368] drop-shadow-[0_0_6px_rgba(217, 3, 104,0.6)]",
-        
-        cornerStyle: 'rivet',
-        showScratches: false,
-        showBlood: false,
-        showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute -top-12 -left-12 w-40 h-40 bg-fuchsia-500/10 blur-[40px] rounded-full" />
-            <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-purple-500/10 blur-[45px] rounded-full" />
-            <div className="absolute top-1/3 left-1/4 w-32 h-32 bg-yellow-400/5 blur-[35px] rounded-full" />
-          </div>
-        )
-      };
+    fontTitle: "font-anton tracking-wide uppercase text-[#d90368]",
+    fontData: "font-montserrat font-semibold",
+    fontCitation: "font-playfair italic",
+    accentColor: "text-[#820263]",
+    accentBorder: "border-[#820263]/80",
+    innerBorder: "border-[#820263]/30",
+    outerBorder: "border-[#fb8b24]/80 shadow-[0_0_24px_rgba(251, 139, 36,0.45)]",
+    themeBgGradient: "from-[#820263]/95 via-[#820263]/90 to-[#171413]/95",
+    
+    nameSectionStyle: "border-2 border-[#820263]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+    textBoxStyle: "border-2 border-[#d90368]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+    portraitBorderStyle: "border-2 border-[#fb8b24]/60 shadow-[0_0_12px_rgba(251, 139, 36,0.45)]",
+    classBadgeStyle: "border-2 border-[#fb8b24]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+    specBoxStyle: "border-2 border-[#525174]/60",
+    citationBoxStyle: "border border-[#d90368]/50 bg-[#171413]/55",
+    iconContainerStyle: "border-[#820263]/80 shadow-[0_0_8px_rgba(130, 2, 99,0.4)]",
+    dividerStyle: "via-[#d90368]/30",
+    failleColor: "text-[#820263]",
+    
+    textBoxBgImage: `linear-gradient(to bottom, rgba(217, 3, 104, 0.1), rgba(23, 20, 19, 0.82)), url(${artisteBackground})`,
+    textBoxBgBlendMode: 'normal',
+    quoteIconStyle: "text-[#d90368] drop-shadow-[0_0_6px_rgba(217, 3, 104,0.6)]",
+    
+    cornerStyle: 'rivet',
+    showScratches: false,
+    showBlood: false,
+    showEmber: false,
+    effectOverlay: (
+      <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#d90368]/[0.04] via-transparent to-[#fb8b24]/15 mix-blend-overlay" />
+
+        {/* Texture toile (trame croisée) — pleine carte, opacité très faible, sans gêner la lecture */}
+        <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(45deg,rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(-45deg,rgba(255,255,255,0.5)_1px,transparent_1px)] [background-size:6px_6px]" />
+
+        {/* ═══ ZONE CONFINÉE : en-tête + portrait uniquement (haut de la carte) ═══
+            Tout ce qui suit reste dans le premier 58% de hauteur pour ne jamais
+            recouvrir le badge de classe, les spécialités ou la boîte de texte/citation */}
+        <div className="absolute top-0 left-0 right-0 h-[58%] overflow-hidden">
+
+          {/* Sous le feu des projecteurs */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-56 bg-gradient-to-b from-[#fffbdb]/20 via-[#fb8b24]/[0.08] to-transparent" style={{ clipPath: 'polygon(42% 0%, 58% 0%, 100% 100%, 0% 100%)' }} />
+          <div className="absolute top-0 left-[18%] w-24 h-40 bg-gradient-to-b from-[#d90368]/10 via-transparent to-transparent rotate-[8deg] origin-top" />
+          <div className="absolute top-0 right-[14%] w-20 h-36 bg-gradient-to-b from-[#820263]/10 via-transparent to-transparent rotate-[-10deg] origin-top" />
+
+          {/* Éclaboussures de peinture abstraites — coins haut uniquement */}
+          <svg className="absolute -top-4 -left-6 w-32 h-32 opacity-[0.28]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20,30 C28,18 42,20 38,35 C50,32 55,45 44,50 C56,55 50,70 38,66 C42,80 26,82 24,68 C12,72 6,58 18,52 C4,48 8,32 20,30 Z" fill="#d90368" opacity="0.6" />
+            <circle cx="55" cy="20" r="3" fill="#fb8b24" opacity="0.7" />
+            <circle cx="65" cy="30" r="1.6" fill="#fb8b24" opacity="0.6" />
+          </svg>
+          <svg className="absolute -top-6 -right-8 w-36 h-36 opacity-[0.22]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M60,45 C70,35 85,40 80,55 C92,54 94,70 80,72 C84,84 68,86 64,74 C52,80 44,68 54,60 C42,58 44,42 60,45 Z" fill="#fb8b24" opacity="0.5" />
+            <circle cx="30" cy="20" r="2.5" fill="#d90368" opacity="0.6" />
+            <circle cx="20" cy="30" r="1.4" fill="#820263" opacity="0.55" />
+          </svg>
+          {/* Coulures de peinture */}
+          <div className="absolute top-6 left-[30%] w-[3px] h-14 bg-gradient-to-b from-[#d90368]/70 to-transparent rounded-full" />
+          <div className="absolute top-4 right-[35%] w-[2px] h-9 bg-gradient-to-b from-[#fb8b24]/60 to-transparent rounded-full" />
+
+          {/* Notes de musique éparpillées — restent dans le portrait */}
+          <div className="absolute top-[24%] left-[10%] text-[#fb8b24] text-lg opacity-40 rotate-[-12deg] select-none">♪</div>
+          <div className="absolute top-[14%] right-[16%] text-[#d90368] text-2xl opacity-35 rotate-[10deg] select-none">♫</div>
+          <div className="absolute bottom-[10%] left-[16%] text-[#820263] text-base opacity-30 rotate-[6deg] select-none">♪</div>
+          <div className="absolute bottom-[6%] right-[8%] text-[#fb8b24] text-xl opacity-30 rotate-[-8deg] select-none">♬</div>
+
+          {/* Partition (portée musicale stylisée) — bas du portrait, jamais sur le badge/texte */}
+          <svg className="absolute bottom-[4%] left-[6%] w-28 h-10 opacity-[0.16]" viewBox="0 0 140 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {[8, 18, 28, 38, 48].map(y => <line key={`staff-${y}`} x1="0" y1={y} x2="140" y2={y} stroke="#fffbdb" strokeWidth="0.7" />)}
+            <circle cx="20" cy="38" r="4" fill="#fffbdb" />
+            <line x1="24" y1="38" x2="24" y2="12" stroke="#fffbdb" strokeWidth="1" />
+            <circle cx="45" cy="28" r="4" fill="#fffbdb" />
+            <line x1="49" y1="28" x2="49" y2="4" stroke="#fffbdb" strokeWidth="1" />
+            <circle cx="70" cy="18" r="4" fill="#fffbdb" />
+            <line x1="74" y1="18" x2="74" y2="42" stroke="#fffbdb" strokeWidth="1" />
+          </svg>
+
+          {/* Ondes visuelles — bord bas du portrait, discrètes, ne descendent pas plus bas */}
+          <svg className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70%] h-6 opacity-[0.22]" viewBox="0 0 240 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {Array.from({ length: 24 }).map((_, i) => {
+              const h = 4 + Math.abs(Math.sin(i * 0.7)) * 20;
+              return <rect key={`wave-${i}`} x={i * 10} y={20 - h / 2} width="3" height={h} rx="1.5" fill={i % 3 === 0 ? "#fb8b24" : "#d90368"} opacity="0.7" />;
+            })}
+          </svg>
+        </div>
+
+        <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(23,20,19,0.65)] rounded-[24px]" />
+      </div>
+    )
+    };
       
-    case 'Fictionnel':
-      return {
-        fontData: "font-montserrat font-semibold text-[#ffff]",
-        fontCitation: "font-playfair italic",
-        accentColor: "text-[#7776bc]",
-        accentBorder: "border-[#7776bc]/80",
-        innerBorder: "border-[#7776bc]/30",
-        outerBorder: "border-[#fffbdb]/80 shadow-[0_0_24px_rgba(255, 251, 219,0.45)]",
-        themeBgGradient: "from-[#fffbdb]/95 via-[#fffbdb]/90 to-[#171413]/95",
-        
-        nameSectionStyle: "border-2 border-[#7776bc]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-        textBoxStyle: "border-2 border-[#cdc7e5]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
-        portraitBorderStyle: "border-2 border-[#fffbdb]/60 shadow-[0_0_12px_rgba(255, 251, 219,0.45)]",
-        classBadgeStyle: "border-2 border-[#fffbdb]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#cdc7e5]/50 bg-[#171413]/55",
-        iconContainerStyle: "border-[#7776bc]/80 shadow-[0_0_8px_rgba(119, 118, 188,0.4)]",
-        dividerStyle: "via-[#cdc7e5]/30",
-        failleColor: "text-[#7776bc]",
-        
-        textBoxBgImage: `linear-gradient(to bottom, rgba(205, 199, 229, 0.08), rgba(23, 20, 19, 0.82)), url(${fictionnelBackground})`,
-        textBoxBgBlendMode: 'normal',
-        quoteIconStyle: "text-[#cdc7e5] drop-shadow-[0_0_6px_rgba(205, 199, 229,0.6)]",
-        
-        cornerStyle: 'rivet',
-        showScratches: false,
-        showBlood: false,
-        showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute inset-0 bg-violet-500/5 mix-blend-color-dodge opacity-50" />
-            <div className="absolute -inset-10 border-[6px] border-violet-500/10 blur-xl" />
-          </div>
-        )
-      };
+case 'Fictionnel':
+  return {
+    fontTitle: "font-bebas tracking-wide uppercase text-[#fffbdb]",
+    fontData: "font-montserrat font-semibold text-[#ffff]",
+    fontCitation: "font-playfair italic",
+    accentColor: "text-[#7776bc]",
+    accentBorder: "border-[#7776bc]/80",
+    innerBorder: "border-[#7776bc]/30",
+    outerBorder: "border-[#fffbdb]/80 shadow-[0_0_24px_rgba(255, 251, 219,0.45)]",
+    themeBgGradient: "from-[#fffbdb]/95 via-[#fffbdb]/90 to-[#171413]/95",
+    
+    nameSectionStyle: "border-2 border-[#7776bc]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+    textBoxStyle: "border-2 border-[#cdc7e5]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+    portraitBorderStyle: "border-2 border-[#fffbdb]/60 shadow-[0_0_12px_rgba(255, 251, 219,0.45)]",
+    classBadgeStyle: "border-2 border-[#fffbdb]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+    specBoxStyle: "border-2 border-[#525174]/60",
+    citationBoxStyle: "border border-[#cdc7e5]/50 bg-[#171413]/55",
+    iconContainerStyle: "border-[#7776bc]/80 shadow-[0_0_8px_rgba(119, 118, 188,0.4)]",
+    dividerStyle: "via-[#cdc7e5]/30",
+    failleColor: "text-[#7776bc]",
+    
+    textBoxBgImage: `linear-gradient(to bottom, rgba(205, 199, 229, 0.08), rgba(23, 20, 19, 0.82)), url(${fictionnelBackground})`,
+    textBoxBgBlendMode: 'normal',
+    quoteIconStyle: "text-[#cdc7e5] drop-shadow-[0_0_6px_rgba(205, 199, 229,0.6)]",
+    
+    cornerStyle: 'rivet',
+    showScratches: false,
+    showBlood: false,
+    showEmber: false,
+    effectOverlay: (
+      <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
+
+        {/* ═══ Teinte de base + Optique cinématographique (vignette) — pleine carte, ne gêne jamais la lecture ═══ */}
+        {/* <div className="absolute inset-0 bg-violet-500/5 mix-blend-color-dodge opacity-50" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_38%,rgba(0,0,0,0.55)_100%)]" /> */}
+        {/* Aberration chromatique (léger liseré rouge/cyan sur les bords) */}
+        {/* <div className="absolute inset-0 shadow-[inset_3px_0_0_rgba(255,0,60,0.06),inset_-3px_0_0_rgba(0,220,255,0.06)]" /> */}
+        {/* Flare d'objectif discret */}
+        {/* <div className="absolute top-[6%] right-[10%] w-24 h-24 bg-[#fffbdb]/10 rounded-full blur-2xl" />
+         <div className="absolute top-[9%] right-[16%] w-3 h-3 bg-[#fffbdb]/25 rounded-full blur-[2px]" /> */}
+
+        {/* Letterboxing "Widescreen" — fines bandes noires façon cinéma */}
+        <div className="absolute top-0 inset-x-0 h-[10px] bg-black/75" />
+        <div className="absolute bottom-0 inset-x-0 h-[10px] bg-black/75" />
+
+        {/* Trame demi-teinte "Âge d'Or du Comic-Book" (Ben-Day dots) — très faible opacité */}
+        <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(#7776bc_1.1px,transparent_1.1px)] [background-size:9px_9px]" />
+
+        {/* Usure "Vintage" — grain de pellicule + rayures verticales + poussière */}
+        {/* <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(#fffbdb_0.6px,transparent_0.6px)] [background-size:3px_3px]" />
+        <div className="absolute top-0 left-[22%] w-[0.5px] h-full bg-white/10" />
+        <div className="absolute top-0 left-[61%] w-[0.5px] h-full bg-white/8" />
+        <div className="absolute top-0 left-[84%] w-[0.5px] h-full bg-white/6" /> */}
+        {[
+          [8, 15], [72, 25], [45, 60], [90, 72], [20, 85], [60, 40]
+        ].map(([left, top], i) => (
+          <div key={`dust-${i}`} className="absolute rounded-full bg-white/25"
+            style={{ left: `${left}%`, top: `${top}%`, width: '1px', height: '1px' }} />
+        ))}
+
+        {/* ═══ ZONE CONFINÉE : en-tête + portrait uniquement (haut de la carte) ═══
+            Tout élément à fort impact visuel (glitch, onomatopées, lignes de vitesse)
+            reste dans le premier 58% de hauteur pour ne jamais recouvrir le badge
+            de classe, les spécialités ou la boîte de texte/citation */}
+        <div className="absolute top-0 left-0 right-0 h-[58%] overflow-hidden">
+
+          {/* Lignes d'action "Mangasen" — rafale de vitesse depuis un coin */}
+          {/* <svg className="absolute top-0 right-0 w-40 h-40 opacity-[0.16]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {Array.from({ length: 14 }).map((_, i) => {
+              const angle = 180 + i * 7;
+              const rad = (angle * Math.PI) / 180;
+              const len = 60 + (i % 3) * 15;
+              return (
+                <line key={`speed-${i}`}
+                  x1="100" y1="0"
+                  x2={100 + len * Math.cos(rad)} y2={len * Math.sin(rad)}
+                  stroke="#fffbdb" strokeWidth={i % 4 === 0 ? "1.1" : "0.5"} />
+              );
+            })}
+          </svg> */}
+
+          {/* Trames en éventail (complément mangasen, coin bas de la zone confinée) */}
+          <svg className="absolute bottom-0 left-0 w-28 h-28 opacity-[0.12]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {Array.from({ length: 10 }).map((_, i) => {
+              const angle = -10 + i * 8;
+              const rad = (angle * Math.PI) / 180;
+              const len = 50 + (i % 2) * 20;
+              return (
+                <line key={`fan-${i}`}
+                  x1="0" y1="100"
+                  x2={len * Math.cos(rad)} y2={100 - len * Math.sin(rad)}
+                  stroke="#7776bc" strokeWidth="0.5" />
+              );
+            })}
+          </svg>
+
+          {/* Brume éthérée */}
+          {/* <div className="absolute top-[10%] left-[10%] w-32 h-20 bg-[#cdc7e5]/10 blur-3xl rounded-full" />
+          <div className="absolute top-[30%] right-[6%] w-28 h-16 bg-[#7776bc]/10 blur-3xl rounded-full" /> */}
+
+          {/* Pixel Sorting & Datamosh — bandes de glitch horizontales discrètes */}
+          <div className="absolute top-[18%] left-0 w-[38%] h-[3px] bg-[#7776bc]/25" style={{ transform: 'translateX(4px)' }} />
+          <div className="absolute top-[18.5%] left-[38%] w-[20%] h-[3px] bg-[#ff2e63]/20" />
+          <div className="absolute top-[44%] right-0 w-[30%] h-[2px] bg-[#00e0ff]/20" style={{ transform: 'translateX(-6px)' }} />
+          <div className="absolute top-[44.4%] right-[30%] w-[15%] h-[2px] bg-[#fffbdb]/20" />
+          <div className="absolute top-[52%] left-[12%] w-[22%] h-[2px] bg-[#7776bc]/18" />
+
+          {/* Onomatopées flottantes (Katakana) */}
+          <div className="absolute top-[8%] left-[8%] text-[#fffbdb] text-xl font-black opacity-30 rotate-[-8deg] select-none" style={{ fontFamily: 'sans-serif' }}>ドン!</div>
+          <div className="absolute bottom-[14%] right-[10%] text-[#7776bc] text-2xl font-black opacity-25 rotate-[6deg] select-none" style={{ fontFamily: 'sans-serif' }}>バーン</div>
+          <div className="absolute top-[38%] right-[20%] text-[#cdc7e5] text-base font-black opacity-20 rotate-[-4deg] select-none" style={{ fontFamily: 'sans-serif' }}>ズシャ</div>
+        </div>
+
+        <div className="absolute -inset-10 border-[6px] border-violet-500/10 blur-xl" />
+        <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(23,20,19,0.65)] rounded-[24px]" />
+      </div>
+    )
+  };
       
     case 'Penseur':
       return {
@@ -657,17 +941,158 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         showScratches: false,
         showBlood: false,
         showEmber: false,
-        effectOverlay: (
-          <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute inset-0 bg-[radial-gradient(#f59e0b_1.5px,transparent_1.5px)] [background-size:32px_32px] opacity-[0.06]" />
-            <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-amber-200/10 via-transparent to-transparent" />
-          </div>
-        )
+  effectOverlay: (
+    <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FFFF82]/[0.03] via-transparent to-[#d97706]/12 mix-blend-overlay" />
+
+      {/* Texture parchemin de fond — très subtile, pleine carte */}
+      <div className="absolute inset-0 opacity-[0.04] bg-[radial-gradient(#A16207_0.6px,transparent_0.6px)] [background-size:6px_6px]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(101,67,33,0.22)_100%)] mix-blend-multiply" />
+
+      {/* ═══ ZONE CONFINÉE : en-tête + portrait uniquement ═══ */}
+      <div className="absolute top-0 left-0 right-0 h-[58%] overflow-hidden">
+
+        {/* ── Symbole Idée (ampoule) — point focal, coin haut-droit ── */}
+        <div className="absolute top-[6%] right-[82%] w-14 h-14 opacity-[0.5]" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))' }}>
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Rayons d'idée */}
+            <g stroke="#FFFF82" strokeWidth="2" strokeLinecap="round" opacity="0.35">
+              <line x1="50" y1="2" x2="50" y2="12" />
+              <line x1="20" y1="14" x2="27" y2="21" />
+              <line x1="80" y1="14" x2="73" y2="21" />
+              <line x1="8" y1="42" x2="18" y2="42" />
+              <line x1="92" y1="42" x2="82" y2="42" />
+            </g>
+            {/* Verre de l'ampoule */}
+            <path d="M50,18 C64,18 74,29 74,42 C74,52 68,58 64,64 C61,68 60,72 60,76 L40,76 C40,72 39,68 36,64 C32,58 26,52 26,42 C26,29 36,18 50,18 Z"
+              fill="#A16207" opacity="0.3" stroke="#d97706" strokeWidth="1.4" />
+            {/* Filament stylisé */}
+            <path d="M42,52 L46,42 L50,52 L54,42 L58,52" stroke="#FFFF82" strokeWidth="1.3" fill="none" opacity="0.75" />
+            {/* Culot / vis */}
+            <line x1="40" y1="78" x2="60" y2="78" stroke="#d97706" strokeWidth="1.6" />
+            <line x1="41" y1="83" x2="59" y2="83" stroke="#d97706" strokeWidth="1.6" />
+            <line x1="42" y1="88" x2="58" y2="88" stroke="#d97706" strokeWidth="1.6" />
+            <rect x="44" y="90" width="12" height="5" rx="1.5" fill="#A16207" opacity="0.8" />
+          </svg>
+        </div>
+
+        {/* ── Hiéroglyphes — glyphes redessinés, plus nets et reconnaissables ── */}
+        <svg className="absolute top-[49%] left-[5%] w-10 h-48 opacity-[0.26]" viewBox="0 0 36 190" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Œil d'Horus (Oudjat) */}
+          <g fill="none" stroke="#FFFF82" strokeWidth="1" strokeLinejoin="round" strokeLinecap="round">
+            <path d="M2,22 Q18,8 34,22 Q18,32 2,22 Z" />
+            <circle cx="18" cy="22" r="4" fill="#FFFF82" opacity="0.75" />
+            <path d="M2,22 Q-2,26 -1,32" />
+            <path d="M18,32 L16,44 Q13,50 8,49" />
+            <path d="M34,22 L38,18" />
+          </g>
+
+          {/* Ânkh (clé de vie) */}
+          <g fill="none" stroke="#d97706" strokeWidth="1.2" strokeLinecap="round">
+            <ellipse cx="18" cy="72" rx="8" ry="10" />
+            <line x1="18" y1="82" x2="18" y2="110" />
+            <line x1="5" y1="93" x2="31" y2="93" />
+          </g>
+
+          {/* Faucon Horus stylisé (au lieu de l'ibis) */}
+          <g fill="none" stroke="#A16207" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18,124 C24,122 29,126 30,132 C31,137 27,140 23,139" />
+            <path d="M30,132 L36,129" />
+            <ellipse cx="16" cy="138" rx="10" ry="7" />
+            <path d="M8,140 Q3,144 2,150" />
+            <path d="M22,143 L23,153" />
+            <path d="M12,143 L11,153" />
+          </g>
+
+          {/* Scarabée (khepri) — quatrième glyphe */}
+          <g fill="none" stroke="#FFFF82" strokeWidth="1" strokeLinecap="round">
+            <ellipse cx="18" cy="170" rx="9" ry="7" opacity="0.7" />
+            <path d="M18,163 L18,177" opacity="0.5" />
+            <path d="M9,166 Q4,162 3,157" opacity="0.6" />
+            <path d="M27,166 Q32,162 33,157" opacity="0.6" />
+            <path d="M9,174 Q4,178 3,183" opacity="0.6" />
+            <path d="M27,174 Q32,178 33,183" opacity="0.6" />
+          </g>
+        </svg>
+
+        {/* ── Ombre de plume d'oie — bas-gauche, courbe naturelle ── */}
+        <svg className="absolute bottom-[3%] left-[8%] w-14 h-32 opacity-[0.18]" viewBox="0 0 60 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M46,4 C40,26 26,42 20,66 C15,86 18,108 12,126" stroke="#171413" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+          {Array.from({ length: 10 }).map((_, i) => {
+            const t = i / 9;
+            const x = 46 - t * 30;
+            const y = 8 + t * 112;
+            const len = 10 + (1 - t) * 6;
+            return (
+              <path key={`barb-${i}`}
+                d={`M${x},${y} q${-len},${len*0.35} ${-len*0.6},${len}`}
+                stroke="#171413" strokeWidth="0.55" fill="none" opacity={0.5 + t * 0.3} />
+            );
+          })}
+        </svg>
+
+        {/* ── Lettrine enluminée médiévale — cadre orné, bas-droit ── */}
+        <div className="absolute bottom-[56%] right-[4.5%] w-16 h-16 opacity-[0.28]">
+          <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Cadre décoratif */}
+            <rect x="3" y="3" width="74" height="74" rx="2" stroke="#d97706" strokeWidth="1.2" fill="#171413" fillOpacity="0.15" />
+            <rect x="7" y="7" width="66" height="66" rx="1" stroke="#A16207" strokeWidth="0.6" strokeDasharray="2 2" />
+            {/* Lettrine gothique stylisée */}
+            <text x="40" y="56" fontSize="46" fill="#FFFF82" fontFamily="serif" fontWeight="bold" textAnchor="middle" opacity="0.75">A</text>
+            {/* Enluminures aux coins */}
+            <circle cx="10" cy="10" r="2" fill="#d97706" opacity="0.7" />
+            <circle cx="70" cy="10" r="2" fill="#d97706" opacity="0.7" />
+            <circle cx="10" cy="70" r="2" fill="#d97706" opacity="0.7" />
+            <circle cx="70" cy="70" r="2" fill="#d97706" opacity="0.7" />
+          </svg>
+        </div>
+      </div>
+
+      {/* ── Ligne d'écriture gothique/médiévale — bandeau fin sous le portrait ── */}
+      <svg className="absolute top-[56%] left-0 w-full h-6 opacity-[0.16]" viewBox="0 0 300 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <text x="10" y="17" fontSize="13" fill="#FFFF82" fontFamily="serif" fontWeight="700" letterSpacing="1"
+          style={{ fontFamily: 'Georgia, serif' }}>
+          Sapientia · Veritas · Ratio · Lumen
+        </text>
+      </svg>
+
+      {/* ── Constellations éphémères — quelques étoiles nettes, pleine carte ── */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.18]" viewBox="0 0 300 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="#FFFF82" strokeWidth="0.4" opacity="0.6">
+          <line x1="45" y1="55" x2="72" y2="85" />
+          <line x1="72" y1="85" x2="58" y2="120" />
+          <line x1="238" y1="105" x2="262" y2="135" />
+          <line x1="262" y1="135" x2="250" y2="168" />
+        </g>
+        {[[45,55],[72,85],[58,120],[238,105],[262,135],[250,168]].map(([x,y], i) => (
+          <g key={`star-${i}`}>
+            <circle cx={x} cy={y} r="2.2" fill="#FFFF82" opacity="0.15" />
+            <circle cx={x} cy={y} r="1" fill="#FFFF82" opacity="0.7" />
+          </g>
+        ))}
+      </svg>
+
+      {/* ── Synapses — discrètes, cantonnées au bas de carte ── */}
+      <svg className="absolute bottom-0 inset-x-0 w-full h-[90px] opacity-[0.12]" viewBox="0 0 300 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="#d97706" strokeWidth="0.5" fill="none">
+          <path d="M60,20 Q85,8 105,22 Q125,36 148,18" />
+          <path d="M148,18 Q160,35 145,50" />
+        </g>
+        {[[60,20],[105,22],[148,18],[145,50]].map(([x,y], i) => (
+          <circle key={`syn-${i}`} cx={x} cy={y} r="1.8" fill="#FFFF82" opacity="0.6" />
+        ))}
+      </svg>
+
+      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-amber-200/6 via-transparent to-transparent" />
+      <div className="absolute -top-8 left-[30%] w-40 h-32 bg-[#d97706]/10 blur-[30px] rounded-full" />
+      <div className="absolute inset-0 shadow-[inset_0_0_50px_rgba(23,20,19,0.65)] rounded-[24px]" />
+    </div>
+  )
       };
       
     case 'Dirigeant':
       return {
-        fontTitle: "font-bebas tracking-widest uppercase",
+        fontTitle: "font-bebas tracking-wide uppercase text-[#fffbdb]",
         fontData: "font-montserrat font-semibold",
         fontCitation: "font-playfair italic",
         accentColor: "text-[#c670ff]",
@@ -696,8 +1121,59 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         showEmber: false,
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            <div className="absolute top-0 right-4 w-28 h-64 bg-gradient-to-b from-yellow-300/10 via-transparent to-transparent transform rotate-[25deg] origin-top" />
-            <div className="absolute -bottom-10 -left-10 w-36 h-36 border border-yellow-500/15 rounded-full opacity-20" />
+            {/* Filtre de couleur d'ambiance Royale (Violet & Or) */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#d946ef]/[0.05] via-transparent to-[#fcd34d]/[0.06] mix-blend-overlay" />
+            
+            {/* Vignettage et ombrage de velours impérial */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(15,23,42,0.6)_100%)]" />
+
+            {/* ═══ RAYONS LUMINEUX DIVINS / DIVINE SPOTLIGHT ═══ */}
+            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-[250px] h-[450px] bg-gradient-to-b from-[#fcd34d]/15 via-[#fcd34d]/02 to-transparent opacity-60 pointer-events-none mix-blend-screen"
+                 style={{ clipPath: 'polygon(40% 0, 60% 0, 100% 100%, 0 100%)' }} />
+            <div className="absolute top-0 left-[35%] w-8 h-80 bg-gradient-to-b from-[#e9d5ff]/10 to-transparent rotate-[-15deg] origin-top mix-blend-screen" />
+            <div className="absolute top-0 right-[35%] w-6 h-80 bg-gradient-to-b from-[#e9d5ff]/10 to-transparent rotate-[15deg] origin-top mix-blend-screen" />
+
+            {/* ═══ POUSSIÈRE D'OR / ÉTINCELLES DE POUVOIR ═══ */}
+            {[
+              [25, 15], [75, 18], [45, 28], [85, 35], [15, 48], [60, 10], [35, 52], [80, 58], [50, 62], [20, 70]
+            ].map(([left, top], i) => (
+              <div key={`royal-spark-${i}`} className="absolute rounded-full bg-[#fcd34d]"
+                style={{ 
+                  left: `${left}%`, 
+                  top: `${top}%`, 
+                  width: `${(i % 2) + 1.5}px`, 
+                  height: `${(i % 2) + 1.5}px`, 
+                  opacity: 0.25 + (i % 3) * 0.15,
+                  boxShadow: '0 0 4px rgba(252,211,77,0.2)',
+                  animation: `pulse ${2 + (i%2)}s infinite ease-in-out`
+                }} />
+            ))}
+
+            {/* ═══ FILIGRANE DE BLASON / COURONNE SVG (Arrière-plan) ═══ */}
+            <div className="absolute top-[22%] left-1/2 -translate-x-1/2 w-48 h-48 opacity-[0.05] text-[#fcd34d]">
+              <svg viewBox="0 0 100 100" fill="currentColor">
+                <path d="M50,15 L68,32 L85,20 L80,55 C80,75 50,88 50,88 C50,88 20,75 20,55 L15,20 L32,32 Z" fillOpacity="0.1" stroke="currentColor" strokeWidth="2" />
+                <circle cx="50" cy="48" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                <path d="M42,48 H58 M50,40 V56" stroke="currentColor" strokeWidth="1.5" />
+              </svg>
+            </div>
+
+            {/* ═══ BORDURE ET FRISES LINÉAIRES ROYALES ═══ */}
+            <svg className="absolute inset-0 w-full h-full opacity-[0.15]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Cadre interne fin */}
+              <rect x="8" y="8" width="284" height="464" rx="18" stroke="#fcd34d" strokeWidth="0.8" />
+              {/* Coins renforcés géométriques style monarchie/empire */}
+              <path d="M8,28 V8 H28" stroke="#fcd34d" strokeWidth="2" />
+              <path d="M292,28 V8 H272" stroke="#fcd34d" strokeWidth="2" />
+              <path d="M8,452 V472 H28" stroke="#fcd34d" strokeWidth="2" />
+              <path d="M292,452 V472 H272" stroke="#fcd34d" strokeWidth="2" />
+              {/* Petits losanges décoratifs aux quatre points cardinaux du cadre */}
+              <path d="M150,4 L153,8 L150,12 L147,8 Z" fill="#fcd34d" />
+              <path d="M150,468 L153,472 L150,476 L147,472 Z" fill="#fcd34d" />
+            </svg>
+
+            {/* Effet d'ombrage interne final pour sceller la carte */}
+            <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(15,23,42,0.5)] rounded-[24px]" />
           </div>
         )
       };
@@ -1600,7 +2076,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
 
                   <div className="flex justify-between items-center gap-2 relative z-10 w-full">
                     <div className="min-w-0 flex-1 pl-1">
-                      <h2 className={`text-xl sm:text-2xl font-black tracking-wider text-neutral-100 uppercase truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] ${cardAmbiance.fontTitle}`}>
+                      <h2 className={`text-lg sm:text-xl font-black tracking-wider text-neutral-100 uppercase truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] ${cardAmbiance.fontTitle}`}>
                         {formData.nom || "SANS NOM"}
                       </h2>
                       <p className={`text-[8.5px] sm:text-[9.5px] font-bold italic tracking-wider mt-0.5 truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] ${cardAmbiance.accentColor} ${cardAmbiance.fontCitation}`}>
