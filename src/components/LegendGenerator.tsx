@@ -4,6 +4,7 @@ import { toPng, toJpeg } from 'html-to-image';
 import cardBackground from '../assets/card_background_1782290811054.jpg';
 import explorateurBackground from '../assets/fond_explorateur.png';
 import savantBackground from '../assets/fond_savant.png';
+import artisteBackground from '../assets/fond_artiste.png';
 import { 
   Sparkles, 
   Upload, 
@@ -62,6 +63,8 @@ interface WarriorCard {
   hp: number;
   atk: number;
 }
+
+
 
 const INITIAL_CARDS: WarriorCard[] = [
   {
@@ -236,7 +239,7 @@ export const CLASSES_CONFIG: Record<ArchetypeType, ClassDesign> = {
     description: "Création, expression, culture",
     subTypes: ["Peintre", "Sculpteur", "Musicien", "Chanteur", "Acteur", "Écrivain", "Cinéaste", "Danseur", "Architecte", "Comédien"],
     colors: "Violet · Rose néon · Or doux",
-    fontTitle: "font-anton text-fuchsia-400",
+    fontTitle: "font-anton text-[#820263]",
     fontData: "font-montserrat",
     fontCitation: "font-playfair",
     background: "Atelier · Scène · Lumières",
@@ -373,7 +376,7 @@ const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => 
   switch (mainClass) {
     case 'Explorateur': return <Compass className={`${iconClassName} text-[#bce784]`} />;
     case 'Savant': return <FlaskConical className={`${iconClassName} text-[#ffff33]`} />;
-    case 'Artiste': return <Palette className={`${iconClassName} text-fuchsia-400`} />;
+    case 'Artiste': return <Palette className={`${iconClassName} text-[#820263]`} />;
     case 'Fictionnel': return <Film className={`${iconClassName} text-purple-400`} />;
     case 'Penseur': return <BookOpen className={`${iconClassName} text-amber-600`} />;
     case 'Dirigeant': return <Crown className={`${iconClassName} text-yellow-500`} />;
@@ -549,26 +552,29 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
       
     case 'Artiste':
       return {
-        fontTitle: "font-anton tracking-wide uppercase text-fuchsia-400",
-        fontData: "font-montserrat font-semibold",
+        fontTitle: "font-anton tracking-wide uppercase text-[#d90368]",
+         fontData: "font-montserrat font-semibold",
         fontCitation: "font-playfair italic",
-        accentColor: "text-fuchsia-400",
-        accentBorder: "border-fuchsia-500/70",
-        innerBorder: "border-purple-500/30",
-        outerBorder: "border-fuchsia-500/80 shadow-[0_0_25px_rgba(217,70,239,0.5),inset_0_0_10px_rgba(217,70,239,0.3)]",
-        themeBgGradient: "from-purple-950/85 via-fuchsia-950/80 to-rose-950/90",
+        accentColor: "text-[#820263]",
+        accentBorder: "border-[#820263]/80",
+        innerBorder: "border-[#820263]/30",
+        outerBorder: "border-[#fb8b24]/80 shadow-[0_0_24px_rgba(251, 139, 36,0.45)]",
+        themeBgGradient: "from-[#820263]/95 via-[#820263]/90 to-[#171413]/95",
         
-        nameSectionStyle: "border-2 border-fuchsia-500/70 bg-neutral-950/90 shadow-[0_4px_12px_rgba(217,70,239,0.25)] rounded-[18px]",
-        textBoxStyle: "border-2 border-purple-500/60 bg-neutral-950/95 shadow-[inset_0_2px_4px_rgba(0,0,0,0.85)] rounded-[18px]",
-        portraitBorderStyle: "border-2 border-fuchsia-500/60 shadow-[0_0_12px_rgba(217,70,239,0.3)] rounded-lg",
-        classBadgeStyle: "border-2 border-fuchsia-500/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-fuchsia-500/50",
-        citationBoxStyle: "border border-fuchsia-500/20 bg-black/45",
-        iconContainerStyle: "border-fuchsia-500/70",
-        dividerStyle: "via-fuchsia-500/20",
-        failleColor: "text-[#ff0000]",
+        nameSectionStyle: "border-2 border-[#820263]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+        textBoxStyle: "border-2 border-[#d90368]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+        portraitBorderStyle: "border-2 border-[#fb8b24]/60 shadow-[0_0_12px_rgba(251, 139, 36,0.45)]",
+        classBadgeStyle: "border-2 border-[#fb8b24]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-[#525174]/60",
+        citationBoxStyle: "border border-[#d90368]/50 bg-[#171413]/55",
+        iconContainerStyle: "border-[#820263]/80 shadow-[0_0_8px_rgba(130, 2, 99,0.4)]",
+        dividerStyle: "via-[#d90368]/30",
+        failleColor: "text-[#820263]",
         
-        quoteIconStyle: "text-fuchsia-400",
+        textBoxBgImage: `linear-gradient(to bottom, rgba(217, 3, 104, 0.2), rgba(23, 20, 19, 0.82)), url(${artisteBackground})`,
+        textBoxBgBlendMode: 'normal',
+        quoteIconStyle: "text-[#d90368] drop-shadow-[0_0_6px_rgba(217, 3, 104,0.6)]",
+        
         cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
@@ -1016,6 +1022,16 @@ export default function LegendGenerator() {
     G: { label: "Divin", color: "text-rose-500 border-rose-600 bg-rose-950/50 animate-pulse" }
   };
 
+  const { mainClass } = parseClasse(formData.classe);
+
+const backgroundMap = {
+  Explorateur: explorateurBackground,
+  Savant: savantBackground,
+  Artiste: artisteBackground,
+};
+
+const background = backgroundMap[mainClass] ?? cardBackground;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#1c0003] via-[#0f0001] to-[#060000] text-neutral-200 font-sans p-4 sm:p-6 lg:p-8 selection:bg-[#7a150e] selection:text-neutral-100">
       
@@ -1450,9 +1466,7 @@ export default function LegendGenerator() {
               {/* FOND GOTHIQUE */}
               <div className="absolute inset-0 z-0 select-none pointer-events-none">
                 <img
-                  src={parseClasse(formData.classe).mainClass === 'Explorateur' ? explorateurBackground :
-                    (parseClasse(formData.classe).mainClass === 'Savant' ?
-                    savantBackground : cardBackground)}
+                  src={background}
                   alt="Epic Background"
                   className="w-full h-full object-cover brightness-[0.7] contrast-[1.1] saturate-[0.85] transition-all duration-300"
                 />
