@@ -236,44 +236,6 @@ export interface EffectConfig {
   showOrbitalCircles?: boolean;
 }
 
-/**
- * Collection des chartes graphiques simplifiées pour chaque classe de personnage.
- * 
- * Le développeur ne spécifie que les deux couleurs principales (primary et secondary).
- * Les autres couleurs (accent, background, danger) sont calculées automatiquement.
- * 
- * **Guerrier** : Palette rouge/orange évoquant la force, l'agressivité et le feu de combat.
- *   - Primary (#ff0000) : Rouge vif symbolisant la puissance et le danger
- *   - Secondary (#8a0303) : Rouge sombre pour les nuances profondes
- * 
- * **Explorateur** : Palette verte/cyan évoquant la nature, la découverte et l'aventure.
- *   - Primary (#bce784) : Vert clair frais symbolisant la nature et la croissance
- *   - Secondary (#5dd39e) : Vert turquoise pour les accents subtils
- * 
- * **Savant** : Palette bleu/jaune évoquant la connaissance, la science et la technologie.
- *   - Primary (#219ebc) : Bleu cyan symbolisant l'intelligence et la clarté
- *   - Secondary (#ffb703) : Jaune or pour les éclairs de génie
- * 
- * **Artiste** : Palette violette/rose évoquant la créativité, l'expression et la passion.
- *   - Primary (#d946ef) : Fuchsia vibrant symbolisant l'expression artistique
- *   - Secondary (#a855f7) : Violet pour les nuances créatives
- * 
- * **Fictionnel** : Palette violette/indigo évoquant le mystère, la magie et l'imaginaire.
- *   - Primary (#7c3aed) : Violet profond symbolisant le mystère et la magie
- *   - Secondary (#6366f1) : Indigo pour les transitions subtiles
- * 
- * **Penseur** : Palette ambrée/marron évoquant la sagesse, la réflexion et la philosophie.
- *   - Primary (#d97706) : Ambre chaud symbolisant la sagesse et l'expérience
- *   - Secondary (#a16207) : Brun doré pour les nuances philosophiques
- * 
- * **Dirigeant** : Palette jaune/or évoquant l'autorité, le pouvoir et la richesse.
- *   - Primary (#eab308) : Jaune or symbolisant le pouvoir et la prospérité
- *   - Secondary (#ca8a04) : Or sombre pour les nuances d'autorité
- * 
- * **Athlète** : Palette verte émeraude évoquant la vitalité, la performance et la santé.
- *   - Primary (#10b981) : Émeraude vibrant symbolisant l'énergie et la performance
- *   - Secondary (#059669) : Vert foncé pour les nuances sportives
- */
 export const CLASS_THEMES: Record<string, SimpleClassTheme> = {
   Guerrier:    { primary: '#ff0000', secondary: '#8a0303', accent: '#f59e0b', background: '#171413', danger: '#ff0000' },
   Explorateur: { primary: '#348aa7', secondary: '#bce784', accent: '#5dd39e', background: '#171413', danger: '#bce784' },
