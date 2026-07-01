@@ -8,6 +8,7 @@ import artisteBackground from '../assets/fond_artiste.png';
 import fictionnelBackground from '../assets/fond_fictionnel.png';
 import penseurBackground from '../assets/fond_penseur.png';
 import dirigeantBackground from '../assets/fond_dirigeant.png';
+import athleteBackground from '../assets/fond_athlete.png';
 import { 
   Sparkles, 
   Upload, 
@@ -294,7 +295,7 @@ export const CLASSES_CONFIG: Record<ArchetypeType, ClassDesign> = {
     description: "Performance physique, compétition, records",
     subTypes: ["Basketball", "Football", "Athlétisme", "Boxe/MMA", "Tennis", "Natation", "Cyclisme", "F1", "Rugby", "Baseball", "Golf", "Sport extrême", "Autre"],
     colors: "Variables selon discipline · Or · Noir",
-    fontTitle: "font-anton text-emerald-400",
+    fontTitle: "font-anton text-[#C08A5A]",
     fontData: "font-montserrat",
     fontCitation: "font-sans",
     background: "Stade · Arène · Terrain",
@@ -383,7 +384,7 @@ const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => 
     case 'Fictionnel': return <Film className={`${iconClassName} text-[#7776bc]`} />;
     case 'Penseur': return <BookOpen className={`${iconClassName} text-[#ffff82]`} />;
     case 'Dirigeant': return <Crown className={`${iconClassName} text-[#c670ff]`} />;
-    case 'Athlète': return <Trophy className={`${iconClassName} text-emerald-400`} />;
+    case 'Athlète': return <Trophy className={`${iconClassName} text-[#C08A5A]`} />;
     case 'Guerrier':
     default:
       const normalized = (classeName || '').toLowerCase();
@@ -397,7 +398,7 @@ const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => 
         return <Skull className={`${iconClassName} text-[#7776bc]`} />;
       }
       if (normalized.includes('archère') || normalized.includes('archer') || normalized.includes('chasseur') || normalized.includes('tireur') || normalized.includes('fusil') || normalized.includes('éclaireur')) {
-        return <Crosshair className={`${iconClassName} text-emerald-400`} />;
+        return <Crosshair className={`${iconClassName} text-[#C08A5A]`} />;
       }
       if (normalized.includes('hoplite') || normalized.includes('protecteur') || normalized.includes('sentinelle') || normalized.includes('bouclier') || normalized.includes('défense') || normalized.includes('garde')) {
         return <Shield className={`${iconClassName} text-blue-400`} />;
@@ -574,7 +575,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         dividerStyle: "via-[#d90368]/30",
         failleColor: "text-[#820263]",
         
-        textBoxBgImage: `linear-gradient(to bottom, rgba(217, 3, 104, 0.2), rgba(23, 20, 19, 0.82)), url(${artisteBackground})`,
+        textBoxBgImage: `linear-gradient(to bottom, rgba(217, 3, 104, 0.1), rgba(23, 20, 19, 0.82)), url(${artisteBackground})`,
         textBoxBgBlendMode: 'normal',
         quoteIconStyle: "text-[#d90368] drop-shadow-[0_0_6px_rgba(217, 3, 104,0.6)]",
         
@@ -648,7 +649,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
         dividerStyle: "via-[#A16207]/30",
         failleColor: "text-[#FFFF82]",
         
-        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 255, 130, 0.2), rgba(23, 20, 19, 0.82)), url(${penseurBackground})`,
+        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 255, 130, 0.07), rgba(23, 20, 19, 0.82)), url(${penseurBackground})`,
         textBoxBgBlendMode: 'normal',
         quoteIconStyle: "text-[#A16207] drop-shadow-[0_0_6px_rgba(255, 255, 130,0.6)]",
         
@@ -703,26 +704,29 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
       
     case 'Athlète':
       return {
-        fontTitle: "font-anton tracking-wide uppercase text-emerald-400",
+        fontTitle: "font-anton tracking-wide uppercase text-[#C08A5A]",
         fontData: "font-montserrat font-semibold",
-        fontCitation: "font-sans font-medium",
-        accentColor: "text-emerald-400",
-        accentBorder: "border-emerald-500/80",
-        innerBorder: "border-emerald-600/30",
-        outerBorder: "border-emerald-500/90 shadow-[0_0_22px_rgba(16,185,129,0.5),inset_0_0_12px_rgba(16,185,129,0.2)]",
-        themeBgGradient: "from-zinc-900/90 via-[#0a0f0d]/90 to-zinc-950/95",
+        fontCitation: "font-playfair italic",
+        accentColor: "text-[#C08A5A]",
+        accentBorder: "border-[#C08A5A]/80",
+        innerBorder: "border-[#C08A5A]/30",
+        outerBorder: "border-[#00A86B]/80 shadow-[0_0_24px_rgba(0, 168, 107,0.45)]",
+        themeBgGradient: "from-[#00A86B]/95 via-[#00A86B]/90 to-[#171413]/95",
         
-        nameSectionStyle: "border-2 border-zinc-800 bg-black/95 shadow-[0_4px_10px_rgba(0,0,0,0.95)] rounded-[4px] skew-x-[-4deg]", 
-        textBoxStyle: "border border-zinc-800 bg-black/95 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.9)] rounded-[4px]",
-        portraitBorderStyle: "border-2 border-emerald-500/60 shadow-[0_0_12px_rgba(16,185,129,0.3)]",
-        classBadgeStyle: "border-2 border-emerald-500/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-emerald-500/40",
-        citationBoxStyle: "border border-emerald-500/20 bg-black/45",
-        iconContainerStyle: "border-emerald-500/80",
-        dividerStyle: "via-emerald-500/20",
-        failleColor: "text-[#ff0000]",
+        nameSectionStyle: "border-2 border-[#C08A5A]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+        textBoxStyle: "border-2 border-[#2bc016]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+        portraitBorderStyle: "border-2 border-[#00A86B]/60 shadow-[0_0_12px_rgba(0, 168, 107,0.45)]",
+        classBadgeStyle: "border-2 border-[#00A86B]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-[#525174]/60",
+        citationBoxStyle: "border border-[#2bc016]/50 bg-[#171413]/55",
+        iconContainerStyle: "border-[#C08A5A]/80 shadow-[0_0_8px_rgba(108, 78, 45,0.4)]",
+        dividerStyle: "via-[#2bc016]/30",
+        failleColor: "text-[#C08A5A]",
         
-        quoteIconStyle: "text-emerald-400",
+        textBoxBgImage: `linear-gradient(to bottom, rgba(43, 192, 22, 0.08), rgba(23, 20, 19, 0.82)), url(${athleteBackground})`,
+        textBoxBgBlendMode: 'normal',
+        quoteIconStyle: "text-[#2bc016] drop-shadow-[0_0_6px_rgba(43, 192, 22,0.6)]",
+        
         cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
@@ -1039,6 +1043,7 @@ const backgroundMap = {
   Fictionnel: fictionnelBackground,
   Penseur: penseurBackground,
   Dirigeant: dirigeantBackground,
+  Athlète: athleteBackground,
 };
 
 const background = backgroundMap[mainClass] ?? cardBackground;
@@ -1085,7 +1090,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
           </h3>
           <ul className="list-disc list-inside space-y-1 ml-1 text-neutral-300">
             <li><strong className="text-amber-300">Zéro problème de CORS :</strong> Les images provenant d'Internet peuvent bloquer le téléchargement.</li>
-            <li><strong className="text-emerald-400">Solution ultime :</strong> Glissez-déposez ou importez une image depuis votre appareil (stockage base64 local).</li>
+            <li><strong className="text-[#C08A5A]">Solution ultime :</strong> Glissez-déposez ou importez une image depuis votre appareil (stockage base64 local).</li>
             <li><strong className="text-amber-300">Rendu Ultra HD :</strong> Carte générée à <span className="font-bold">3X sa résolution d'affichage</span>.</li>
           </ul>
         </div>
