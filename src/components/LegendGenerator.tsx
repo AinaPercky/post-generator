@@ -7,6 +7,7 @@ import savantBackground from '../assets/fond_savant.png';
 import artisteBackground from '../assets/fond_artiste.png';
 import fictionnelBackground from '../assets/fond_fictionnel.png';
 import penseurBackground from '../assets/fond_penseur.png';
+import dirigeantBackground from '../assets/fond_dirigeant.png';
 import { 
   Sparkles, 
   Upload, 
@@ -280,7 +281,7 @@ export const CLASSES_CONFIG: Record<ArchetypeType, ClassDesign> = {
     description: "Pouvoir, gouvernance, empire",
     subTypes: ["Roi", "Empereur", "Président", "Dictateur", "Chef révolutionnaire", "Tyran", "Fondateur d'État"],
     colors: "Or royal · Bleu foncé · Rouge noble",
-    fontTitle: "font-bebas text-yellow-500",
+    fontTitle: "font-bebas text-[#c670ff]",
     fontData: "font-montserrat",
     fontCitation: "font-serif",
     background: "Trône · Palais · Capitole",
@@ -381,7 +382,7 @@ const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => 
     case 'Artiste': return <Palette className={`${iconClassName} text-[#820263]`} />;
     case 'Fictionnel': return <Film className={`${iconClassName} text-[#7776bc]`} />;
     case 'Penseur': return <BookOpen className={`${iconClassName} text-[#ffff82]`} />;
-    case 'Dirigeant': return <Crown className={`${iconClassName} text-yellow-500`} />;
+    case 'Dirigeant': return <Crown className={`${iconClassName} text-[#c670ff]`} />;
     case 'Athlète': return <Trophy className={`${iconClassName} text-emerald-400`} />;
     case 'Guerrier':
     default:
@@ -665,26 +666,29 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
       
     case 'Dirigeant':
       return {
-        fontTitle: "font-bebas tracking-widest uppercase text-yellow-500",
+        fontTitle: "font-bebas tracking-widest uppercase",
         fontData: "font-montserrat font-semibold",
-        fontCitation: "font-serif",
-        accentColor: "text-yellow-500",
-        accentBorder: "border-yellow-600/80",
-        innerBorder: "border-yellow-700/40",
-        outerBorder: "border-yellow-600/90 shadow-[0_0_30px_rgba(234,179,8,0.6),inset_0_0_15px_rgba(234,179,8,0.3)]",
-        themeBgGradient: "from-blue-950/80 via-yellow-950/20 to-neutral-950/95",
+        fontCitation: "font-playfair italic",
+        accentColor: "text-[#c670ff]",
+        accentBorder: "border-[#c670ff]/80",
+        innerBorder: "border-[#c670ff]/30",
+        outerBorder: "border-[#ffd500]/80 shadow-[0_0_24px_rgba(255, 213, 0,0.45)]",
+        themeBgGradient: "from-[#ffd500]/95 via-[#ffd500]/90 to-[#171413]/95",
         
-        nameSectionStyle: "border-2 border-yellow-600 bg-neutral-950/90 shadow-[0_4px_12px_rgba(234,179,8,0.25)] rounded-lg",
-        textBoxStyle: "border-2 border-yellow-700/60 bg-neutral-950/95 shadow-[inset_0_2px_4px_rgba(0,0,0,0.9)] rounded-lg",
-        portraitBorderStyle: "border-2 border-yellow-600/80 shadow-[0_0_15px_rgba(234,179,8,0.3)]",
-        classBadgeStyle: "border-2 border-yellow-600/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-yellow-600/50",
-        citationBoxStyle: "border border-yellow-600/20 bg-black/45",
-        iconContainerStyle: "border-yellow-600/80",
-        dividerStyle: "via-yellow-600/20",
-        failleColor: "text-[#ff0000]",
+        nameSectionStyle: "border-2 border-[#c670ff]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+        textBoxStyle: "border-2 border-[#fdc500]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+        portraitBorderStyle: "border-2 border-[#ffd500]/60 shadow-[0_0_12px_rgba(255, 213, 0,0.45)]",
+        classBadgeStyle: "border-2 border-[#ffd500]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-[#525174]/60",
+        citationBoxStyle: "border border-[#fdc500]/50 bg-[#171413]/55",
+        iconContainerStyle: "border-[#c670ff]/80 shadow-[0_0_8px_rgba(61, 0, 102,0.4)]",
+        dividerStyle: "via-[#fdc500]/30",
+        failleColor: "text-[#c670ff]",
         
-        quoteIconStyle: "text-yellow-500",
+        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 213, 0, 0.08), rgba(23, 20, 19, 0.82)), url(${dirigeantBackground})`,
+        textBoxBgBlendMode: 'normal',
+        quoteIconStyle: "text-[#fdc500] drop-shadow-[0_0_6px_rgba(255, 213, 0,0.6)]",
+        
         cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
@@ -1034,6 +1038,7 @@ const backgroundMap = {
   Artiste: artisteBackground,
   Fictionnel: fictionnelBackground,
   Penseur: penseurBackground,
+  Dirigeant: dirigeantBackground,
 };
 
 const background = backgroundMap[mainClass] ?? cardBackground;

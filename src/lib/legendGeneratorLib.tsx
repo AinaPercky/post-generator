@@ -281,7 +281,7 @@ export const CLASS_THEMES: Record<string, SimpleClassTheme> = {
   Artiste:     { primary: '#820263', secondary: '#fb8b24', accent: '#d90368', background: '#0a0008', danger: '#ff0000' },
   Fictionnel:  { primary: '#7776bc', secondary: '#fffbdb', accent: '#cdc7e5', background: '#0d0a1a', danger: '#ff0000' },
   Penseur:     { primary: '#d97706', secondary: '#FFFF82', accent: '#A16207', background: '#1c1917', danger: '#ff0000' },
-  Dirigeant:   { primary: '#eab308', secondary: '#ca8a04', accent: '#eab308', background: '#0a0a0a', danger: '#ff0000' },
+  Dirigeant:   { primary: '#ffd500', secondary: '#5c0099', accent: '#fdc500', background: '#0a0a0a', danger: '#ff0000' },
   Athlète:     { primary: '#10b981', secondary: '#059669', accent: '#10b981', background: '#0a0f0d', danger: '#ff0000' },
 };
 
