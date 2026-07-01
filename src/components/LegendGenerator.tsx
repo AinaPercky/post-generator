@@ -1084,59 +1084,193 @@ case 'Fictionnel':
         showEmber: false,
         effectOverlay: (
           <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-            {/* Filtre de couleur d'ambiance Royale (Violet & Or) */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#d946ef]/[0.05] via-transparent to-[#fcd34d]/[0.06] mix-blend-overlay" />
-            
-            {/* Vignettage et ombrage de velours impérial */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(15,23,42,0.6)_100%)]" />
-
-            {/* ═══ RAYONS LUMINEUX DIVINS / DIVINE SPOTLIGHT ═══ */}
-            <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-[250px] h-[450px] bg-gradient-to-b from-[#fcd34d]/15 via-[#fcd34d]/02 to-transparent opacity-60 pointer-events-none mix-blend-screen"
-                 style={{ clipPath: 'polygon(40% 0, 60% 0, 100% 100%, 0 100%)' }} />
-            <div className="absolute top-0 left-[35%] w-8 h-80 bg-gradient-to-b from-[#e9d5ff]/10 to-transparent rotate-[-15deg] origin-top mix-blend-screen" />
-            <div className="absolute top-0 right-[35%] w-6 h-80 bg-gradient-to-b from-[#e9d5ff]/10 to-transparent rotate-[15deg] origin-top mix-blend-screen" />
-
-            {/* ═══ POUSSIÈRE D'OR / ÉTINCELLES DE POUVOIR ═══ */}
-            {[
-              [25, 15], [75, 18], [45, 28], [85, 35], [15, 48], [60, 10], [35, 52], [80, 58], [50, 62], [20, 70]
-            ].map(([left, top], i) => (
-              <div key={`royal-spark-${i}`} className="absolute rounded-full bg-[#fcd34d]"
-                style={{ 
-                  left: `${left}%`, 
-                  top: `${top}%`, 
-                  width: `${(i % 2) + 1.5}px`, 
-                  height: `${(i % 2) + 1.5}px`, 
-                  opacity: 0.25 + (i % 3) * 0.15,
-                  boxShadow: '0 0 4px rgba(252,211,77,0.2)',
-                  animation: `pulse ${2 + (i%2)}s infinite ease-in-out`
-                }} />
-            ))}
-
-            {/* ═══ FILIGRANE DE BLASON / COURONNE SVG (Arrière-plan) ═══ */}
-            <div className="absolute top-[22%] left-1/2 -translate-x-1/2 w-48 h-48 opacity-[0.05] text-[#fcd34d]">
+            {/* ═══ PAPIER FILIGRANÉ (emblème d'État en transparence) ═══ */}
+            <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-44 h-44 opacity-[0.04] text-[#fcd34d]">
               <svg viewBox="0 0 100 100" fill="currentColor">
-                <path d="M50,15 L68,32 L85,20 L80,55 C80,75 50,88 50,88 C50,88 20,75 20,55 L15,20 L32,32 Z" fillOpacity="0.1" stroke="currentColor" strokeWidth="2" />
-                <circle cx="50" cy="48" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                <path d="M42,48 H58 M50,40 V56" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M50,10 L62,38 L92,38 L68,56 L78,86 L50,68 L22,86 L32,56 L8,38 L38,38 Z" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="50" cy="50" r="14" stroke="currentColor" strokeWidth="1" fill="none" />
+                <path d="M50,36 V64 M36,50 H64" stroke="currentColor" strokeWidth="0.8" />
               </svg>
             </div>
 
-            {/* ═══ BORDURE ET FRISES LINÉAIRES ROYALES ═══ */}
-            <svg className="absolute inset-0 w-full h-full opacity-[0.15]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Cadre interne fin */}
-              <rect x="8" y="8" width="284" height="464" rx="18" stroke="#fcd34d" strokeWidth="0.8" />
-              {/* Coins renforcés géométriques style monarchie/empire */}
-              <path d="M8,28 V8 H28" stroke="#fcd34d" strokeWidth="2" />
-              <path d="M292,28 V8 H272" stroke="#fcd34d" strokeWidth="2" />
-              <path d="M8,452 V472 H28" stroke="#fcd34d" strokeWidth="2" />
-              <path d="M292,452 V472 H272" stroke="#fcd34d" strokeWidth="2" />
-              {/* Petits losanges décoratifs aux quatre points cardinaux du cadre */}
-              <path d="M150,4 L153,8 L150,12 L147,8 Z" fill="#fcd34d" />
-              <path d="M150,468 L153,472 L150,476 L147,472 Z" fill="#fcd34d" />
+            {/* ═══ CARTE TOPOGRAPHIQUE EN FILIGRANE (courbes de niveau) ═══ */}
+            <svg className="absolute inset-0 w-full h-full opacity-[0.07]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M-20,120 Q60,100 140,130 Q220,160 320,140" stroke="#fcd34d" strokeWidth="0.4" />
+              <path d="M-20,150 Q70,130 150,160 Q230,190 320,170" stroke="#fcd34d" strokeWidth="0.4" />
+              <path d="M-20,180 Q80,160 160,190 Q240,220 320,200" stroke="#fcd34d" strokeWidth="0.4" />
+              <path d="M-20,210 Q90,190 170,220 Q250,250 320,230" stroke="#fcd34d" strokeWidth="0.4" />
+              <path d="M-20,240 Q100,220 180,250 Q260,280 320,260" stroke="#fcd34d" strokeWidth="0.4" />
+              <path d="M-20,270 Q110,250 190,280 Q270,310 320,290" stroke="#fcd34d" strokeWidth="0.4" />
+              <path d="M-20,300 Q120,280 200,310 Q280,340 320,320" stroke="#fcd34d" strokeWidth="0.4" />
+              <path d="M-20,330 Q130,310 210,340 Q290,370 320,350" stroke="#fcd34d" strokeWidth="0.4" />
+              <path d="M-20,360 Q140,340 220,370 Q300,400 320,380" stroke="#fcd34d" strokeWidth="0.4" />
+              <path d="M-20,390 Q150,370 230,400 Q310,430 320,410" stroke="#fcd34d" strokeWidth="0.4" />
             </svg>
 
-            {/* Effet d'ombrage interne final pour sceller la carte */}
+            {/* ═══ LE PANTHÉON DES LÉGENDES (silhouettes de monuments) ═══ */}
+            <div className="absolute bottom-[20%] left-0 right-0 h-32 opacity-[0.06]">
+              <svg className="w-full h-full" viewBox="0 0 300 128" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Obélisque gauche */}
+                <path d="M20,128 L20,40 L24,20 L28,40 L28,128 Z" fill="#fcd34d" />
+                <path d="M22,20 L24,8 L26,20" fill="#fcd34d" />
+                {/* Colonnade centrale */}
+                <rect x="100" y="60" width="100" height="68" fill="#fcd34d" opacity="0.5" />
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <rect key={`col-${i}`} x={104 + i * 13} y="50" width="6" height="78" fill="#fcd34d" />
+                ))}
+                <path d="M95,60 L150,40 L205,60 Z" fill="#fcd34d" opacity="0.6" />
+                {/* Obélisque droit */}
+                <path d="M272,128 L272,40 L276,20 L280,40 L280,128 Z" fill="#fcd34d" />
+                <path d="M274,20 L276,8 L278,20" fill="#fcd34d" />
+              </svg>
+            </div>
+
+            {/* ═══ L'OMBRE DU DRAPEAU (bannière drapée) ═══ */}
+            <div className="absolute top-0 left-0 w-24 h-full opacity-[0.08]">
+              <svg className="w-full h-full" viewBox="0 0 96 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0,0 L80,0 Q72,60 80,120 Q88,180 76,240 Q64,300 82,360 Q72,420 80,480 L0,480 Z" fill="#c670ff" opacity="0.6" />
+                <path d="M10,40 Q70,50 70,60 M10,100 Q70,110 70,120 M10,160 Q70,170 70,180 M10,220 Q70,230 70,240 M10,280 Q70,290 70,300 M10,340 Q70,350 70,360 M10,400 Q70,410 70,420" stroke="#fcd34d" strokeWidth="0.5" opacity="0.4" fill="none" />
+              </svg>
+            </div>
+            <div className="absolute top-0 right-0 w-20 h-full opacity-[0.07]">
+              <svg className="w-full h-full" viewBox="0 0 80 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M80,0 L8,0 Q16,60 8,120 Q0,180 14,240 Q26,300 6,360 Q16,420 8,480 L80,480 Z" fill="#c670ff" opacity="0.6" />
+                <path d="M70,40 Q10,50 10,60 M70,100 Q10,110 10,120 M70,160 Q10,170 10,180 M70,220 Q10,230 10,240 M70,280 Q10,290 10,300 M70,340 Q10,350 10,360 M70,400 Q10,410 10,420" stroke="#fcd34d" strokeWidth="0.5" opacity="0.4" fill="none" />
+              </svg>
+            </div>
+
+            {/* ═══ LE TRÔNE INVISIBLE (ombre portée) ═══ */}
+            <div className="absolute top-[18%] left-1/2 -translate-x-1/2 w-40 h-56 opacity-[0.07]">
+              <svg viewBox="0 0 160 224" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M30,224 L30,80 Q30,40 50,30 L110,30 Q130,40 130,80 L130,224 Z" fill="#fcd34d" />
+                <path d="M30,80 L20,80 L20,30 Q20,10 40,10 L120,10 Q140,10 140,30 L140,80 L130,80" fill="#fcd34d" opacity="0.7" />
+                <rect x="40" y="90" width="80" height="100" fill="#171413" opacity="0.3" />
+                <rect x="30" y="190" width="100" height="34" fill="#fcd34d" opacity="0.8" />
+              </svg>
+            </div>
+
+            {/* ═══ RÉFLEXIONS DE MÉTAL PRÉCIEUX (anisotropie sur cadre) ═══ */}
+            <svg className="absolute inset-0 w-full h-full opacity-[0.20]" viewBox="0 0 300 480" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="6" width="288" height="468" rx="20" stroke="url(#goldAniso)" strokeWidth="1.5" />
+              <rect x="10" y="10" width="280" height="460" rx="18" stroke="url(#goldAniso2)" strokeWidth="0.6" />
+              <defs>
+                <linearGradient id="goldAniso" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.9" />
+                  <stop offset="25%" stopColor="#fde68a" stopOpacity="0.4" />
+                  <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.9" />
+                  <stop offset="75%" stopColor="#fde68a" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#fcd34d" stopOpacity="0.9" />
+                </linearGradient>
+                <linearGradient id="goldAniso2" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fde68a" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#fde68a" stopOpacity="0.6" />
+                </linearGradient>
+              </defs>
+            </svg>
+
+            {/* ═══ LA COURONNE DE LAURIERS VIVANTE (animée) ═══ */}
+            <div className="absolute top-[6%] left-1/2 -translate-x-1/2 w-28 h-16 opacity-[0.18]">
+              <svg viewBox="0 0 112 64" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animation: 'dirigeantLaurel 6s ease-in-out infinite' }}>
+                {/* Branche gauche */}
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <ellipse key={`l-l-${i}`} cx={20 + i * 2} cy={32 - i * 4} rx="8" ry="3" fill="#fcd34d" opacity="0.7"
+                    transform={`rotate(${-50 + i * 8} ${20 + i * 2} ${32 - i * 4})`} />
+                ))}
+                {/* Branche droite */}
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <ellipse key={`l-r-${i}`} cx={92 - i * 2} cy={32 - i * 4} rx="8" ry="3" fill="#fcd34d" opacity="0.7"
+                    transform={`rotate(${50 - i * 8} ${92 - i * 2} ${32 - i * 4})`} />
+                ))}
+                {/* Noeud central */}
+                <circle cx="56" cy="40" r="3" fill="#fcd34d" />
+              </svg>
+            </div>
+
+            {/* ═══ POUSSIÈRE DE GLOIRE (particules dorées + lens flare) ═══ */}
+            {[
+              [15, 20], [28, 35], [42, 15], [58, 28], [72, 18], [85, 32], [20, 50], [48, 45], [68, 55], [82, 48], [30, 68], [55, 72], [75, 65], [38, 82], [62, 85]
+            ].map(([left, top], i) => (
+              <div key={`dir-spark-${i}`} className="absolute rounded-full bg-[#fcd34d]"
+                style={{
+                  left: `${left}%`, top: `${top}%`,
+                  width: `${(i % 3) + 1}px`, height: `${(i % 3) + 1}px`,
+                  opacity: 0.2 + (i % 4) * 0.1,
+                  boxShadow: '0 0 4px rgba(252,211,77,0.3)',
+                  animation: `dirigeantDust ${3 + (i % 3)}s infinite ease-in-out`
+                }} />
+            ))}
+            {/* Lens flare principal */}
+            <div className="absolute top-[25%] left-[30%] w-16 h-16 bg-[radial-gradient(circle,rgba(252,211,77,0.15)_0%,transparent_70%)] blur-[4px] mix-blend-screen" />
+            <div className="absolute top-[40%] right-[25%] w-12 h-12 bg-[radial-gradient(circle,rgba(252,211,77,0.12)_0%,transparent_70%)] blur-[3px] mix-blend-screen" />
+
+            {/* ═══ TAMpons ENCREURS ET SCEAUX À CIRE ═══ */}
+            {/* Tampon "APPROUVÉ" coin haut-gauche */}
+            <div className="absolute top-[5%] left-[4%] w-16 h-16 opacity-[0.22] rotate-[-12deg]">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="32" cy="32" r="28" stroke="#dc2626" strokeWidth="2" fill="none" opacity="0.7" />
+                <circle cx="32" cy="32" r="24" stroke="#dc2626" strokeWidth="1" fill="none" opacity="0.5" strokeDasharray="2 2" />
+                <text x="32" y="36" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#dc2626" opacity="0.8" fontFamily="monospace">APPROUVÉ</text>
+              </svg>
+            </div>
+            {/* Tampon "CONFIDENTIEL" coin haut-droit */}
+            <div className="absolute top-[8%] right-[5%] w-20 h-12 opacity-[0.18] rotate-[8deg]">
+              <svg viewBox="0 0 80 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="2" width="76" height="44" rx="3" stroke="#dc2626" strokeWidth="1.5" fill="none" opacity="0.7" />
+                <text x="40" y="28" textAnchor="middle" fontSize="9" fontWeight="bold" fill="#dc2626" opacity="0.8" fontFamily="monospace">CONFIDENTIEL</text>
+              </svg>
+            </div>
+            {/* Sceau de cire rouge coin bas-droit */}
+            <div className="absolute bottom-[14%] right-[6%] w-14 h-14 opacity-[0.35] rotate-[15deg]">
+              <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M28,4 C40,4 52,14 52,28 C52,42 40,52 28,52 C16,52 4,42 4,28 C4,14 16,4 28,4 Z"
+                  fill="#dc2626" opacity="0.7" />
+                <path d="M28,4 C40,4 52,14 52,28 C52,42 40,52 28,52 C16,52 4,42 4,28 C4,14 16,4 28,4 Z"
+                  fill="none" stroke="#7f1d1d" strokeWidth="1" opacity="0.5" />
+                <path d="M28,16 L36,28 L28,40 L20,28 Z" fill="#7f1d1d" opacity="0.6" />
+                <circle cx="28" cy="28" r="4" fill="#fcd34d" opacity="0.5" />
+                {/* Imperfections de cire */}
+                <circle cx="12" cy="20" r="2" fill="#dc2626" opacity="0.4" />
+                <circle cx="44" cy="38" r="1.5" fill="#dc2626" opacity="0.3" />
+              </svg>
+            </div>
+            {/* Sceau héraldique bas-gauche */}
+            <div className="absolute bottom-[16%] left-[5%] w-12 h-12 opacity-[0.20] rotate-[-8deg]">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24,3 L30,18 L45,18 L33,27 L38,42 L24,33 L10,42 L15,27 L3,18 L18,18 Z" fill="#1a1a1a" opacity="0.6" stroke="#fcd34d" strokeWidth="0.8" />
+                <circle cx="24" cy="24" r="5" fill="#fcd34d" opacity="0.4" />
+              </svg>
+            </div>
+
+            {/* ═══ LA SIGNATURE MANUSCRITE (paraphe officiel) ═══ */}
+            <div className="absolute bottom-[6%] left-1/2 -translate-x-1/2 w-56 h-10 opacity-[0.20]">
+              <svg viewBox="0 0 224 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8,28 Q14,12 22,24 Q30,36 38,20 Q46,8 54,26 Q62,34 70,18 Q78,10 86,28 Q94,36 102,22 Q110,14 118,30 Q126,38 134,24 Q142,16 150,32 Q158,38 166,26 Q174,18 182,30 Q190,36 198,24 Q206,16 214,28"
+                  stroke="#fcd34d" strokeWidth="1.2" fill="none" strokeLinecap="round" opacity="0.8" />
+                <path d="M8,28 Q14,12 22,24 Q30,36 38,20 Q46,8 54,26 Q62,34 70,18 Q78,10 86,28 Q94,36 102,22 Q110,14 118,30 Q126,38 134,24 Q142,16 150,32 Q158,38 166,26 Q174,18 182,30 Q190,36 198,24 Q206,16 214,28"
+                  stroke="#fde68a" strokeWidth="0.4" fill="none" strokeLinecap="round" opacity="0.5" />
+                {/* Paraphe final */}
+                <path d="M214,28 Q218,20 210,16 Q206,14 208,22" stroke="#fcd34d" strokeWidth="0.8" fill="none" opacity="0.7" strokeLinecap="round" />
+              </svg>
+            </div>
+
+            {/* Vignettage de velours impérial */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,rgba(15,23,42,0.45)_100%)]" />
+
+            {/* Ombrage interne final */}
             <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(15,23,42,0.5)] rounded-[24px]" />
+
+            {/* Keyframes */}
+            <style>{`
+              @keyframes dirigeantDust {
+                0%, 100% { transform: translateY(0) scale(1); opacity: 0.2; }
+                50% { transform: translateY(-6px) scale(1.3); opacity: 0.5; }
+              }
+              @keyframes dirigeantLaurel {
+                0%, 100% { transform: rotate(-1deg) scale(1); }
+                50% { transform: rotate(1deg) scale(1.03); }
+              }
+            `}</style>
           </div>
         )
       };
