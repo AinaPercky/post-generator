@@ -6,6 +6,7 @@ import explorateurBackground from '../assets/fond_explorateur.png';
 import savantBackground from '../assets/fond_savant.png';
 import artisteBackground from '../assets/fond_artiste.png';
 import fictionnelBackground from '../assets/fond_fictionnel.png';
+import penseurBackground from '../assets/fond_penseur.png';
 import { 
   Sparkles, 
   Upload, 
@@ -266,7 +267,7 @@ export const CLASSES_CONFIG: Record<ArchetypeType, ClassDesign> = {
     description: "Idées, philosophie, transformation sociale ou spirituelle",
     subTypes: ["Philosophe", "Idéologue", "Réformateur social", "Leader non-violent", "Théologien", "Visionnaire", "Théoricien"],
     colors: "Bronze · Ivoire · Gris ancien",
-    fontTitle: "font-oswald text-amber-600",
+    fontTitle: "font-oswald text-[#ffff82]",
     fontData: "font-sourcesans",
     fontCitation: "font-playfair",
     background: "Bibliothèque · Temple · Manuscrits",
@@ -379,7 +380,7 @@ const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => 
     case 'Savant': return <FlaskConical className={`${iconClassName} text-[#ffff33]`} />;
     case 'Artiste': return <Palette className={`${iconClassName} text-[#820263]`} />;
     case 'Fictionnel': return <Film className={`${iconClassName} text-[#7776bc]`} />;
-    case 'Penseur': return <BookOpen className={`${iconClassName} text-amber-600`} />;
+    case 'Penseur': return <BookOpen className={`${iconClassName} text-[#ffff82]`} />;
     case 'Dirigeant': return <Crown className={`${iconClassName} text-yellow-500`} />;
     case 'Athlète': return <Trophy className={`${iconClassName} text-emerald-400`} />;
     case 'Guerrier':
@@ -627,28 +628,28 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
       
     case 'Penseur':
       return {
-        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-amber-600",
-        fontData: "font-sourcesans font-semibold",
+        fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-[#ffff82]",
+        fontData: "font-montserrat font-semibold",
         fontCitation: "font-playfair italic",
-        accentColor: "text-amber-600",
-        accentBorder: "border-amber-700/60",
-        innerBorder: "border-amber-800/35",
-        outerBorder: "border-stone-700/80 shadow-[0_0_15px_rgba(120,113,108,0.4)]",
-        themeBgGradient: "from-stone-900/95 via-amber-950/40 to-stone-950/95",
+        accentColor: "text-[#FFFF82]",
+        accentBorder: "border-[#FFFF82]/80",
+        innerBorder: "border-[#FFFF82]/30",
+        outerBorder: "border-[#d97706]/80 shadow-[0_0_24px_rgba(217, 119, 6.45)]",
+        themeBgGradient: "from-[#d97706]/95 via-[#d97706]/90 to-[#171413]/95",
         
-        nameSectionStyle: "border-2 border-stone-700 bg-stone-950/95 shadow-[0_4px_8px_rgba(0,0,0,0.85)] rounded-[4px]", 
-        textBoxStyle: "border-2 border-stone-700 bg-stone-950/95 shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.9)] rounded-[4px]",
-        portraitBorderStyle: "border-2 border-stone-700/80 shadow-[0_0_10px_rgba(217,119,6,0.15)]",
-        classBadgeStyle: "border-2 border-stone-700/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-stone-600/50",
-        citationBoxStyle: "border border-amber-700/20 bg-black/45",
-        iconContainerStyle: "border-amber-700/60",
-        dividerStyle: "via-amber-600/20",
-        failleColor: "text-[#ff0000]",
+        nameSectionStyle: "border-2 border-[#FFFF82]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+        textBoxStyle: "border-2 border-[#A16207]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+        portraitBorderStyle: "border-2 border-[#d97706]/60 shadow-[0_0_12px_rgba(217, 119, 6.45)]",
+        classBadgeStyle: "border-2 border-[#d97706]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-[#525174]/60",
+        citationBoxStyle: "border border-[#A16207]/50 bg-[#171413]/55",
+        iconContainerStyle: "border-[#FFFF82]/80 shadow-[0_0_8px_rgba(255, 255, 130,0.4)]",
+        dividerStyle: "via-[#A16207]/30",
+        failleColor: "text-[#FFFF82]",
         
-        textBoxBgImage: `linear-gradient(to bottom, rgba(217, 119, 6, 0.2), rgba(28, 25, 23, 0.95)), url(${cardBackground})`,
-        textBoxBgBlendMode: 'multiply',
-        quoteIconStyle: "text-amber-600",
+        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 255, 130, 0.2), rgba(23, 20, 19, 0.82)), url(${penseurBackground})`,
+        textBoxBgBlendMode: 'normal',
+        quoteIconStyle: "text-[#A16207] drop-shadow-[0_0_6px_rgba(255, 255, 130,0.6)]",
         
         cornerStyle: 'rivet',
         showScratches: false,
@@ -1032,6 +1033,7 @@ const backgroundMap = {
   Savant: savantBackground,
   Artiste: artisteBackground,
   Fictionnel: fictionnelBackground,
+  Penseur: penseurBackground,
 };
 
 const background = backgroundMap[mainClass] ?? cardBackground;
