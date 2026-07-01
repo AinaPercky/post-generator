@@ -5,6 +5,7 @@ import cardBackground from '../assets/card_background_1782290811054.jpg';
 import explorateurBackground from '../assets/fond_explorateur.png';
 import savantBackground from '../assets/fond_savant.png';
 import artisteBackground from '../assets/fond_artiste.png';
+import fictionnelBackground from '../assets/fond_fictionnel.png';
 import { 
   Sparkles, 
   Upload, 
@@ -252,7 +253,7 @@ export const CLASSES_CONFIG: Record<ArchetypeType, ClassDesign> = {
     description: "Personnages d'univers imaginaires",
     subTypes: ["Super-héros", "Anti-héros", "Créature", "Guerrier fictif", "Entité cosmique", "Personnage comique", "Vilain", "IA fictive", "Sorcier/Mage", "Antihéros criminel"],
     colors: "Variables selon univers d'origine",
-    fontTitle: "font-bebas text-purple-400",
+    fontTitle: "font-bebas text-[#7776bc]",
     fontData: "font-montserrat",
     fontCitation: "font-serif",
     background: "Énergie · Portails · Cosmos",
@@ -377,7 +378,7 @@ const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => 
     case 'Explorateur': return <Compass className={`${iconClassName} text-[#bce784]`} />;
     case 'Savant': return <FlaskConical className={`${iconClassName} text-[#ffff33]`} />;
     case 'Artiste': return <Palette className={`${iconClassName} text-[#820263]`} />;
-    case 'Fictionnel': return <Film className={`${iconClassName} text-purple-400`} />;
+    case 'Fictionnel': return <Film className={`${iconClassName} text-[#7776bc]`} />;
     case 'Penseur': return <BookOpen className={`${iconClassName} text-amber-600`} />;
     case 'Dirigeant': return <Crown className={`${iconClassName} text-yellow-500`} />;
     case 'Athlète': return <Trophy className={`${iconClassName} text-emerald-400`} />;
@@ -391,7 +392,7 @@ const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => 
         return <Crown className={`${iconClassName} text-yellow-400`} />;
       }
       if (normalized.includes('assassin') || normalized.includes('voleur') || normalized.includes('ninja') || normalized.includes('ombre') || normalized.includes('mort') || normalized.includes('faucheur') || normalized.includes('démon')) {
-        return <Skull className={`${iconClassName} text-purple-400`} />;
+        return <Skull className={`${iconClassName} text-[#7776bc]`} />;
       }
       if (normalized.includes('archère') || normalized.includes('archer') || normalized.includes('chasseur') || normalized.includes('tireur') || normalized.includes('fusil') || normalized.includes('éclaireur')) {
         return <Crosshair className={`${iconClassName} text-emerald-400`} />;
@@ -553,7 +554,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
     case 'Artiste':
       return {
         fontTitle: "font-anton tracking-wide uppercase text-[#d90368]",
-         fontData: "font-montserrat font-semibold",
+        fontData: "font-montserrat font-semibold",
         fontCitation: "font-playfair italic",
         accentColor: "text-[#820263]",
         accentBorder: "border-[#820263]/80",
@@ -590,26 +591,28 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
       
     case 'Fictionnel':
       return {
-        fontTitle: "font-bebas tracking-wider uppercase text-purple-400",
-        fontData: "font-montserrat font-semibold",
-        fontCitation: "font-serif",
-        accentColor: "text-purple-400",
-        accentBorder: "border-purple-500/80",
-        innerBorder: "border-indigo-500/40",
-        outerBorder: "border-violet-600/90 shadow-[0_0_28px_rgba(139,92,246,0.7),inset_0_0_12px_rgba(139,92,246,0.4)]",
-        themeBgGradient: "from-indigo-950/90 via-violet-950/85 to-neutral-950/95",
+        fontData: "font-montserrat font-semibold text-[#ffff]",
+        fontCitation: "font-playfair italic",
+        accentColor: "text-[#7776bc]",
+        accentBorder: "border-[#7776bc]/80",
+        innerBorder: "border-[#7776bc]/30",
+        outerBorder: "border-[#fffbdb]/80 shadow-[0_0_24px_rgba(255, 251, 219,0.45)]",
+        themeBgGradient: "from-[#fffbdb]/95 via-[#fffbdb]/90 to-[#171413]/95",
         
-        nameSectionStyle: "border-2 border-violet-500/80 bg-neutral-950/90 shadow-[0_4px_15px_rgba(139,92,246,0.3)] rounded-xl",
-        textBoxStyle: "border-2 border-indigo-500/60 bg-neutral-950/95 shadow-[inset_0_2.5px_5px_rgba(0,0,0,0.9)] rounded-xl",
-        portraitBorderStyle: "border-2 border-violet-500/60 shadow-[0_0_12px_rgba(139,92,246,0.4)]",
-        classBadgeStyle: "border-2 border-violet-500/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
-        specBoxStyle: "border-2 border-violet-500/50",
-        citationBoxStyle: "border border-violet-500/20 bg-black/45",
-        iconContainerStyle: "border-purple-500/80",
-        dividerStyle: "via-purple-500/20",
-        failleColor: "text-[#ff0000]",
+        nameSectionStyle: "border-2 border-[#7776bc]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+        textBoxStyle: "border-2 border-[#cdc7e5]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+        portraitBorderStyle: "border-2 border-[#fffbdb]/60 shadow-[0_0_12px_rgba(255, 251, 219,0.45)]",
+        classBadgeStyle: "border-2 border-[#fffbdb]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
+        specBoxStyle: "border-2 border-[#525174]/60",
+        citationBoxStyle: "border border-[#cdc7e5]/50 bg-[#171413]/55",
+        iconContainerStyle: "border-[#7776bc]/80 shadow-[0_0_8px_rgba(119, 118, 188,0.4)]",
+        dividerStyle: "via-[#cdc7e5]/30",
+        failleColor: "text-[#7776bc]",
         
-        quoteIconStyle: "text-purple-400",
+        textBoxBgImage: `linear-gradient(to bottom, rgba(205, 199, 229, 0.08), rgba(23, 20, 19, 0.82)), url(${fictionnelBackground})`,
+        textBoxBgBlendMode: 'normal',
+        quoteIconStyle: "text-[#cdc7e5] drop-shadow-[0_0_6px_rgba(205, 199, 229,0.6)]",
+        
         cornerStyle: 'rivet',
         showScratches: false,
         showBlood: false,
@@ -1028,6 +1031,7 @@ const backgroundMap = {
   Explorateur: explorateurBackground,
   Savant: savantBackground,
   Artiste: artisteBackground,
+  Fictionnel: fictionnelBackground,
 };
 
 const background = backgroundMap[mainClass] ?? cardBackground;
