@@ -879,7 +879,7 @@ case 'Fictionnel':
       return {
         fontTitle: "font-oswald font-extrabold tracking-wide uppercase text-[#ffff82]",
         fontData: "font-montserrat font-semibold",
-        fontCitation: "font-playfair italic",
+        fontCitation: "font-playfair italic t-white",
         accentColor: "text-[#FFFF82]",
         accentBorder: "border-[#FFFF82]/80",
         innerBorder: "border-[#FFFF82]/30",
@@ -896,8 +896,8 @@ case 'Fictionnel':
         dividerStyle: "via-[#A16207]/30",
         failleColor: "text-[#FFFF82]",
         
-        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 255, 130, 0.07), rgba(23, 20, 19, 0.82)), url(${penseurBackground})`,
-        textBoxBgBlendMode: 'normal',
+        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 255, 130, 0.02), rgba(23, 20, 19, 0.82)), url(${penseurBackground})`,
+        textBoxBgBlendMode: 'multiply',
         quoteIconStyle: "text-[#A16207] drop-shadow-[0_0_6px_rgba(255, 255, 130,0.6)]",
         
         cornerStyle: 'rivet',
@@ -911,7 +911,7 @@ case 'Fictionnel':
       <div className="absolute bottom-0 inset-x-0 h-[42%] bg-gradient-to-t from-[#171413]/55 via-[#171413]/25 to-transparent" />
 
       {/* Teinte d'ambiance (réduite pour préserver la lisibilité) */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#FFFF82]/[0.02] via-transparent to-[#d97706]/[0.06] mix-blend-overlay" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FFFF82]/[0.02] via-transparent to-[#d97706]/[0.01] mix-blend-overlay" />
 
       {/* Texture parchemin de fond — très subtile, pleine carte */}
       <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#A16207_0.6px,transparent_0.6px)] [background-size:6px_6px]" />
@@ -1016,7 +1016,7 @@ case 'Fictionnel':
         </div>
 
         {/* ── NOUVEAU : Rouleau de parchemin déroulé — haut-gauche, subtil ── */}
-        <div className="absolute top-[2%] left-[3%] w-12 h-20 opacity-[0.12]">
+        <div className="absolute top-[2%] left-[3%] w-12 h-20 opacity-[0.05]">
           <svg viewBox="0 0 48 80" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="8" y="8" width="32" height="64" rx="2" fill="#A16207" opacity="0.3" stroke="#d97706" strokeWidth="0.8" />
             <line x1="12" y1="18" x2="36" y2="18" stroke="#FFFF82" strokeWidth="0.5" opacity="0.5" />
@@ -1070,13 +1070,13 @@ case 'Fictionnel':
       </svg>
 
       {/* ── Synapses — discrètes, cantonnées au bas de carte ── */}
-      <svg className="absolute bottom-0 inset-x-0 w-full h-[90px] opacity-[0.10]" viewBox="0 0 300 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg className="absolute bottom-0 inset-x-0 w-full h-[90px] opacity-[0.05]" viewBox="0 0 300 90" fill="none" xmlns="http://www.w3.org/2000/svg">
         <g stroke="#d97706" strokeWidth="0.5" fill="none">
           <path d="M60,20 Q85,8 105,22 Q125,36 148,18" />
           <path d="M148,18 Q160,35 145,50" />
         </g>
         {[[60,20],[105,22],[148,18],[145,50]].map(([x,y], i) => (
-          <circle key={`syn-${i}`} cx={x} cy={y} r="1.8" fill="#FFFF82" opacity="0.5" />
+          <circle key={`syn-${i}`} cx={x} cy={y} r="1.8" fill="#FFFF82" opacity="0.1" />
         ))}
       </svg>
 
@@ -1111,7 +1111,7 @@ case 'Fictionnel':
       <div className="absolute -top-8 left-[30%] w-40 h-32 bg-[#d97706]/[0.06] blur-[30px] rounded-full" />
 
       {/* Ombrage interne final — réduit pour préserver la lisibilité */}
-      <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(23,20,19,0.55)] rounded-[24px]" />
+      <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(23,20,19,0.15)] rounded-[24px]" />
 
       {/* Keyframes */}
       <style>{`
@@ -1121,7 +1121,7 @@ case 'Fictionnel':
         }
         @keyframes penseurDust {
           0%, 100% { transform: translateY(0) scale(1); opacity: 0.15; }
-          50% { transform: translateY(-5px) scale(1.4); opacity: 0.35; }
+          50% { transform: translateY(-5px) scale(1.4); opacity: 0.15; }
         }
       `}</style>
     </div>
@@ -1162,7 +1162,7 @@ case 'Fictionnel':
             {/* ═══ PAPIER FILIGRANÉ (emblème d'État en transparence) ═══ */}
             <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-44 h-44 opacity-[0.04] text-[#fcd34d]">
               <svg viewBox="0 0 100 100" fill="currentColor">
-                <path d="M50,10 L62,38 L92,38 L68,56 L78,86 L50,68 L22,86 L32,56 L8,38 L38,38 Z" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M50,10 L62,38 L92,38 L68,56 L78,86 L50,68 L22,86 L32,56 L8,38 L38,38 Z" fillOpacity="0.08" stroke="currentColor" strokeWidth="1.5" />
                 <circle cx="50" cy="50" r="14" stroke="currentColor" strokeWidth="1" fill="none" />
                 <path d="M50,36 V64 M36,50 H64" stroke="currentColor" strokeWidth="0.8" />
               </svg>
