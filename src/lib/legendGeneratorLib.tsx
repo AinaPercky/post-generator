@@ -246,131 +246,6 @@ export const CLASS_THEMES: Record<string, SimpleClassTheme> = {
   Dirigeant:   { primary: '#ffd500', secondary: '#5c0099', accent: '#fdc500', background: '#0a0a0a', danger: '#ff0000' },
   Athlète:     { primary: '#00A86B', secondary: '#6C4E2D', accent: '#2bc016', background: '#0a0f0d', danger: '#ff0000' },
 };
-
-// ─── CONFIGURATIONS D'AMBIANCE PAR CLASSE ─────────────────────────────────────────
-
-/**
- * Configuration d'ambiance complète pour une classe.
- * Permet de personnaliser tous les aspects visuels d'une classe de personnage.
- */
-export interface ClassAmbianceConfig {
-  /** Identifiant unique de la classe */
-  id: string;
-  /** Nom d'affichage de la classe */
-  displayName: string;
-  /** Description de l'identité de la classe */
-  identity: string;
-  /** Liste des sous-types associés à cette classe */
-  subtypes: string[];
-  /** Thème de couleurs simplifié */
-  theme: SimpleClassTheme;
-  /** Configuration des effets visuels */
-  effects: EffectConfig;
-  /** URL de l'image de fond par défaut */
-  backgroundImage?: string;
-  /** Police principale pour les titres */
-  titleFont?: 'oswald' | 'bebas' | 'anton' | 'montserrat';
-  /** Style de coin */
-  cornerStyle?: 'rivet' | 'compass' | 'none';
-  /** Afficher les rayures de style guerrier */
-  showScratches?: boolean;
-  /** Afficher les effets de sang/brasier */
-  showBlood?: boolean;
-  /** Afficher les braises animées */
-  showEmber?: boolean;
-  /** Surcharges additionnelles pour CardAmbiance */
-  overrides?: Partial<CardAmbiance>;
-}
-
-/**
- * Registre des configurations d'ambiance par classe.
- * Chaque classe a une configuration complète qui définit son identité visuelle.
- */
-export const CLASS_AMBIANCE_CONFIGS: Record<string, ClassAmbianceConfig> = {
-  Guerrier: {
-    id: 'Guerrier',
-    displayName: 'Guerrier',
-    identity: 'Combat · Stratégie · Domination physique',
-    subtypes: ['Soldat', 'Stratège', 'Conquérant', 'Chef de guerre', 'Héros mythologique', 'Anti-héros'],
-    theme: CLASS_THEMES.Guerrier,
-    effects: CLASS_EFFECT_CONFIGS.Guerrier,
-    titleFont: 'bebas',
-    cornerStyle: 'rivet',
-    showScratches: true,
-    showBlood: true,
-    showEmber: true,
-  },
-  Explorateur: {
-    id: 'Explorateur',
-    displayName: 'Explorateur',
-    identity: 'Découverte · Aventure · Liberté',
-    subtypes: ['Navigateur', 'Cartographe', 'Terrestre', 'Maritime', 'Spatial', 'Numérique', 'Pionnier'],
-    theme: CLASS_THEMES.Explorateur,
-    effects: CLASS_EFFECT_CONFIGS.Explorateur,
-    titleFont: 'oswald',
-    cornerStyle: 'compass',
-  },
-  Savant: {
-    id: 'Savant',
-    displayName: 'Savant',
-    identity: 'Logique · Innovation · Découverte',
-    subtypes: ['Physicien', 'Mathématicien', 'Ingénieur', 'Inventeur', 'Économiste', 'Informaticien'],
-    theme: CLASS_THEMES.Savant,
-    effects: CLASS_EFFECT_CONFIGS.Savant,
-    titleFont: 'oswald',
-    cornerStyle: 'rivet',
-  },
-  Artiste: {
-    id: 'Artiste',
-    displayName: 'Artiste',
-    identity: 'Créativité · Expression · Culture',
-    subtypes: ['Peintre', 'Sculpteur', 'Musicien', 'Chanteur', 'Acteur', 'Écrivain', 'Cinéaste', 'Danseur', 'Architecte'],
-    theme: CLASS_THEMES.Artiste,
-    effects: CLASS_EFFECT_CONFIGS.Artiste,
-    titleFont: 'anton',
-    cornerStyle: 'rivet',
-  },
-  Fictionnel: {
-    id: 'Fictionnel',
-    displayName: 'Fictionnel',
-    identity: 'Imaginaire · Pouvoir · Univers',
-    subtypes: ['Super-héros', 'Anti-héros', 'Créature', 'Guerrier fictif', 'Entité cosmique', 'Sorcier/Mage', 'Vilain', 'IA fictive'],
-    theme: CLASS_THEMES.Fictionnel,
-    effects: CLASS_EFFECT_CONFIGS.Fictionnel,
-    titleFont: 'bebas',
-    cornerStyle: 'rivet',
-  },
-  Penseur: {
-    id: 'Penseur',
-    displayName: 'Penseur',
-    identity: 'Sagesse · Vision · Réflexion',
-    subtypes: ['Philosophe', 'Idéologue', 'Réformateur social', 'Leader non-violent', 'Théologien', 'Visionnaire'],
-    theme: CLASS_THEMES.Penseur,
-    effects: CLASS_EFFECT_CONFIGS.Penseur,
-    titleFont: 'oswald',
-    cornerStyle: 'rivet',
-  },
-  Dirigeant: {
-    id: 'Dirigeant',
-    displayName: 'Dirigeant',
-    identity: 'Pouvoir · Gouvernance · Empire',
-    subtypes: ['Roi', 'Empereur', 'Président', 'Dictateur', 'Chef révolutionnaire', 'Tyran', 'Fondateur d\'État'],
-    theme: CLASS_THEMES.Dirigeant,
-    effects: CLASS_EFFECT_CONFIGS.Dirigeant,
-    titleFont: 'bebas',
-    cornerStyle: 'rivet',
-  },
-  Athlète: {
-    id: 'Athlète',
-    displayName: 'Athlète',
-    identity: 'Performance · Compétition · Dépassement',
-    subtypes: ['Basketball', 'Football', 'Athlétisme', 'Boxe/MMA', 'Tennis', 'Natation', 'Cyclisme', 'F1', 'Rugby', 'Baseball', 'Golf', 'Sport extrême'],
-    theme: CLASS_THEMES.Athlète,
-    effects: CLASS_EFFECT_CONFIGS.Athlète,
-    titleFont: 'anton',
-    cornerStyle: 'rivet',
-  },
-};
 /**
  * Configuration des effets visuels pour chaque classe.
  * Le développeur ne configure que les types d'effets, les couleurs sont appliquées automatiquement
@@ -955,27 +830,15 @@ export const deriveAmbiance = (
 ): CardAmbiance => {
   // Étendre le thème simplifié en thème complet
   const fullTheme = expandClassTheme(t);
-
-  // Récupérer la configuration de la classe pour les options spécifiques
-  const classConfig = CLASS_AMBIANCE_CONFIGS[className];
-
+  
   // Récupérer la configuration d'effets pour cette classe
   const effectConfig = CLASS_EFFECT_CONFIGS[className] || {};
-
+  
   // Générer l'overlay automatiquement depuis la configuration
   const generatedOverlay = generateEffectOverlay(effectConfig, t);
-
-  // Déterminer la police de titre
-  const titleFont = classConfig?.titleFont || 'oswald';
-  const fontMap: Record<string, string> = {
-    oswald: 'font-oswald font-extrabold tracking-wide uppercase',
-    bebas: 'font-bebas tracking-wider uppercase',
-    anton: 'font-anton tracking-wide uppercase',
-    montserrat: 'font-montserrat font-bold uppercase',
-  };
-
+  
   return {
-    fontTitle:    `${fontMap[titleFont]} text-[${fullTheme.primary}]`,
+    fontTitle:    `font-oswald font-extrabold tracking-wide uppercase text-[${fullTheme.primary}]`,
     fontData:     'font-montserrat font-semibold',
     fontCitation: 'font-playfair italic',
     accentColor:  `text-[${fullTheme.primary}]`,
@@ -995,93 +858,14 @@ export const deriveAmbiance = (
     textBoxBgImage:      `linear-gradient(to bottom, ${fullTheme.primary}72, ${fullTheme.background}ec), url(${cardBgImage})`,
     textBoxBgBlendMode:  'multiply',
     quoteIconStyle:      `text-[${fullTheme.accent}] drop-shadow-[0_0_6px_${fullTheme.accent}99]`,
-    cornerStyle:   classConfig?.cornerStyle || 'rivet',
-    showScratches: classConfig?.showScratches || false,
-    showBlood:     classConfig?.showBlood || false,
-    showEmber:     classConfig?.showEmber || false,
+    cornerStyle:   'rivet',
+    showScratches: false,
+    showBlood:     false,
+    showEmber:     false,
     effectOverlay: generatedOverlay,
     ...overrides,
   };
 };
-
-/**
- * Fonction principale pour obtenir l'ambiance visuelle d'une classe.
- *
- * Cette fonction est le point d'entrée unique pour récupérer la configuration
- * visuelle complète d'une classe de personnage. Elle utilise les configurations
- * déclaratives définies dans CLASS_AMBIANCE_CONFIGS et génère automatiquement
- * tous les styles CSS et effets visuels.
- *
- * @param className - Le nom de la classe ('Guerrier', 'Explorateur', etc.)
- *                    Peut inclure un sous-type (ex: 'Guerrier / Soldat')
- * @param activeTheme - Thème actif pour les couleurs additionnelles (optionnel)
- * @param backgroundImages - Map optionnelle d'images de fond par classe
- * @returns Un objet CardAmbiance complet avec tous les styles et effets
- *
- * @example
- * // Utilisation simple
- * const ambiance = getCardAmbiance('Guerrier');
- *
- * // Avec sous-type
- * const ambiance = getCardAmbiance('Guerrier / Soldat');
- *
- * // Avec image de fond personnalisée
- * const ambiance = getCardAmbiance('Explorateur', null, { Explorateur: '/custom-bg.jpg' });
- */
-export const getCardAmbianceV2 = (
-  className: string,
-  activeTheme?: any,
-  backgroundImages?: Record<string, string>
-): CardAmbiance => {
-  // Extraire la classe principale (ex: 'Guerrier / Soldat' -> 'Guerrier')
-  const mainClass = className.split('/')[0].trim();
-
-  // Récupérer la configuration de la classe
-  const config = CLASS_AMBIANCE_CONFIGS[mainClass];
-
-  if (!config) {
-    // Fallback vers Guerrier si la classe n'existe pas
-    console.warn(`Class "${mainClass}" not found in CLASS_AMBIANCE_CONFIGS, falling back to Guerrier`);
-    return getCardAmbianceV2('Guerrier', activeTheme, backgroundImages);
-  }
-
-  // Récupérer l'image de fond
-  const bgImage = backgroundImages?.[mainClass] || '';
-
-  // Mapper les polices
-  const fontMap: Record<string, string> = {
-    oswald: 'font-oswald font-extrabold tracking-wide uppercase',
-    bebas: 'font-bebas tracking-wider uppercase',
-    anton: 'font-anton tracking-wide uppercase',
-    montserrat: 'font-montserrat font-bold uppercase',
-  };
-
-  // Construire les overrides
-  const overrides: Partial<CardAmbiance> = {
-    cornerStyle: config.cornerStyle || 'rivet',
-    showScratches: config.showScratches || false,
-    showBlood: config.showBlood || false,
-    showEmber: config.showEmber || false,
-  };
-
-  // Appliquer la police de titre personnalisée
-  if (config.titleFont) {
-    const fontClass = fontMap[config.titleFont];
-    if (fontClass) {
-      overrides.fontTitle = `${fontClass} text-[${expandClassTheme(config.theme).primary}]`;
-    }
-  }
-
-  // Fusionner avec les overrides additionnels de la config
-  if (config.overrides) {
-    Object.assign(overrides, config.overrides);
-  }
-
-  // Générer l'ambiance
-  return deriveAmbiance(mainClass, config.theme, bgImage, activeTheme, overrides);
-};
-
-// ─── BACKWARD COMPATIBILITY: Export guerrierEffectOverlay ────────────────────────
 
 /**
  * Overlay d'effets visuels pour la classe Guerrier.
