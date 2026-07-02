@@ -2500,7 +2500,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                   {/* Spé 1 */}
                   <div className={`bg-black/75 backdrop-blur-[4px] rounded-lg py-1 px-2 flex items-center justify-center gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.5)] ${cardAmbiance.specBoxStyle}`}>
                     <span className={`${cardAmbiance.accentColor} flex-shrink-0`}>
-                      {renderSpecialtyIcon(formData.iconSpecialite1, 'shield', 'w-3.5 h-3.5')}
+                      {renderSpecialtyIcon(formData.iconSpecialite1, 'shield', 'w-5 h-5')}
                     </span>
                     <span className={`text-[8px] sm:text-[9.5px] font-black tracking-wide uppercase truncate text-neutral-100 ${cardAmbiance.fontData}`}>
                       {formData.specialite1 || "SPÉCIALITÉ 1"}
@@ -2510,7 +2510,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                   {/* Spé 2 */}
                   <div className={`bg-black/55 backdrop-blur-[2px] rounded-lg py-1 px-2 flex items-center justify-center gap-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_1.5px_3px_rgba(0,0,0,0.4)] ${cardAmbiance.specBoxStyle}`}>
                     <span className={`${cardAmbiance.accentColor} flex-shrink-0`}>
-                      {renderSpecialtyIcon(formData.iconSpecialite2, 'sparkles', 'w-3.5 h-3.5')}
+                      {renderSpecialtyIcon(formData.iconSpecialite2, 'sparkles', 'w-5 h-5')}
                     </span>
                     <span className={`text-[8px] sm:text-[9.5px] font-black tracking-wide uppercase truncate text-neutral-300 ${cardAmbiance.fontData}`}>
                       {formData.specialite2 || "SPÉCIALITÉ 2"}
