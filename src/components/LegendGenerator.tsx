@@ -339,6 +339,17 @@ const renderSpecialtyIcon = (iconName: string | undefined, defaultIcon: string, 
   return <DefaultIcon className={className} />;
 };
 
+const getCitationFontSize = (text: string) => {
+  const len = (text || '').trim().length;
+  if (len <= 50) return 12.5;
+  if (len <= 80) return 11.5;
+  if (len <= 110) return 10.5;
+  if (len <= 140) return 9.5;
+  if (len <= 175) return 8.5;
+  if (len <= 210) return 7.8;
+  return 7;
+};
+
 const getClassIcon = (classeName: string, iconClassName: string = "w-4 h-4") => {
   const { mainClass } = parseClasse(classeName);
   switch (mainClass) {
@@ -2603,9 +2614,15 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                   <div className={`h-[1px] bg-gradient-to-r from-transparent ${cardAmbiance.dividerStyle} to-transparent relative z-10`} />
 
                   {/* ── CITATION ── */}
-                  <div className={`pt-1.5 pb-1 text-center flex items-center justify-start gap-2 px-2.5 relative z-10 rounded-lg shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.6),0_0_8px_rgba(138,3,3,0.15)] ${cardAmbiance.citationBoxStyle}`}>
-                    <Quote className={`w-4.5 h-4.5 sm:w-5 h-5 flex-shrink-0 ${cardAmbiance.quoteIconStyle}`} />
-                    <p className={`text-[10px] sm:text-[12px] italic text-rose-100/95 tracking-wide leading-relaxed whitespace-normal text-left w-full max-h-[50px] overflow-y-auto pr-0.5 scrollbar-thin ${cardAmbiance.fontCitation}`}>
+                  <div className={`pt-1.5 pb-1.5 text-left flex items-start justify-start gap-2 px-2.5 relative z-10 rounded-lg shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.6),0_0_8px_rgba(138,3,3,0.15)] ${cardAmbiance.citationBoxStyle}`}>
+                    <Quote className={`w-4 h-4 sm:w-4.5 sm:h-4.5 flex-shrink-0 mt-0.5 ${cardAmbiance.quoteIconStyle}`} />
+                    <p
+                      className={`italic text-rose-100/95 tracking-wide whitespace-normal text-left w-full break-words ${cardAmbiance.fontCitation}`}
+                      style={{
+                        fontSize: `${getCitationFontSize(formData.citation)}px`,
+                        lineHeight: 1.25,
+                      }}
+                    >
                       {formData.citation || "Saisissez votre citation épique..."}
                     </p>
                   </div>
