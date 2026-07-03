@@ -16,9 +16,9 @@ Horizontal cinematic portrait, 3:2 aspect ratio, subject centered in upper-cente
 upper body and face clearly visible, exact same face preserved, same facial features,
 same clothing, same hairstyle, [CELEBRITY NAME] unchanged, photorealistic, 8k,
 dark atmospheric background fading to black on edges, clean subject isolation,
-teal and sea-green ambient lighting from left, warm golden hour rim light from right,
-soft emerald fill light, cool cyan edge light on hair, warm amber reflection on cheekbones,
-cinematic color grading with teal and gold tones, subtle Unreal Engine 5 rendering
+deep teal-blue ambient lighting from left, soft emerald-green rim light from right,
+mint-green fill light, cool cyan edge light on hair, pale lime-green reflection on cheekbones,
+cinematic color grading with teal and emerald-green tones, subtle Unreal Engine 5 rendering
 on skin micro-details, slight subsurface scattering, soft depth-of-field falloff
 on background only, no graphic elements, no maps, no compass, no navigation instruments,
 lighting and subtle 3D rendering only, hyper-realistic skin texture,

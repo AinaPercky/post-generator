@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { toPng, toJpeg } from 'html-to-image';
 // @ts-ignore
 import cardBackground from '../assets/card_background_1782290811054.jpg';
@@ -9,28 +9,11 @@ import fictionnelBackground from '../assets/fond_fictionnel.png';
 import penseurBackground from '../assets/fond_penseur.png';
 import dirigeantBackground from '../assets/fond_dirigeant.png';
 import athleteBackground from '../assets/fond_athlete.png';
-import { Anchor, Sparkles, Upload, Download, Plus, Trash2, Copy, Search, Image as ImageIcon, RotateCcw, Swords, Shield, Quote, Heart, Check, TriangleAlert as AlertTriangle, ListFilter as Filter, Eye, Settings, Circle as HelpCircle, FileImage, Crown, Skull, Crosshair, Axe, Flame, Zap, Wind, Target, Feather, Compass, FlaskConical, Palette, Film, BookOpen, Trophy } from 'lucide-react';
+import { Anchor, Sparkles, Upload, Download, Plus, Trash2, Copy, Search, Image as ImageIcon, RotateCcw, Swords, Shield, Quote, Heart, Check, TriangleAlert as AlertTriangle, ListFilter as Filter, Eye, Settings, Circle as HelpCircle, FileImage, Crown, Skull, Crosshair, Axe, Flame, Zap, Wind, Target, Feather, Compass, FlaskConical, Palette, Film, BookOpen, Trophy, Loader2, CloudOff, CloudCheck } from 'lucide-react';
+import { WarriorCard, loadLegendCards, saveLegendCard, updateLegendCard, deleteLegendCard, batchSaveLegendCards } from '../lib/legendService';
 
-// Structure de données d'une carte de guerrier
-interface WarriorCard {
-  id: number;
-  numero: string;
-  nom: string;
-  rarete: 'C' | 'R' | 'E' | 'L' | 'G'; // C: Commun, R: Rare, E: Épique, L: Légendaire, G: Divin
-  surnom: string;
-  portraitUrl: string;
-  classe: string;
-  specialite1: string;
-  specialite2: string;
-  iconSpecialite1?: string;
-  iconSpecialite2?: string;
-  realisation: string;
-  faille: string;
-  citation: string;
-  theme: 'gold' | 'fire' | 'void' | 'ice' | 'emerald';
-  hp: number;
-  atk: number;
-}
+// WarriorCard est importé depuis legendService (avec le champ supabaseId en plus)
+// cf. src/lib/legendService.ts
 
 
 
@@ -677,28 +660,28 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
 
     case 'Artiste':
       return {
-    fontTitle: "font-anton tracking-wide uppercase text-[#d90368]",
+    fontTitle: "font-anton tracking-wide uppercase text-[#820263]",
     fontData: "font-montserrat font-semibold",
     fontCitation: "font-playfair italic",
-    accentColor: "text-[#820263]",
-    accentBorder: "border-[#820263]/80",
-    innerBorder: "border-[#820263]/30",
+    accentColor: "text-[#d90368]",
+    accentBorder: "border-[#d90368]/80",
+    innerBorder: "border-[#d90368]/30",
     outerBorder: "border-[#fb8b24]/80 shadow-[0_0_24px_rgba(251, 139, 36,0.45)]",
-    themeBgGradient: "from-[#820263]/95 via-[#820263]/90 to-[#171413]/95",
+    themeBgGradient: "from-[#d90368]/95 via-[#d90368]/90 to-[#171413]/95",
     
-    nameSectionStyle: "border-2 border-[#820263]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
-    textBoxStyle: "border-2 border-[#d90368]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
+    nameSectionStyle: "border-2 border-[#d90368]/80 bg-[#171413]/90 backdrop-blur-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.85)] rounded-xl",
+    textBoxStyle: "border-2 border-[#820263]/80 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.85),0_4px_6px_rgba(0,0,0,0.5)]",
     portraitBorderStyle: "border-2 border-[#fb8b24]/60 shadow-[0_0_12px_rgba(251, 139, 36,0.45)]",
     classBadgeStyle: "border-2 border-[#fb8b24]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
     specBoxStyle: "border-2 border-[#525174]/60",
-    citationBoxStyle: "border border-[#d90368]/50 bg-[#171413]/55",
-    iconContainerStyle: "border-[#820263]/80 shadow-[0_0_8px_rgba(130, 2, 99,0.4)]",
-    dividerStyle: "via-[#d90368]/30",
-    failleColor: "text-[#820263]",
+    citationBoxStyle: "border border-[#820263]/50 bg-[#171413]/55",
+    iconContainerStyle: "border-[#d90368]/80 shadow-[0_0_8px_rgba(130, 2, 99,0.4)]",
+    dividerStyle: "via-[#820263]/30",
+    failleColor: "text-[#d90368]",
     
     textBoxBgImage: `linear-gradient(to bottom, rgba(217, 3, 104, 0.1), rgba(23, 20, 19, 0.82)), url(${artisteBackground})`,
     textBoxBgBlendMode: 'normal',
-    quoteIconStyle: "text-[#d90368] drop-shadow-[0_0_6px_rgba(217, 3, 104,0.6)]",
+    quoteIconStyle: "text-[#820263] drop-shadow-[0_0_6px_rgba(217, 3, 104,0.6)]",
     
     cornerStyle: 'rivet',
     showScratches: false,
@@ -706,7 +689,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
     showEmber: false,
     effectOverlay: (
       <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#d90368]/[0.04] via-transparent to-[#fb8b24]/15 mix-blend-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#820263]/[0.04] via-transparent to-[#fb8b24]/15 mix-blend-overlay" />
 
         {/* Texture toile (trame croisée) — pleine carte, opacité très faible, sans gêner la lecture */}
         <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(45deg,rgba(255,255,255,0.5)_1px,transparent_1px),linear-gradient(-45deg,rgba(255,255,255,0.5)_1px,transparent_1px)] [background-size:6px_6px]" />
@@ -718,27 +701,27 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
 
           {/* Sous le feu des projecteurs */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-56 bg-gradient-to-b from-[#fffbdb]/20 via-[#fb8b24]/[0.08] to-transparent" style={{ clipPath: 'polygon(42% 0%, 58% 0%, 100% 100%, 0% 100%)' }} />
-          <div className="absolute top-0 left-[18%] w-24 h-40 bg-gradient-to-b from-[#d90368]/10 via-transparent to-transparent rotate-[8deg] origin-top" />
+          <div className="absolute top-0 left-[18%] w-24 h-40 bg-gradient-to-b from-[#820263]/10 via-transparent to-transparent rotate-[8deg] origin-top" />
           <div className="absolute top-0 right-[14%] w-20 h-36 bg-gradient-to-b from-[#820263]/10 via-transparent to-transparent rotate-[-10deg] origin-top" />
 
           {/* Éclaboussures de peinture abstraites — coins haut uniquement */}
           <svg className="absolute -top-4 -left-6 w-32 h-32 opacity-[0.28]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20,30 C28,18 42,20 38,35 C50,32 55,45 44,50 C56,55 50,70 38,66 C42,80 26,82 24,68 C12,72 6,58 18,52 C4,48 8,32 20,30 Z" fill="#d90368" opacity="0.6" />
+            <path d="M20,30 C28,18 42,20 38,35 C50,32 55,45 44,50 C56,55 50,70 38,66 C42,80 26,82 24,68 C12,72 6,58 18,52 C4,48 8,32 20,30 Z" fill="#820263" opacity="0.6" />
             <circle cx="55" cy="20" r="3" fill="#fb8b24" opacity="0.7" />
             <circle cx="65" cy="30" r="1.6" fill="#fb8b24" opacity="0.6" />
           </svg>
           <svg className="absolute -top-6 -right-8 w-36 h-36 opacity-[0.22]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M60,45 C70,35 85,40 80,55 C92,54 94,70 80,72 C84,84 68,86 64,74 C52,80 44,68 54,60 C42,58 44,42 60,45 Z" fill="#fb8b24" opacity="0.5" />
-            <circle cx="30" cy="20" r="2.5" fill="#d90368" opacity="0.6" />
+            <circle cx="30" cy="20" r="2.5" fill="#820263" opacity="0.6" />
             <circle cx="20" cy="30" r="1.4" fill="#820263" opacity="0.55" />
           </svg>
           {/* Coulures de peinture */}
-          <div className="absolute top-6 left-[30%] w-[3px] h-14 bg-gradient-to-b from-[#d90368]/70 to-transparent rounded-full" />
+          <div className="absolute top-6 left-[30%] w-[3px] h-14 bg-gradient-to-b from-[#820263]/70 to-transparent rounded-full" />
           <div className="absolute top-4 right-[35%] w-[2px] h-9 bg-gradient-to-b from-[#fb8b24]/60 to-transparent rounded-full" />
 
           {/* Notes de musique éparpillées — restent dans le portrait */}
           <div className="absolute top-[24%] left-[10%] text-[#fb8b24] text-lg opacity-40 rotate-[-12deg] select-none">♪</div>
-          <div className="absolute top-[14%] right-[16%] text-[#d90368] text-2xl opacity-35 rotate-[10deg] select-none">♫</div>
+          <div className="absolute top-[14%] right-[16%] text-[#820263] text-2xl opacity-35 rotate-[10deg] select-none">♫</div>
           <div className="absolute bottom-[10%] left-[16%] text-[#820263] text-base opacity-30 rotate-[6deg] select-none">♪</div>
           <div className="absolute bottom-[6%] right-[8%] text-[#fb8b24] text-xl opacity-30 rotate-[-8deg] select-none">♬</div>
 
@@ -757,7 +740,7 @@ export const getCardAmbiance = (classeStr: string, activeTheme: any): CardAmbian
           <svg className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70%] h-6 opacity-[0.22]" viewBox="0 0 240 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             {Array.from({ length: 24 }).map((_, i) => {
               const h = 4 + Math.abs(Math.sin(i * 0.7)) * 20;
-              return <rect key={`wave-${i}`} x={i * 10} y={20 - h / 2} width="3" height={h} rx="1.5" fill={i % 3 === 0 ? "#fb8b24" : "#d90368"} opacity="0.7" />;
+              return <rect key={`wave-${i}`} x={i * 10} y={20 - h / 2} width="3" height={h} rx="1.5" fill={i % 3 === 0 ? "#fb8b24" : "#820263"} opacity="0.7" />;
             })}
           </svg>
         </div>
@@ -1611,19 +1594,25 @@ case 'Fictionnel':
   }
 };
 
-export default function LegendGenerator() {
-  const [cards, setCards] = useState<WarriorCard[]>(() => {
-    const saved = localStorage.getItem('warrior_cards');
-    return saved ? JSON.parse(saved) : INITIAL_CARDS;
-  });
+// ─── Statuts de synchronisation Supabase ─────────────────────────────────────
+type SyncStatus = 'idle' | 'loading' | 'saving' | 'error' | 'synced';
 
+export default function LegendGenerator() {
+  // ─── État des cartes ─────────────────────────────────────────────────────
+  const [cards, setCards] = useState<WarriorCard[]>(INITIAL_CARDS);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // ─── État UI ──────────────────────────────────────────────────────────────
   const [isExporting, setIsExporting] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [exportBackground, setExportBackground] = useState<'transparent' | 'filled'>('filled');
+
+  // ─── État synchronisation Supabase ────────────────────────────────────────
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
+  const [syncMessage, setSyncMessage] = useState<string>('');
+  const updateDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1631,21 +1620,89 @@ export default function LegendGenerator() {
   const activeCard = cards[currentIndex] || cards[0] || INITIAL_CARDS[0];
   const [formData, setFormData] = useState<WarriorCard>({ ...activeCard });
 
+  // ─── Chargement initial depuis Supabase (avec fallback localStorage) ──────
+  useEffect(() => {
+    const initCards = async () => {
+      setSyncStatus('loading');
+      setSyncMessage('Chargement depuis Supabase...');
+      try {
+        const supabaseCards = await loadLegendCards();
+
+        if (supabaseCards.length > 0) {
+          // Supabase a des données : les utiliser comme source de vérité
+          setCards(supabaseCards);
+          setFormData({ ...supabaseCards[0] });
+          setCurrentIndex(0);
+          setSyncStatus('synced');
+          setSyncMessage(`${supabaseCards.length} carte(s) chargée(s)`);
+          // Mettre à jour le localStorage en miroir
+          localStorage.setItem('warrior_cards', JSON.stringify(supabaseCards));
+        } else {
+          // Supabase est vide : vérifier si localStorage a des données à migrer
+          const localRaw = localStorage.getItem('warrior_cards');
+          const localCards: WarriorCard[] = localRaw ? JSON.parse(localRaw) : INITIAL_CARDS;
+
+          if (localCards.length > 0 && localCards.some(c => !c.supabaseId)) {
+            // Migration one-time : importer les cartes locales dans Supabase
+            setSyncMessage('Migration des données locales...');
+            const migrated = await batchSaveLegendCards(localCards);
+            setCards(migrated);
+            setFormData({ ...migrated[0] });
+            localStorage.setItem('warrior_cards', JSON.stringify(migrated));
+            setSyncStatus('synced');
+            setSyncMessage(`${migrated.length} carte(s) migrée(s) vers Supabase`);
+          } else {
+            setCards(localCards);
+            setFormData({ ...localCards[0] });
+            setSyncStatus('synced');
+            setSyncMessage('Prêt');
+          }
+        }
+      } catch (err) {
+        // Fallback localStorage si Supabase est inaccessible
+        console.warn('[LegendGenerator] Supabase inaccessible, fallback localStorage', err);
+        const localRaw = localStorage.getItem('warrior_cards');
+        const localCards: WarriorCard[] = localRaw ? JSON.parse(localRaw) : INITIAL_CARDS;
+        setCards(localCards);
+        setFormData({ ...localCards[0] });
+        setSyncStatus('error');
+        setSyncMessage('Mode hors-ligne (localStorage)');
+      }
+    };
+
+    initCards();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ─── Sync localStorage en miroir à chaque mise à jour des cartes ──────────
   useEffect(() => {
     localStorage.setItem('warrior_cards', JSON.stringify(cards));
   }, [cards]);
 
+  // ─── Sync formData quand currentIndex / cards change ─────────────────────
   useEffect(() => {
     if (activeCard) {
       setFormData({ ...activeCard });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, cards]);
 
-  const handleResetToDefault = () => {
+  // ─── Réinitialisation ─────────────────────────────────────────────────────
+  const handleResetToDefault = async () => {
     if (window.confirm("Êtes-vous sûr de vouloir réinitialiser l'application ? Toutes vos cartes personnalisées seront perdues et remplacées par la collection de base.")) {
+      // Supprimer toutes les cartes Supabase ayant un supabaseId
+      const toDelete = cards.filter(c => c.supabaseId);
+      if (toDelete.length > 0) {
+        setSyncStatus('saving');
+        setSyncMessage('Suppression en cours...');
+        await Promise.all(toDelete.map(c => deleteLegendCard(c.supabaseId!)));
+      }
       setCards(INITIAL_CARDS);
       setCurrentIndex(0);
       setFormData({ ...INITIAL_CARDS[0] });
+      localStorage.removeItem('warrior_cards');
+      setSyncStatus('idle');
+      setSyncMessage('Collection réinitialisée');
     }
   };
 
@@ -1665,6 +1722,19 @@ export default function LegendGenerator() {
     }
   };
 
+  // ─── Debounced update Supabase lors d'une édition de champ ───────────────
+  const scheduleSupabaseUpdate = useCallback((updatedCard: WarriorCard) => {
+    if (updateDebounceRef.current) clearTimeout(updateDebounceRef.current);
+    if (!updatedCard.supabaseId) return;
+    updateDebounceRef.current = setTimeout(async () => {
+      setSyncStatus('saving');
+      setSyncMessage('Sauvegarde...');
+      const ok = await updateLegendCard(updatedCard.supabaseId!, updatedCard);
+      setSyncStatus(ok ? 'synced' : 'error');
+      setSyncMessage(ok ? 'Sauvegardé' : 'Erreur de synchronisation');
+    }, 700);
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => {
@@ -1677,12 +1747,13 @@ export default function LegendGenerator() {
         }
         updatedCards[activeIdx] = updated;
         setCards(updatedCards);
+        scheduleSupabaseUpdate(updatedCards[activeIdx]);
       }
       return updated;
     });
   };
 
-  const handleAddNewCard = () => {
+  const handleAddNewCard = async () => {
     if (cards.length >= 100) { alert("Limite maximale de 100 cartes atteinte !"); return; }
     const maxId = cards.reduce((max, c) => c.id > max ? c.id : max, 0);
     const newId = maxId + 1;
@@ -1705,29 +1776,73 @@ export default function LegendGenerator() {
       hp: 70,
       atk: 75
     };
+    // Ajouter localement immédiatement
     const newCollection = [...cards, newCard];
     setCards(newCollection);
     setCurrentIndex(newCollection.length - 1);
     setFormData(newCard);
+    // Persister dans Supabase en arrière-plan
+    setSyncStatus('saving');
+    setSyncMessage('Sauvegarde de la nouvelle carte...');
+    const supabaseId = await saveLegendCard(newCard);
+    if (supabaseId) {
+      const withId = { ...newCard, supabaseId };
+      setCards(prev => prev.map(c => c.id === newCard.id ? withId : c));
+      setFormData(prev => prev.id === newCard.id ? withId : prev);
+      setSyncStatus('synced');
+      setSyncMessage('Carte sauvegardée');
+    } else {
+      setSyncStatus('error');
+      setSyncMessage('Sauvegarde Supabase échouée (carte conservée localement)');
+    }
   };
 
-  const handleDuplicateCard = () => {
+  const handleDuplicateCard = async () => {
     if (cards.length >= 100) { alert("Limite maximale de 100 cartes atteinte !"); return; }
     const maxId = cards.reduce((max, c) => c.id > max ? c.id : max, 0);
     const newId = maxId + 1;
-    const duplicated: WarriorCard = { ...formData, id: newId, numero: String(newId).padStart(3, '0'), nom: `${formData.nom} (COPIE)` };
+    const duplicated: WarriorCard = {
+      ...formData,
+      id: newId,
+      numero: String(newId).padStart(3, '0'),
+      nom: `${formData.nom} (COPIE)`,
+      supabaseId: undefined,   // la copie est une nouvelle entrée
+    };
     const newCollection = [...cards, duplicated];
     setCards(newCollection);
     setCurrentIndex(newCollection.length - 1);
     setFormData(duplicated);
+    // Persister dans Supabase en arrière-plan
+    setSyncStatus('saving');
+    setSyncMessage('Duplication en cours...');
+    const supabaseId = await saveLegendCard(duplicated);
+    if (supabaseId) {
+      const withId = { ...duplicated, supabaseId };
+      setCards(prev => prev.map(c => c.id === duplicated.id ? withId : c));
+      setFormData(prev => prev.id === duplicated.id ? withId : prev);
+      setSyncStatus('synced');
+      setSyncMessage('Copie sauvegardée');
+    } else {
+      setSyncStatus('error');
+      setSyncMessage('Duplication Supabase échouée');
+    }
   };
 
-  const handleDeleteCard = () => {
+  const handleDeleteCard = async () => {
     if (cards.length <= 1) { alert("Vous devez conserver au moins une carte dans votre studio !"); return; }
     if (window.confirm(`Voulez-vous vraiment supprimer la carte de "${formData.nom}" ?`)) {
-      const filtered = cards.filter(c => c.id !== formData.id);
+      const toDelete = formData;
+      const filtered = cards.filter(c => c.id !== toDelete.id);
       setCards(filtered);
       setCurrentIndex(Math.max(0, currentIndex - 1));
+      // Supprimer de Supabase en arrière-plan
+      if (toDelete.supabaseId) {
+        setSyncStatus('saving');
+        setSyncMessage('Suppression...');
+        const ok = await deleteLegendCard(toDelete.supabaseId);
+        setSyncStatus(ok ? 'synced' : 'error');
+        setSyncMessage(ok ? 'Carte supprimée' : 'Erreur de suppression Supabase');
+      }
     }
   };
 
@@ -1741,7 +1856,11 @@ export default function LegendGenerator() {
           const updated = { ...prev, portraitUrl: base64Url };
           const updatedCards = [...cards];
           const activeIdx = cards.findIndex(c => c.id === prev.id);
-          if (activeIdx !== -1) { updatedCards[activeIdx] = updated; setCards(updatedCards); }
+          if (activeIdx !== -1) {
+            updatedCards[activeIdx] = updated;
+            setCards(updatedCards);
+            scheduleSupabaseUpdate(updatedCards[activeIdx]);
+          }
           return updated;
         });
       }
@@ -1763,7 +1882,11 @@ export default function LegendGenerator() {
       const updated = { ...prev, portraitUrl: url };
       const updatedCards = [...cards];
       const activeIdx = cards.findIndex(c => c.id === prev.id);
-      if (activeIdx !== -1) { updatedCards[activeIdx] = updated; setCards(updatedCards); }
+      if (activeIdx !== -1) {
+        updatedCards[activeIdx] = updated;
+        setCards(updatedCards);
+        scheduleSupabaseUpdate(updatedCards[activeIdx]);
+      }
       return updated;
     });
   };
@@ -1903,6 +2026,21 @@ const background = backgroundMap[mainClass] ?? cardBackground;
         </div>
 
         <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
+          {/* Indicateur de synchronisation Supabase */}
+          <div className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-2 rounded-md border transition-all ${
+            syncStatus === 'loading' ? 'bg-neutral-900 border-neutral-700 text-neutral-400' :
+            syncStatus === 'saving'  ? 'bg-amber-950/30 border-amber-600/40 text-amber-400' :
+            syncStatus === 'synced'  ? 'bg-emerald-950/30 border-emerald-600/40 text-emerald-400' :
+            syncStatus === 'error'   ? 'bg-red-950/30 border-red-600/40 text-red-400' :
+            'bg-neutral-900 border-neutral-700 text-neutral-500'
+          }`}>
+            {syncStatus === 'loading' && <Loader2 className="w-3 h-3 animate-spin" />}
+            {syncStatus === 'saving'  && <Loader2 className="w-3 h-3 animate-spin" />}
+            {syncStatus === 'synced'  && <CloudCheck className="w-3 h-3" />}
+            {syncStatus === 'error'   && <CloudOff className="w-3 h-3" />}
+            {syncStatus === 'idle'    && <CloudCheck className="w-3 h-3" />}
+            <span className="hidden sm:inline">{syncMessage || 'Supabase'}</span>
+          </div>
           <button onClick={() => setShowGuide(!showGuide)}
             className="flex items-center gap-1.5 text-xs bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 px-4 py-2 rounded-md font-bold transition text-amber-500/90 cursor-pointer">
             <HelpCircle className="w-4 h-4" />
@@ -2269,8 +2407,25 @@ const background = backgroundMap[mainClass] ?? cardBackground;
               </div>
 
               <div className="pt-2">
-                <div className="p-3.5 bg-amber-500/5 rounded-lg border border-amber-600/20 text-[10px] text-amber-500/80 italic font-medium uppercase tracking-wider text-center">
-                  💡 Sauvegarde locale active en temps réel.
+                <div className={`p-3.5 rounded-lg border text-[10px] italic font-medium uppercase tracking-wider text-center flex items-center justify-center gap-2 transition-all ${
+                  syncStatus === 'loading' ? 'bg-neutral-900/60 border-neutral-700/40 text-neutral-500' :
+                  syncStatus === 'saving'  ? 'bg-amber-950/20 border-amber-600/25 text-amber-400' :
+                  syncStatus === 'synced'  ? 'bg-emerald-950/20 border-emerald-600/25 text-emerald-400' :
+                  syncStatus === 'error'   ? 'bg-red-950/20 border-red-600/25 text-red-400' :
+                  'bg-amber-500/5 border-amber-600/20 text-amber-500/80'
+                }`}>
+                  {syncStatus === 'loading' && <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" />}
+                  {syncStatus === 'saving'  && <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" />}
+                  {syncStatus === 'synced'  && <CloudCheck className="w-3 h-3 flex-shrink-0" />}
+                  {syncStatus === 'error'   && <CloudOff className="w-3 h-3 flex-shrink-0" />}
+                  {!syncStatus              && <span>💡</span>}
+                  <span>
+                    {syncStatus === 'loading' && 'Chargement depuis Supabase...'}
+                    {syncStatus === 'saving'  && (syncMessage || 'Synchronisation...')}
+                    {syncStatus === 'synced'  && (syncMessage || 'Sauvegardé dans Supabase')}
+                    {syncStatus === 'error'   && (syncMessage || 'Mode hors-ligne (localStorage)')}
+                    {syncStatus === 'idle'    && 'Synchronisation Supabase active'}
+                  </span>
                 </div>
               </div>
             </form>
@@ -2650,7 +2805,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
           <span>•</span>
           <span className="hover:text-amber-500 transition cursor-default">Éditeur HD</span>
           <span>•</span>
-          <span className="hover:text-amber-500 transition cursor-default">Local Persistence</span>
+          <span className="hover:text-emerald-400 transition cursor-default">Supabase Sync</span>
         </div>
       </footer>
     </div>

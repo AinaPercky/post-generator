@@ -38,6 +38,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
 import {
   savePost,
+  updatePost,
   getCustomCategoryIcons,
   saveCustomCategoryIcon,
   deleteCustomCategoryIcon,
@@ -150,7 +151,12 @@ const initialItemsFactory = () =>
     imageUrl: null as string | null,
   }));
 
-export function Top5Generator() {
+interface Top5GeneratorProps {
+  editingPost?: SavedPost | null;
+  onClearEdit?: () => void;
+}
+
+export function Top5Generator({ editingPost, onClearEdit }: Top5GeneratorProps = {}) {
   const [user, setUser] = useState<User | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -167,11 +173,26 @@ export function Top5Generator() {
 
   // Load saved items when selected category changes
   useEffect(() => {
+    // Si on est en mode édition, on ne charge pas la catégorie locale par-dessus
+    if (editingPost) return;
     if (selectedCategory) {
       const savedData = categoryData[selectedCategory] || initialItemsFactory();
       setItems(savedData);
     }
-  }, [selectedCategory]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedCategory, editingPost]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load editing post data
+  useEffect(() => {
+    if (editingPost && editingPost.metadata) {
+      setCategorySubtitle(editingPost.metadata.categorySubtitle as string || '');
+      if (editingPost.metadata.items && Array.isArray(editingPost.metadata.items)) {
+        setItems(editingPost.metadata.items as any[]);
+      }
+      setSelectedCategory(null);
+      setIsCustomCategory(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [editingPost]);
 
   const persistCurrentCategory = () => {
     if (selectedCategory) {
@@ -313,11 +334,18 @@ export function Top5Generator() {
         metadata: {
           firebaseUid: user.uid,
           categorySubtitle,
-          items: items.map(i => ({ ...i, imageUrl: '' })),
+          // Conserver les URLs des images dans les metadata pour pouvoir les recharger plus tard
+          items: items.map(i => ({ ...i })),
         },
       };
-      await savePost(post);
-      alert('Saved successfully!');
+      
+      if (editingPost && editingPost.id) {
+        await updatePost(editingPost.id, post);
+        alert('Updated successfully!');
+      } else {
+        await savePost(post);
+        alert('Saved successfully!');
+      }
     } catch (err: any) {
       setSaveError(err?.message || 'Save failed');
     } finally {
@@ -593,14 +621,37 @@ export function Top5Generator() {
               <FileText className="w-4 h-4" /> TXT
             </button>
           </div>
-          <button
-            onClick={handleSaveToLibrary}
-            disabled={isSaving}
-            className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <SaveIcon />}
-            {user ? 'Save to Library' : 'Sign in to Save'}
-          </button>
+          {editingPost ? (
+            <div className="flex gap-2 w-full">
+              <button
+                onClick={handleSaveToLibrary}
+                disabled={isSaving}
+                className="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+                Mettre à jour
+              </button>
+              <button
+                onClick={() => {
+                  if (onClearEdit) onClearEdit();
+                  setItems(initialItemsFactory());
+                  setCategorySubtitle('YOUR CATEGORY HERE');
+                }}
+                className="flex-1 py-2.5 px-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                Annuler l'édition
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleSaveToLibrary}
+              disabled={isSaving}
+              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+              {user ? 'Save to Library' : 'Sign in to Save'}
+            </button>
+          )}
         </div>
       </div>
 

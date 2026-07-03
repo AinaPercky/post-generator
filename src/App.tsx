@@ -31,6 +31,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [selectedTop5Post, setSelectedTop5Post] = useState<SavedPost | null>(null);
   const [nextIssueNumber, setNextIssueNumber] = useState(1);
 
   const coverRef = useRef<HTMLDivElement>(null);
@@ -388,11 +389,17 @@ export default function App() {
           <MisyFaTsyGenerator />
         ) : activeTab === 'top5' ? (
           <>
-            <Top5Generator />
+            <Top5Generator
+              editingPost={selectedTop5Post}
+              onClearEdit={() => setSelectedTop5Post(null)}
+            />
             <div className="mt-20 pt-10 border-t border-neutral-200">
               <h2 className="text-2xl font-semibold text-neutral-800 mb-8">Top 5 Library</h2>
               <Top5Library
-                onSelectTop5={() => {}} // We'll implement this later
+                onSelectTop5={(post) => {
+                  setSelectedTop5Post(post);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 currentUserId={user?.uid}
               />
             </div>
