@@ -9,7 +9,7 @@ import fictionnelBackground from '../assets/fond_fictionnel.png';
 import penseurBackground from '../assets/fond_penseur.png';
 import dirigeantBackground from '../assets/fond_dirigeant.png';
 import athleteBackground from '../assets/fond_athlete.png';
-import { Anchor, Sparkles, Upload, Download, Plus, Trash2, Copy, Search, Image as ImageIcon, RotateCcw, Swords, Shield, Quote, Heart, Check, TriangleAlert as AlertTriangle, ListFilter as Filter, Eye, Settings, Circle as HelpCircle, FileImage, Crown, Skull, Crosshair, Axe, Flame, Zap, Wind, Target, Feather, Compass, FlaskConical, Palette, Film, BookOpen, Trophy, Loader2, CloudOff, CloudCheck } from 'lucide-react';
+import { Anchor, Sparkles, Upload, Download, Plus, Trash2, Copy, Search, Image as ImageIcon, RotateCcw, Swords, Shield, Quote, Heart, Check, TriangleAlert as AlertTriangle, ListFilter as Filter, Eye, Settings, Circle as HelpCircle, FileImage, Crown, Skull, Crosshair, Axe, Flame, Zap, Wind, Target, Feather, Compass, FlaskConical, Palette, Film, BookOpen, Trophy, Loader2, CloudOff, CloudCheck, ClipboardPaste } from 'lucide-react';
 import { WarriorCard, loadLegendCards, saveLegendCard, updateLegendCard, deleteLegendCard } from '../lib/legendService';
 
 // WarriorCard est importé depuis legendService (avec le champ supabaseId en plus)
@@ -1768,6 +1768,64 @@ export default function LegendGenerator() {
     }
   };
 
+  const applyJsonData = (jsonString: string) => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      
+      let citation = parsed.citation || "";
+      if (citation.includes("Traduction française :")) {
+         const parts = citation.split("Traduction française :");
+         citation = parts[parts.length - 1].trim().replace(/^"|"$/g, "").trim();
+      }
+
+      setFormData(prev => {
+        const updated = {
+          ...prev,
+          surnom: parsed.surnom || prev.surnom,
+          nom: parsed.nom_personnage_fourni || prev.nom,
+          classe: parsed.classe || prev.classe,
+          specialite1: parsed.specialite1 || prev.specialite1,
+          iconSpecialite1: parsed.iconSpecialite1?.iconName || parsed.iconSpecialite1 || prev.iconSpecialite1,
+          specialite2: parsed.specialite2 || prev.specialite2,
+          iconSpecialite2: parsed.iconSpecialite2?.iconName || parsed.iconSpecialite2 || prev.iconSpecialite2,
+          realisation: parsed.realisation || prev.realisation,
+          faille: parsed.faille || prev.faille,
+          citation: citation || prev.citation
+        };
+
+        const updatedCards = [...cards];
+        const activeIdx = cards.findIndex(c => c.id === prev.id);
+        if (activeIdx !== -1) {
+          updatedCards[activeIdx] = updated;
+          setCards(updatedCards);
+          scheduleSupabaseUpdate(updatedCards[activeIdx]);
+        }
+        return updated;
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const handleImportJson = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text) throw new Error("empty clipboard");
+      
+      if (!applyJsonData(text)) {
+        throw new Error("invalid json");
+      }
+    } catch (err) {
+      const manualInput = window.prompt("Collez votre JSON ici :");
+      if (manualInput) {
+        if (!applyJsonData(manualInput)) {
+          alert("JSON invalide.");
+        }
+      }
+    }
+  };
+
   const handleImageFile = (file: File) => {
     if (!file.type.startsWith('image/')) { alert('Veuillez sélectionner un fichier image valide.'); return; }
     const reader = new FileReader();
@@ -2055,6 +2113,10 @@ const background = backgroundMap[mainClass] ?? cardBackground;
           {/* FORMULAIRE */}
           <div className="bg-neutral-900/40 p-6 rounded-2xl border border-neutral-800 shadow-xl backdrop-blur-sm relative">
             <div className="absolute top-4 right-4 flex gap-1.5">
+              <button type="button" onClick={handleImportJson}
+                className="p-2 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-neutral-400 hover:text-emerald-500 rounded-lg transition cursor-pointer" title="Importer depuis JSON (Presse-papier)">
+                <ClipboardPaste className="w-4 h-4" />
+              </button>
               <button type="button" onClick={handleDuplicateCard}
                 className="p-2 bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-neutral-400 hover:text-amber-500 rounded-lg transition cursor-pointer" title="Dupliquer">
                 <Copy className="w-4 h-4" />
