@@ -10,7 +10,7 @@ import penseurBackground from '../assets/fond_penseur.png';
 import dirigeantBackground from '../assets/fond_dirigeant.png';
 import athleteBackground from '../assets/fond_athlete.png';
 import { Anchor, Sparkles, Upload, Download, Plus, Trash2, Copy, Search, Image as ImageIcon, RotateCcw, Swords, Shield, Quote, Heart, Check, TriangleAlert as AlertTriangle, ListFilter as Filter, Eye, Settings, Circle as HelpCircle, FileImage, Crown, Skull, Crosshair, Axe, Flame, Zap, Wind, Target, Feather, Compass, FlaskConical, Palette, Film, BookOpen, Trophy, Loader2, CloudOff, CloudCheck } from 'lucide-react';
-import { WarriorCard, loadLegendCards, saveLegendCard, updateLegendCard, deleteLegendCard, batchSaveLegendCards } from '../lib/legendService';
+import { WarriorCard, loadLegendCards, saveLegendCard, updateLegendCard, deleteLegendCard } from '../lib/legendService';
 
 // WarriorCard est importé depuis legendService (avec le champ supabaseId en plus)
 // cf. src/lib/legendService.ts
@@ -1531,7 +1531,7 @@ type SyncStatus = 'idle' | 'loading' | 'saving' | 'error' | 'synced';
 
 export default function LegendGenerator() {
   // ─── État des cartes ─────────────────────────────────────────────────────
-  const [cards, setCards] = useState<WarriorCard[]>(INITIAL_CARDS);
+  const [cards, setCards] = useState<WarriorCard[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -1549,10 +1549,10 @@ export default function LegendGenerator() {
   const cardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const activeCard = cards[currentIndex] || cards[0] || INITIAL_CARDS[0];
-  const [formData, setFormData] = useState<WarriorCard>({ ...activeCard });
+  const activeCard = cards[currentIndex] || cards[0];
+  const [formData, setFormData] = useState<WarriorCard>(activeCard ? { ...activeCard } : { ...INITIAL_CARDS[0] });
 
-  // ─── Chargement initial depuis Supabase (avec fallback localStorage) ──────
+  // ─── Chargement initial depuis Supabase uniquement ────────────────────────
   useEffect(() => {
     const initCards = async () => {
       setSyncStatus('loading');
@@ -1561,44 +1561,24 @@ export default function LegendGenerator() {
         const supabaseCards = await loadLegendCards();
 
         if (supabaseCards.length > 0) {
-          // Supabase a des données : les utiliser comme source de vérité
-          setCards(supabaseCards);
-          setFormData({ ...supabaseCards[0] });
+          // Renuméroter séquentiellement selon l'ordre reçu
+          const renumbered = renumberCards(supabaseCards);
+          setCards(renumbered);
+          setFormData({ ...renumbered[0] });
           setCurrentIndex(0);
           setSyncStatus('synced');
-          setSyncMessage(`${supabaseCards.length} carte(s) chargée(s)`);
-          // Mettre à jour le localStorage en miroir
-          localStorage.setItem('warrior_cards', JSON.stringify(supabaseCards));
+          setSyncMessage(`${renumbered.length} carte(s) chargée(s)`);
         } else {
-          // Supabase est vide : vérifier si localStorage a des données à migrer
-          const localRaw = localStorage.getItem('warrior_cards');
-          const localCards: WarriorCard[] = localRaw ? JSON.parse(localRaw) : INITIAL_CARDS;
-
-          if (localCards.length > 0 && localCards.some(c => !c.supabaseId)) {
-            // Migration one-time : importer les cartes locales dans Supabase
-            setSyncMessage('Migration des données locales...');
-            const migrated = await batchSaveLegendCards(localCards);
-            setCards(migrated);
-            setFormData({ ...migrated[0] });
-            localStorage.setItem('warrior_cards', JSON.stringify(migrated));
-            setSyncStatus('synced');
-            setSyncMessage(`${migrated.length} carte(s) migrée(s) vers Supabase`);
-          } else {
-            setCards(localCards);
-            setFormData({ ...localCards[0] });
-            setSyncStatus('synced');
-            setSyncMessage('Prêt');
-          }
+          // Supabase est vide : collection vide, pas de sauvegarde automatique
+          setCards([]);
+          setSyncStatus('synced');
+          setSyncMessage('Aucune carte — créez votre première légende !');
         }
       } catch (err) {
-        // Fallback localStorage si Supabase est inaccessible
-        console.warn('[LegendGenerator] Supabase inaccessible, fallback localStorage', err);
-        const localRaw = localStorage.getItem('warrior_cards');
-        const localCards: WarriorCard[] = localRaw ? JSON.parse(localRaw) : INITIAL_CARDS;
-        setCards(localCards);
-        setFormData({ ...localCards[0] });
+        console.warn('[LegendGenerator] Supabase inaccessible', err);
+        setCards([]);
         setSyncStatus('error');
-        setSyncMessage('Mode hors-ligne (localStorage)');
+        setSyncMessage('Erreur de connexion à Supabase');
       }
     };
 
@@ -1606,34 +1586,37 @@ export default function LegendGenerator() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── Sync localStorage en miroir à chaque mise à jour des cartes ──────────
-  useEffect(() => {
-    localStorage.setItem('warrior_cards', JSON.stringify(cards));
-  }, [cards]);
 
   // ─── Sync formData quand currentIndex / cards change ─────────────────────
   useEffect(() => {
     if (activeCard) {
       setFormData({ ...activeCard });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, cards]);
+
+  // ─── Renumérotation séquentielle des cartes ───────────────────────────────
+  const renumberCards = (cardList: WarriorCard[]): WarriorCard[] => {
+    return cardList.map((c, i) => ({
+      ...c,
+      id: i + 1,
+      numero: String(i + 1).padStart(3, '0'),
+    }));
+  };
 
   // ─── Réinitialisation ─────────────────────────────────────────────────────
   const handleResetToDefault = async () => {
-    if (window.confirm("Êtes-vous sûr de vouloir réinitialiser l'application ? Toutes vos cartes personnalisées seront perdues et remplacées par la collection de base.")) {
-      // Supprimer toutes les cartes Supabase ayant un supabaseId
+    if (window.confirm("Êtes-vous sûr de vouloir réinitialiser l'application ? Toutes vos cartes seront supprimées de Supabase.")) {
+      // Supprimer toutes les cartes Supabase
       const toDelete = cards.filter(c => c.supabaseId);
       if (toDelete.length > 0) {
         setSyncStatus('saving');
         setSyncMessage('Suppression en cours...');
         await Promise.all(toDelete.map(c => deleteLegendCard(c.supabaseId!)));
       }
-      setCards(INITIAL_CARDS);
+      setCards([]);
       setCurrentIndex(0);
-      setFormData({ ...INITIAL_CARDS[0] });
-      localStorage.removeItem('warrior_cards');
-      setSyncStatus('idle');
+      setSyncStatus('synced');
       setSyncMessage('Collection réinitialisée');
     }
   };
@@ -1687,11 +1670,10 @@ export default function LegendGenerator() {
 
   const handleAddNewCard = async () => {
     if (cards.length >= 100) { alert("Limite maximale de 100 cartes atteinte !"); return; }
-    const maxId = cards.reduce((max, c) => c.id > max ? c.id : max, 0);
-    const newId = maxId + 1;
+    const newPosition = cards.length + 1;
     const newCard: WarriorCard = {
-      id: newId,
-      numero: String(newId).padStart(3, '0'),
+      id: newPosition,
+      numero: String(newPosition).padStart(3, '0'),
       nom: "NOUVELLE LÉGENDE",
       rarete: "L",
       surnom: "Le Héros de l'Ombre",
@@ -1708,73 +1690,81 @@ export default function LegendGenerator() {
       hp: 70,
       atk: 75
     };
-    // Ajouter localement immédiatement
-    const newCollection = [...cards, newCard];
-    setCards(newCollection);
-    setCurrentIndex(newCollection.length - 1);
-    setFormData(newCard);
-    // Persister dans Supabase en arrière-plan
+    // Sauvegarder dans Supabase AVANT d'ajouter localement
     setSyncStatus('saving');
     setSyncMessage('Sauvegarde de la nouvelle carte...');
     const supabaseId = await saveLegendCard(newCard);
-    if (supabaseId) {
-      const withId = { ...newCard, supabaseId };
-      setCards(prev => prev.map(c => c.id === newCard.id ? withId : c));
-      setFormData(prev => prev.id === newCard.id ? withId : prev);
-      setSyncStatus('synced');
-      setSyncMessage('Carte sauvegardée');
-    } else {
+    if (!supabaseId) {
       setSyncStatus('error');
-      setSyncMessage('Sauvegarde Supabase échouée (carte conservée localement)');
+      setSyncMessage('Erreur : impossible de créer la carte dans Supabase');
+      return;
     }
+    const cardWithId = { ...newCard, supabaseId };
+    const newCollection = [...cards, cardWithId];
+    // Renuméroter toute la collection
+    const renumbered = renumberCards(newCollection);
+    setCards(renumbered);
+    const newIdx = renumbered.length - 1;
+    setCurrentIndex(newIdx);
+    setFormData({ ...renumbered[newIdx] });
+    setSyncStatus('synced');
+    setSyncMessage('Carte sauvegardée');
   };
 
   const handleDuplicateCard = async () => {
     if (cards.length >= 100) { alert("Limite maximale de 100 cartes atteinte !"); return; }
-    const maxId = cards.reduce((max, c) => c.id > max ? c.id : max, 0);
-    const newId = maxId + 1;
+    const newPosition = cards.length + 1;
     const duplicated: WarriorCard = {
       ...formData,
-      id: newId,
-      numero: String(newId).padStart(3, '0'),
+      id: newPosition,
+      numero: String(newPosition).padStart(3, '0'),
       nom: `${formData.nom} (COPIE)`,
       supabaseId: undefined,   // la copie est une nouvelle entrée
     };
-    const newCollection = [...cards, duplicated];
-    setCards(newCollection);
-    setCurrentIndex(newCollection.length - 1);
-    setFormData(duplicated);
-    // Persister dans Supabase en arrière-plan
+    // Sauvegarder dans Supabase AVANT d'ajouter localement
     setSyncStatus('saving');
     setSyncMessage('Duplication en cours...');
     const supabaseId = await saveLegendCard(duplicated);
-    if (supabaseId) {
-      const withId = { ...duplicated, supabaseId };
-      setCards(prev => prev.map(c => c.id === duplicated.id ? withId : c));
-      setFormData(prev => prev.id === duplicated.id ? withId : prev);
-      setSyncStatus('synced');
-      setSyncMessage('Copie sauvegardée');
-    } else {
+    if (!supabaseId) {
       setSyncStatus('error');
-      setSyncMessage('Duplication Supabase échouée');
+      setSyncMessage('Erreur : impossible de dupliquer la carte dans Supabase');
+      return;
     }
+    const cardWithId = { ...duplicated, supabaseId };
+    const newCollection = [...cards, cardWithId];
+    // Renuméroter toute la collection
+    const renumbered = renumberCards(newCollection);
+    setCards(renumbered);
+    const newIdx = renumbered.length - 1;
+    setCurrentIndex(newIdx);
+    setFormData({ ...renumbered[newIdx] });
+    setSyncStatus('synced');
+    setSyncMessage('Copie sauvegardée');
   };
 
   const handleDeleteCard = async () => {
     if (cards.length <= 1) { alert("Vous devez conserver au moins une carte dans votre studio !"); return; }
     if (window.confirm(`Voulez-vous vraiment supprimer la carte de "${formData.nom}" ?`)) {
       const toDelete = formData;
-      const filtered = cards.filter(c => c.id !== toDelete.id);
-      setCards(filtered);
-      setCurrentIndex(Math.max(0, currentIndex - 1));
-      // Supprimer de Supabase en arrière-plan
+      // Supprimer de Supabase en premier
       if (toDelete.supabaseId) {
         setSyncStatus('saving');
         setSyncMessage('Suppression...');
         const ok = await deleteLegendCard(toDelete.supabaseId);
-        setSyncStatus(ok ? 'synced' : 'error');
-        setSyncMessage(ok ? 'Carte supprimée' : 'Erreur de suppression Supabase');
+        if (!ok) {
+          setSyncStatus('error');
+          setSyncMessage('Erreur de suppression Supabase');
+          return;
+        }
       }
+      // Retirer localement et renuméroter
+      const filtered = cards.filter(c => c.id !== toDelete.id);
+      const renumbered = renumberCards(filtered);
+      const newIdx = Math.max(0, currentIndex - 1);
+      setCards(renumbered);
+      setCurrentIndex(newIdx);
+      setSyncStatus('synced');
+      setSyncMessage('Carte supprimée');
     }
   };
 
@@ -2436,7 +2426,8 @@ const background = backgroundMap[mainClass] ?? cardBackground;
               {cardAmbiance.showScratches && (
                 <>
                   <div className="metal-scratch top-[18%] left-[15%] w-[45%] rotate-[20deg] opacity-35" />
-                  <div className="metal-scratch top-[32%] left-[25%] w-[35%] rotate-[-25deg] opacity-30" />
+                  <div className="metal-scratch top-[10%] left-[55%] w-[25%] rotate-[6deg] opacity-30" />
+                  <div className="metal-scratch top-[58%] left-[70%] w-[25%] rotate-[-30deg] opacity-30" />
                   <div className="metal-scratch top-[52%] left-[18%] w-[50%] rotate-[-8deg] opacity-40" />
                   <div className="metal-scratch top-[75%] left-[20%] w-[55%] rotate-[10deg] opacity-35" />
                 </>
@@ -2587,8 +2578,10 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                     {cardAmbiance.cornerStyle === 'rivet' && (
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.05)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0.05)_75%,transparent_75%,transparent)] bg-[length:4px_4px] opacity-15 pointer-events-none" />
                     )}
-                  <span className="relative z-10 flex items-center justify-center px-2">
+                  <span className="relative z-10 flex items-center justify-center gap-2 px-2">
+                    <span className={`${cardAmbiance.accentColor} text-[10px] filter drop-shadow-md`}>●</span>
                     {formData.classe || "SANS CLASSE"}
+                    <span className={`${cardAmbiance.accentColor} text-[10px] filter drop-shadow-md`}>●</span>
                   </span>
                   </span>
                 </div>
