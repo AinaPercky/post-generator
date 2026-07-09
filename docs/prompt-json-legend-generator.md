@@ -260,7 +260,7 @@ Répondre uniquement en JSON :
 "iconSpecialite2": "[emoji ou ≤6 caractères]",
 "realisation": "[Fait réel reconnu]",
 "faille": "[Faiblesse réelle ou documentée]",
-"citation": "[Citation originale + traduction si nécessaire]"
+"citation": "[Citation originale + traduction si nécessaire]" "citation": "\"Au milieu de l'hiver, j'apprenais enfin qu'il y avait en moi un été invincible.\"\n→ Traduction française : Citation originale en français.", et si citation originale en français, reécrire la citation originale et ne plus mettre les entre guillemets
 }
 
 Règle d’or finale
