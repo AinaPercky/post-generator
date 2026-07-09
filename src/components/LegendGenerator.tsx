@@ -1444,7 +1444,7 @@ case 'Fictionnel':
             <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(#1a1a1a_0.8px,transparent_0.8px)] [background-size:3px_3px] mix-blend-multiply" />
 
             {/* ═══ LE JUMBOTRON / SCOREBOARD (ligne défilante) ═══ */}
-            <div className="absolute bottom-3 left-2 right-2 h-5 bg-black/70 rounded-sm overflow-hidden border border-[#00A86B]/30">
+            {/* <div className="absolute bottom-3 left-2 right-2 h-5 bg-black/70 rounded-sm overflow-hidden border border-[#00A86B]/30">
               <div className="absolute inset-0 flex items-center whitespace-nowrap overflow-hidden">
                 <div className="flex items-center gap-8 px-3 text-[8px] font-mono font-bold text-[#00A86B] tracking-wider"
                   style={{ animation: 'athleteTicker 18s linear infinite' }}>
@@ -1470,7 +1470,7 @@ case 'Fictionnel':
                   <span>MIN: 34:12</span>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* ═══ SPOTLIGHT DU STADE ═══ */}
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-56 h-64 bg-gradient-to-b from-white/10 via-[#00A86B]/[0.04] to-transparent opacity-50 mix-blend-screen"
