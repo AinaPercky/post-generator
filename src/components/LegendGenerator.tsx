@@ -2613,7 +2613,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                           <path d="M10,10 C25,25 35,20 28,45 C22,55 18,35 8,60 C4,70 14,75 20,65 C26,55 32,80 42,70 C52,60 40,40 37,30 C34,20 27,10 10,10 Z" />
                         </svg>
                       </div>
-                      <div className="absolute bottom-2 right-3 text-[#8a0303]/45 z-10 pointer-events-none">
+                      <div className="absolute bottom-0 right-0 text-[#8a0303]/45 z-10 pointer-events-none">
                         <svg className="w-14 h-7" viewBox="0 0 100 50" fill="currentColor">
                           <path d="M5,45 C15,35 30,48 45,35 C60,22 55,5 75,10 C95,15 85,38 95,45 C80,48 65,42 50,48 C35,48 20,40 5,45 Z" />
                         </svg>
