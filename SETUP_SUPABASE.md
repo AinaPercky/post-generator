@@ -128,6 +128,19 @@ VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
 ```
 
+### Autoriser un upload anonyme dans `saved_posts`
+
+Si vous souhaitez permettre des sauvegardes sans utilisateur Supabase (upload anonyme), utilisez la politique suivante pour la table `saved_posts` :
+
+```sql
+CREATE POLICY "Créer ses propres posts"
+  ON saved_posts
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
+```
+
+Cela permet d'insérer des posts avec `user_id = NULL` tout en conservant la sécurité pour les posts authentifiés.
+
 ### Erreur: "Failed to connect to Supabase"
 
 1. Vérifiez que vos clés API sont correctes

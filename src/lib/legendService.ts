@@ -111,12 +111,31 @@ export function savedPostToWarriorCard(post: SavedPost, localId: number): Warrio
  * Charge toutes les cartes Legend depuis Supabase.
  * Retourne un tableau vide en cas d'erreur (le composant gerera le fallback).
  */
+const compareLegendCards = (a: SavedPost, b: SavedPost) => {
+  const aNumero = Number((a.metadata?.card as any)?.numero ?? '');
+  const bNumero = Number((b.metadata?.card as any)?.numero ?? '');
+
+  if (!Number.isNaN(aNumero) && !Number.isNaN(bNumero)) {
+    return aNumero - bNumero;
+  }
+
+  if (!Number.isNaN(aNumero)) return -1;
+  if (!Number.isNaN(bNumero)) return 1;
+
+  const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+  const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+  return aTime - bTime;
+};
+
 export async function loadLegendCards(): Promise<WarriorCard[]> {
   try {
     const posts = await getPostsByType('legend', {
       limit: 200,
       includeImageData: true,
     });
+
+    posts.sort(compareLegendCards);
+
     return posts.map((post, index) => savedPostToWarriorCard(post, index + 1));
   } catch (error) {
     console.error('[legendService] Erreur chargement Supabase:', error);

@@ -263,5 +263,164 @@ Répondre uniquement en JSON :
 "citation": "[Citation originale + traduction si nécessaire]" "citation": "\"Au milieu de l'hiver, j'apprenais enfin qu'il y avait en moi un été invincible.\"\n→ Traduction française : Citation originale en français.", et si citation originale en français, reécrire la citation originale et ne plus mettre les entre guillemets
 }
 
+Détermination de la classe
+
+La classe doit refléter la raison principale pour laquelle le personnage est universellement reconnu.
+
+Règles de classification
+
+• Artiste
+Personnage principalement célèbre pour la création d'œuvres artistiques :
+roman, poésie, théâtre, musique, peinture, sculpture, cinéma, danse, etc.
+
+Exemples :
+
+- Charles Perrault
+- Victor Hugo
+- William Shakespeare
+- Molière
+
+• Penseur
+Personnage principalement célèbre pour ses idées, sa philosophie, sa réflexion intellectuelle, politique, morale, religieuse ou scientifique.
+
+Exemples :
+
+- Platon
+- Aristote
+- Confucius
+- Jean-Paul Sartre
+- Simone de Beauvoir
+
+Cas hybrides (règle prioritaire)
+
+Si un personnage est reconnu à la fois comme artiste et comme penseur, toujours privilégier la classe « Penseur » lorsque son œuvre est indissociable d'une pensée, d'une philosophie, d'une théorie ou d'un courant intellectuel ayant marqué l'histoire.
+
+Exemples :
+
+- Albert Camus → Penseur / Philosophe
+- Jean-Paul Sartre → Penseur / Philosophe
+- Simone de Beauvoir → Penseur / Philosophe
+- Umberto Eco → Penseur / Sémioticien
+
+Règle de décision
+
+Se poser la question suivante :
+
+« Ce personnage est-il davantage connu pour ses œuvres artistiques ou pour les idées qu'elles transmettent ? »
+
+→ Si la renommée provient principalement de ses créations artistiques : Artiste.
+→ Si la renommée provient principalement de sa pensée ou de son influence intellectuelle : Penseur.
+→ En cas d'hésitation entre les deux, toujours choisir « Penseur ».
+
+Cas particulier : Athlètes
+Pour la classe Athlète, ne jamais utiliser un sous-titre stylisé ou une épithète (ex: "Guerrier", "Légende du ring").
+Toujours utiliser le format suivant :
+Athlète / [Discipline pratiquée]
+La discipline doit être celle pour laquelle le personnage est principalement reconnu, formulée de façon simple et directe (le sport ou l'épreuve précise si pertinent).
+Exemples corrects :
+
+Carl Lewis → Athlète / Sprint
+Muhammad Ali → Athlète / Boxe
+Michael Jordan → Athlète / Basketball
+Usain Bolt → Athlète / Sprint
+Serena Williams → Athlète / Tennis
+
+❌ Interdit :
+
+Athlète / Le Roi du 100m
+Athlète / Légende Olympique
+Athlète / Guerrier des Rings
+
+Cas particulier : Stratèges
+Les stratèges (militaires, historiques ou théoriciens de la guerre) doivent toujours être classés en Guerrier, même si leur renommée provient principalement d'écrits ou de théories stratégiques plutôt que de batailles personnellement menées.
+Sont considérés comme stratèges : généraux, maréchaux, colonels, et tout autre titre ou grade militaire de commandement stratégique.
+Format :
+Guerrier / Stratège
+Exemples corrects :
+
+Sun Tzu → Guerrier / Stratège
+Carl von Clausewitz → Guerrier / Stratège
+Subutai → Guerrier / Stratège
+Napoléon Bonaparte → Guerrier / Stratège
+Erwin Rommel → Guerrier / Stratège
+
+❌ Ne pas mettre : "Guerrier / Stratège militaire" — utiliser uniquement "Stratège".
+
+Cas particulier : Fictionnel
+Pour la classe Fictionnel, le sous-type doit refléter la nature ou fonction principale du personnage dans son univers, formulée de façon simple et directe — jamais un titre honorifique ou un surnom stylisé.
+Format :
+Fictionnel / [Type ou fonction]
+Types courants à utiliser en priorité (liste non exhaustive) :
+
+Mage (magiciens, sorciers, utilisateurs de sortilèges)
+Ninja (shinobi, assassins entraînés à l'infiltration)
+Guerrier (combattants, chevaliers, soldats fictifs génériques)
+Soldat (militaires fictifs, vétérans, combattants solitaires)
+Psychique (pouvoirs mentaux, télékinésie, télépathie)
+Héros (super-héros sans catégorie plus précise)
+Détective (enquêteurs, résolveurs de mystères)
+Avocat (juristes, défenseurs, hors-la-loi juridiques)
+Chimiste / Scientifique fictif (savants fictionnels, réservé à l'univers de fiction)
+Marin (capitaines, navigateurs fictifs)
+Reporter (journalistes, aventuriers-enquêteurs fictifs)
+Pirate (marins hors-la-loi)
+Robot / IA (intelligences artificielles, androïdes)
+Créature (êtres non-humains : dragons, monstres, etc.)
+Espion (agents secrets fictifs)
+
+Règle de sélection :
+Se poser la question : « Quelle est la fonction ou nature la plus reconnaissable de ce personnage dans son univers ? »
+→ Choisir le type le plus concret et le plus immédiatement identifiable, pas une description vague ("Personnage", "Figure").
+Cas limite — personnages évolutifs :
+Certains personnages changent de fonction au cours de leur histoire (ex : chimiste devenant criminel). Toujours choisir la fonction la plus reconnaissable et originelle, pas l'aboutissement moral ou narratif du personnage.
+Exemples corrects :
+
+Gandalf → Fictionnel / Mage
+Eleven (Stranger Things) → Fictionnel / Psychique
+Kakashi Hatake → Fictionnel / Ninja
+Sherlock Holmes → Fictionnel / Détective
+Iron Man → Fictionnel / Héros
+Saul Goodman → Fictionnel / Avocat
+Rambo → Fictionnel / Soldat
+Walter White → Fictionnel / Chimiste
+Capitaine Haddock → Fictionnel / Marin
+Tintin → Fictionnel / Reporter
+
+❌ Interdit :
+
+Fictionnel / Légende Vivante
+Fictionnel / Être Extraordinaire
+Fictionnel / Le Plus Grand des Héros
+Fictionnel / Baron de la Drogue (aboutissement narratif, pas fonction originelle)
+
+Sous-type : Religieux
+
+Classe : Penseur / Religieux
+
+Définition :
+Personnage reconnu pour son influence spirituelle, son enseignement religieux, sa vision morale ou son rôle majeur dans une tradition de foi.
+
+Critères :
+
+Contribution importante à une tradition religieuse ;
+Enseignement spirituel ou moral reconnu ;
+Réflexion sur la foi, l’éthique ou la condition humaine ;
+Influence religieuse historique.
+
+Exemples :
+
+Jésus de Nazareth → Penseur / Religieux
+Bouddha → Penseur / Religieux
+Saint Augustin → Penseur / Religieux
+Thomas d’Aquin → Penseur / Religieux
+Mère Teresa → Penseur / Religieux
+
+Cas de Mère Teresa :
+Elle est classée ainsi pour son influence spirituelle catholique, sa fondation des Missionnaires de la Charité et sa vision du service des plus pauvres comme engagement religieux.
+
+Règle LegendGenerator :
+
+Religieux désigne les personnages dont l’impact historique provient principalement de leur pensée, leur foi ou leur influence spirituelle.
+
 Règle d’or finale
 👉 La carte doit être stylisée comme un TCG, mais vérifiable comme une encyclopédie.

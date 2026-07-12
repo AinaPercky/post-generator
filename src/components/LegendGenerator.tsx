@@ -1544,7 +1544,11 @@ export default function LegendGenerator() {
   // ─── État synchronisation Supabase ────────────────────────────────────────
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
   const [syncMessage, setSyncMessage] = useState<string>('');
-  const updateDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // liste des ids locaux modifiés (à sauvegarder manuellement)
+  const [dirtyIds, setDirtyIds] = useState<number[]>([]);
+
+  // cache des URLs de portrait pour éviter de charger toutes les images au démarrage
+  const [portraitCache, setPortraitCache] = useState<Record<number, string>>({});
 
   const cardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1563,8 +1567,15 @@ export default function LegendGenerator() {
         if (supabaseCards.length > 0) {
           // Renuméroter séquentiellement selon l'ordre reçu
           const renumbered = renumberCards(supabaseCards);
-          setCards(renumbered);
-          setFormData({ ...renumbered[0] });
+          // Extraire et mettre en cache les portraits pour chargement lazy
+          const cache: Record<number, string> = {};
+          const cardsWithoutPortraits = renumbered.map(c => {
+            cache[c.id] = c.portraitUrl || '';
+            return { ...c, portraitUrl: '' } as WarriorCard;
+          });
+          setPortraitCache(cache);
+          setCards(cardsWithoutPortraits);
+          setFormData({ ...cardsWithoutPortraits[0], portraitUrl: cache[cardsWithoutPortraits[0].id] || '' });
           setCurrentIndex(0);
           setSyncStatus('synced');
           setSyncMessage(`${renumbered.length} carte(s) chargée(s)`);
@@ -1587,13 +1598,14 @@ export default function LegendGenerator() {
   }, []);
 
 
-  // ─── Sync formData quand currentIndex / cards change ─────────────────────
+  // ─── Sync formData quand currentIndex / cards change (lazy portrait load)
   useEffect(() => {
     if (activeCard) {
-      setFormData({ ...activeCard });
+      const portrait = portraitCache[activeCard.id] ?? activeCard.portraitUrl ?? '';
+      setFormData({ ...activeCard, portraitUrl: portrait });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, cards]);
+  }, [currentIndex, cards, portraitCache]);
 
   // ─── Renumérotation séquentielle des cartes ───────────────────────────────
   const renumberCards = (cardList: WarriorCard[]): WarriorCard[] => {
@@ -1637,17 +1649,9 @@ export default function LegendGenerator() {
     }
   };
 
-  // ─── Debounced update Supabase lors d'une édition de champ ───────────────
-  const scheduleSupabaseUpdate = useCallback((updatedCard: WarriorCard) => {
-    if (updateDebounceRef.current) clearTimeout(updateDebounceRef.current);
-    if (!updatedCard.supabaseId) return;
-    updateDebounceRef.current = setTimeout(async () => {
-      setSyncStatus('saving');
-      setSyncMessage('Sauvegarde...');
-      const ok = await updateLegendCard(updatedCard.supabaseId!, updatedCard);
-      setSyncStatus(ok ? 'synced' : 'error');
-      setSyncMessage(ok ? 'Sauvegardé' : 'Erreur de synchronisation');
-    }, 700);
+  // ─── Marquer une carte comme modifiée (sauvegarde manuelle via le bouton)
+  const markDirty = useCallback((cardId: number) => {
+    setDirtyIds(prev => Array.from(new Set([...prev, cardId])));
   }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -1662,7 +1666,11 @@ export default function LegendGenerator() {
         }
         updatedCards[activeIdx] = updated;
         setCards(updatedCards);
-        scheduleSupabaseUpdate(updatedCards[activeIdx]);
+        markDirty(updatedCards[activeIdx].id);
+        // mettre à jour le cache de portrait si l'utilisateur a saisi une URL
+        if (name === 'portraitUrl') {
+          setPortraitCache(prev => ({ ...prev, [updatedCards[activeIdx].id]: updated.portraitUrl }));
+        }
       }
       return updated;
     });
@@ -1690,16 +1698,8 @@ export default function LegendGenerator() {
       hp: 70,
       atk: 75
     };
-    // Sauvegarder dans Supabase AVANT d'ajouter localement
-    setSyncStatus('saving');
-    setSyncMessage('Sauvegarde de la nouvelle carte...');
-    const supabaseId = await saveLegendCard(newCard);
-    if (!supabaseId) {
-      setSyncStatus('error');
-      setSyncMessage('Erreur : impossible de créer la carte dans Supabase');
-      return;
-    }
-    const cardWithId = { ...newCard, supabaseId };
+    // Ajouter localement sans sauvegarde automatique (utilisateur devra appuyer sur "Sauvegarder les cartes")
+    const cardWithId = { ...newCard, supabaseId: undefined };
     const newCollection = [...cards, cardWithId];
     // Renuméroter toute la collection
     const renumbered = renumberCards(newCollection);
@@ -1707,8 +1707,9 @@ export default function LegendGenerator() {
     const newIdx = renumbered.length - 1;
     setCurrentIndex(newIdx);
     setFormData({ ...renumbered[newIdx] });
-    setSyncStatus('synced');
-    setSyncMessage('Carte sauvegardée');
+    setDirtyIds(prev => Array.from(new Set([...prev, renumbered[newIdx].id])));
+    setSyncStatus('idle');
+    setSyncMessage('Carte ajoutée localement (pensez à sauvegarder)');
   };
 
   const handleDuplicateCard = async () => {
@@ -1719,18 +1720,12 @@ export default function LegendGenerator() {
       id: newPosition,
       numero: String(newPosition).padStart(3, '0'),
       nom: `${formData.nom} (COPIE)`,
-      supabaseId: undefined,   // la copie est une nouvelle entrée
+      supabaseId: undefined,   // la copie est une nouvelle entrée locale
     };
-    // Sauvegarder dans Supabase AVANT d'ajouter localement
-    setSyncStatus('saving');
-    setSyncMessage('Duplication en cours...');
-    const supabaseId = await saveLegendCard(duplicated);
-    if (!supabaseId) {
-      setSyncStatus('error');
-      setSyncMessage('Erreur : impossible de dupliquer la carte dans Supabase');
-      return;
-    }
-    const cardWithId = { ...duplicated, supabaseId };
+    // Ajouter localement sans sauvegarde automatique
+    setSyncStatus('idle');
+    setSyncMessage('Duplication locale réalisée');
+    const cardWithId = { ...duplicated };
     const newCollection = [...cards, cardWithId];
     // Renuméroter toute la collection
     const renumbered = renumberCards(newCollection);
@@ -1738,8 +1733,7 @@ export default function LegendGenerator() {
     const newIdx = renumbered.length - 1;
     setCurrentIndex(newIdx);
     setFormData({ ...renumbered[newIdx] });
-    setSyncStatus('synced');
-    setSyncMessage('Copie sauvegardée');
+    setDirtyIds(prev => Array.from(new Set([...prev, renumbered[newIdx].id])));
   };
 
   const handleDeleteCard = async () => {
@@ -1798,7 +1792,7 @@ export default function LegendGenerator() {
         if (activeIdx !== -1) {
           updatedCards[activeIdx] = updated;
           setCards(updatedCards);
-          scheduleSupabaseUpdate(updatedCards[activeIdx]);
+          markDirty(updatedCards[activeIdx].id);
         }
         return updated;
       });
@@ -1839,7 +1833,8 @@ export default function LegendGenerator() {
           if (activeIdx !== -1) {
             updatedCards[activeIdx] = updated;
             setCards(updatedCards);
-            scheduleSupabaseUpdate(updatedCards[activeIdx]);
+            setPortraitCache(prev => ({ ...prev, [updatedCards[activeIdx].id]: base64Url }));
+            markDirty(updatedCards[activeIdx].id);
           }
           return updated;
         });
@@ -1865,10 +1860,42 @@ export default function LegendGenerator() {
       if (activeIdx !== -1) {
         updatedCards[activeIdx] = updated;
         setCards(updatedCards);
-        scheduleSupabaseUpdate(updatedCards[activeIdx]);
+        setPortraitCache(prev => ({ ...prev, [updatedCards[activeIdx].id]: url }));
+        markDirty(updatedCards[activeIdx].id);
       }
       return updated;
     });
+  };
+
+  // ─── Sauvegarder toutes les cartes modifiées / non sauvegardées vers Supabase
+  const handleSaveAll = async () => {
+    if (cards.length === 0) return;
+    setSyncStatus('saving');
+    setSyncMessage('Sauvegarde des cartes en cours...');
+    try {
+      const updatedCollection: WarriorCard[] = [];
+      for (const c of cards) {
+        if (c.supabaseId) {
+          // Mettre à jour
+          const ok = await updateLegendCard(c.supabaseId, c);
+          if (!ok) console.warn('Échec mise à jour carte', c.id);
+          updatedCollection.push(c);
+        } else {
+          // Nouvel enregistrement
+          const supabaseId = await saveLegendCard(c);
+          updatedCollection.push({ ...c, supabaseId: supabaseId ?? undefined });
+        }
+      }
+      const renumbered = renumberCards(updatedCollection);
+      setCards(renumbered);
+      setDirtyIds([]);
+      setSyncStatus('synced');
+      setSyncMessage('Toutes les cartes ont été sauvegardées');
+    } catch (err) {
+      console.error('Erreur sauvegarde globale', err);
+      setSyncStatus('error');
+      setSyncMessage('Erreur pendant la sauvegarde');
+    }
   };
 
   const exportCard = async (format: 'png' | 'jpeg') => {
@@ -2006,6 +2033,13 @@ const background = backgroundMap[mainClass] ?? cardBackground;
         </div>
 
         <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
+          <button onClick={handleSaveAll} disabled={dirtyIds.length === 0}
+            title={dirtyIds.length === 0 ? 'Aucune modification à sauvegarder' : `Sauvegarder ${dirtyIds.length} carte(s)`}
+            className={`flex items-center gap-2 text-xs ${dirtyIds.length === 0 ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-black'} border border-neutral-800 px-4 py-2 rounded-md font-bold transition`}>
+            <Upload className="w-4 h-4" />
+            <span>Sauvegarder les cartes</span>
+            {dirtyIds.length > 0 && <span className="ml-1 inline-block bg-black/60 text-[11px] px-2 py-0.5 rounded-full font-mono">{dirtyIds.length}</span>}
+          </button>
           {/* Indicateur de synchronisation Supabase */}
           <div className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-2 rounded-md border transition-all ${
             syncStatus === 'loading' ? 'bg-neutral-900 border-neutral-700 text-neutral-400' :
@@ -2085,7 +2119,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                           isSelected ? 'border-amber-500 bg-amber-950/10 shadow-[0_0_12px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20' : 'border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900/50'
                         }`}>
                         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-900 border border-neutral-800">
-                          <img src={c.portraitUrl} alt="" className="w-full h-full object-cover object-top" />
+                          <img src={portraitCache[c.id] ?? c.portraitUrl} alt="" className="w-full h-full object-cover object-top" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 justify-between">
@@ -2421,6 +2455,15 @@ const background = backgroundMap[mainClass] ?? cardBackground;
           
           {/* EXPORT */}
           <div className="bg-neutral-900/40 p-5 rounded-2xl border border-neutral-800 shadow-lg backdrop-blur-sm w-full max-w-[430px] mb-6 space-y-4">
+            <div className="flex justify-end">
+              <button onClick={handleSaveAll} disabled={dirtyIds.length === 0}
+                title={dirtyIds.length === 0 ? 'Aucune modification à sauvegarder' : `Sauvegarder ${dirtyIds.length} carte(s)`}
+                className={`flex items-center gap-2 text-xs ${dirtyIds.length === 0 ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-black'} border border-neutral-800 px-3 py-2 rounded-md font-bold transition`}>
+                <Upload className="w-4 h-4" />
+                <span>Sauvegarder les cartes</span>
+                {dirtyIds.length > 0 && <span className="ml-1 inline-block bg-black/60 text-[11px] px-2 py-0.5 rounded-full font-mono">{dirtyIds.length}</span>}
+              </button>
+            </div>
             <span className="block text-[10px] font-black uppercase text-neutral-500 tracking-widest mb-1">Options d'exportation d'image</span>
             <div className="grid grid-cols-2 gap-2 bg-neutral-950 p-1 rounded-lg border border-neutral-800">
               <button type="button" onClick={() => setExportBackground('filled')}

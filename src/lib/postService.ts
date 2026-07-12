@@ -5,6 +5,80 @@ const TABLE_NAME = 'saved_posts';
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const isUuid = (value?: string): value is string => Boolean(value && UUID_REGEX.test(value));
+const isDataUrl = (value?: string): value is string => Boolean(value && /^data:/i.test(value));
+
+const getStorageBucketCandidates = (): string[] => {
+  const envBucket = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET?.trim();
+  return [...new Set([envBucket, 'post_images', 'POST_IMAGES'].filter(Boolean))] as string[];
+};
+
+const isStorageBucketError = (error: unknown): boolean => {
+  if (typeof error !== 'object' || error === null) {
+    return false;
+  }
+
+  const message = (error as { message?: string }).message || '';
+  return /bucket not found|storage bucket|not found/i.test(message);
+};
+
+const uploadImageToStorage = async (imageUrl: string | undefined, postType: PostType): Promise<string | undefined> => {
+  if (!imageUrl || !isDataUrl(imageUrl)) {
+    return imageUrl;
+  }
+
+  try {
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    const mimeType = blob.type || 'image/png';
+    const extension = mimeType.split('/')[1] || 'png';
+    const fileName = `${postType}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`;
+
+    const bucketCandidates = getStorageBucketCandidates();
+    let lastError: unknown;
+
+    for (const bucket of bucketCandidates) {
+      const { data, error } = await supabase.storage.from(bucket).upload(fileName, blob, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: mimeType,
+      });
+
+      if (error) {
+        if (isStorageBucketError(error)) {
+          lastError = error;
+          continue;
+        }
+
+        throw error;
+      }
+
+      if (!data?.path) {
+        throw new Error('Supabase Storage returned no file path.');
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
+      return publicUrlData.publicUrl || imageUrl;
+    }
+
+    if (lastError) {
+      console.warn('[postService] Supabase Storage bucket was not found for any candidate:', bucketCandidates, lastError);
+    }
+
+    return imageUrl;
+  } catch (error) {
+    console.warn('Image upload to Supabase Storage failed, keeping the original value:', error);
+    return imageUrl;
+  }
+};
+
+const preparePostForPersistence = async (post: Partial<SavedPost>): Promise<Partial<SavedPost>> => {
+  const persistedImageUrl = await uploadImageToStorage(post.imageUrl, post.type || 'magazine');
+
+  return {
+    ...post,
+    imageUrl: persistedImageUrl ?? '',
+  };
+};
 
 const withOwnerMetadata = (post: Partial<SavedPost>) => {
   const metadata = { ...(post.metadata || {}) };
@@ -148,7 +222,8 @@ const sanitizePostForSave = (post: Partial<SavedPost>): Partial<SavedPost> => {
 export async function savePost(post: SavedPost): Promise<SavedPost | null> {
   try {
     const sanitizedPost = sanitizePostForSave(post) as SavedPost;
-    const payload = toInsertPayload(sanitizedPost);
+    const persistedPost = await preparePostForPersistence(sanitizedPost);
+    const payload = toInsertPayload(persistedPost as SavedPost);
     const { data, error } = await supabase.from(TABLE_NAME).insert([payload]).select().single();
 
     if (error) {
@@ -174,9 +249,9 @@ export async function getPostsByType(
   }
 ): Promise<SavedPost[]> {
   try {
-    // Select all fields except image_url by default to prevent timeouts due to large base64 strings
-    const selectFields = filters?.includeImageData 
-      ? '*' 
+    // Select only the needed fields, including image_url only when requested.
+    const selectFields = filters?.includeImageData
+      ? 'id, type, title, description, image_url, metadata, created_at, updated_at, user_id, author_name'
       : 'id, type, title, description, metadata, created_at, updated_at, user_id, author_name';
 
     let query = supabase.from(TABLE_NAME).select(selectFields).eq('type', postType);
@@ -224,7 +299,8 @@ export async function getPostById(id: string): Promise<SavedPost | null> {
 
 export async function updatePost(id: string, updates: Partial<SavedPost>): Promise<SavedPost | null> {
   try {
-    const payload = toUpdatePayload(sanitizePostForSave(updates));
+    const persistedUpdates = await preparePostForPersistence(sanitizePostForSave(updates));
+    const payload = toUpdatePayload(persistedUpdates);
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .update(payload)
@@ -308,7 +384,7 @@ export function subscribeToPostChanges(
         filter: `type=eq.${postType}`,
       },
       () => {
-        getPostsByType(postType, { limit: 50, includeImageData: true }).then(callback);
+        getPostsByType(postType, { limit: 50, includeImageData: false }).then(callback);
       }
     )
     .subscribe();

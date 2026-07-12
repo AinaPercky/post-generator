@@ -43,7 +43,7 @@ CREATE POLICY "Lire les posts publics"
 CREATE POLICY "Créer ses propres posts"
   ON saved_posts
   FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
 -- Politique: Modifier ses propres posts
 CREATE POLICY "Modifier ses propres posts"
