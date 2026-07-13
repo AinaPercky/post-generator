@@ -1551,9 +1551,6 @@ export default function LegendGenerator() {
   // null = pas de doublon ; string = message d'avertissement
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
-  // cache des URLs de portrait pour éviter de charger toutes les images au démarrage
-  const [portraitCache, setPortraitCache] = useState<Record<number, string>>({});
-
   const cardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -1571,15 +1568,8 @@ export default function LegendGenerator() {
         if (supabaseCards.length > 0) {
           // Renuméroter séquentiellement selon l'ordre reçu
           const renumbered = renumberCards(supabaseCards);
-          // Extraire et mettre en cache les portraits pour chargement lazy
-          const cache: Record<number, string> = {};
-          const cardsWithoutPortraits = renumbered.map(c => {
-            cache[c.id] = c.portraitUrl || '';
-            return { ...c, portraitUrl: '' } as WarriorCard;
-          });
-          setPortraitCache(cache);
-          setCards(cardsWithoutPortraits);
-          setFormData({ ...cardsWithoutPortraits[0], portraitUrl: cache[cardsWithoutPortraits[0].id] || '' });
+          setCards(renumbered);
+          setFormData({ ...renumbered[0] });
           setCurrentIndex(0);
           setSyncStatus('synced');
           setSyncMessage(`${renumbered.length} carte(s) chargée(s)`);
@@ -1602,14 +1592,12 @@ export default function LegendGenerator() {
   }, []);
 
 
-  // ─── Sync formData quand currentIndex / cards change (lazy portrait load)
+  // ─── Sync formData quand currentIndex / cards change
   useEffect(() => {
     if (activeCard) {
-      const portrait = portraitCache[activeCard.id] ?? activeCard.portraitUrl ?? '';
-      setFormData({ ...activeCard, portraitUrl: portrait });
+      setFormData({ ...activeCard });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, cards, portraitCache]);
+  }, [currentIndex, cards]);
 
   // ─── Renumérotation séquentielle des cartes ───────────────────────────────
   const renumberCards = (cardList: WarriorCard[]): WarriorCard[] => {
@@ -1671,10 +1659,6 @@ export default function LegendGenerator() {
         updatedCards[activeIdx] = updated;
         setCards(updatedCards);
         markDirty(updatedCards[activeIdx].id);
-        // mettre à jour le cache de portrait si l'utilisateur a saisi une URL
-        if (name === 'portraitUrl') {
-          setPortraitCache(prev => ({ ...prev, [updatedCards[activeIdx].id]: updated.portraitUrl }));
-        }
       }
 
       // ─── Vérification doublon en temps réel (sur le champ « nom ») ───────────
@@ -1859,7 +1843,6 @@ export default function LegendGenerator() {
           if (activeIdx !== -1) {
             updatedCards[activeIdx] = updated;
             setCards(updatedCards);
-            setPortraitCache(prev => ({ ...prev, [updatedCards[activeIdx].id]: base64Url }));
             markDirty(updatedCards[activeIdx].id);
           }
           return updated;
@@ -1886,7 +1869,6 @@ export default function LegendGenerator() {
       if (activeIdx !== -1) {
         updatedCards[activeIdx] = updated;
         setCards(updatedCards);
-        setPortraitCache(prev => ({ ...prev, [updatedCards[activeIdx].id]: url }));
         markDirty(updatedCards[activeIdx].id);
       }
       return updated;
@@ -2207,7 +2189,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                           isSelected ? 'border-amber-500 bg-amber-950/10 shadow-[0_0_12px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20' : 'border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900/50'
                         }`}>
                         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-900 border border-neutral-800">
-                          <img src={portraitCache[c.id] ?? c.portraitUrl} alt="" className="w-full h-full object-cover object-top" />
+                          <img src={c.portraitUrl} alt="" className="w-full h-full object-cover object-top" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 justify-between">
