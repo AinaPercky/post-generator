@@ -1,4 +1,4 @@
-﻿/**
+/**
  * legendService.ts
  * ---------------------------------------------------------------
  * Service CRUD dedie aux cartes du LegendGenerator.
@@ -7,6 +7,7 @@
  *  - Mapper WarriorCard (format interne) <=> SavedPost (format Supabase)
  *  - Exposer : loadLegendCards / saveLegendCard / updateLegendCard / deleteLegendCard / batchSaveLegendCards
  *  - Deleguer les appels reseau au postService generique existant
+ *  - Garantir l'unicité des noms de cartes (DuplicateLegendError)
  * ---------------------------------------------------------------
  */
 
@@ -41,6 +42,38 @@ export interface WarriorCard {
   theme: 'gold' | 'fire' | 'void' | 'ice' | 'emerald';
   hp: number;
   atk: number;
+}
+
+// ----------------------------------------------------------------
+// Erreur métier — Doublon de carte
+// ----------------------------------------------------------------
+
+/**
+ * Erreur levée quand une carte Legend avec le même nom existe déjà.
+ * Permet de distinguer ce cas d'une erreur réseau ou d'une erreur DB générique.
+ */
+export class DuplicateLegendError extends Error {
+  constructor(nom: string) {
+    super(`Une carte nommée "${nom}" existe déjà dans la collection.`);
+    this.name = 'DuplicateLegendError';
+  }
+}
+
+// ----------------------------------------------------------------
+// Normalisation du nom (insensible à la casse et aux accents)
+// ----------------------------------------------------------------
+
+/**
+ * Normalise un nom de carte pour la comparaison d'unicité :
+ * - trim, lowercase, suppression des diacritiques (accents)
+ * Exemple : "Léonard De Vinci" === "leonard de vinci"
+ */
+export function normalizeLegendName(nom: string): string {
+  return nom
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
 // ----------------------------------------------------------------
@@ -104,6 +137,38 @@ export function savedPostToWarriorCard(post: SavedPost, localId: number): Warrio
 }
 
 // ----------------------------------------------------------------
+// Vérification d'unicité — backend
+// ----------------------------------------------------------------
+
+/**
+ * Vérifie si une carte Legend avec ce nom existe déjà dans Supabase.
+ *
+ * @param nom               - Nom à vérifier (insensible à la casse et aux accents)
+ * @param excludeSupabaseId - supabaseId de la carte en cours d'édition à exclure (cas UPDATE)
+ * @returns true si un doublon existe (une AUTRE carte porte déjà ce nom)
+ */
+export async function checkLegendCardNameExists(
+  nom: string,
+  excludeSupabaseId?: string
+): Promise<boolean> {
+  try {
+    const posts = await getPostsByType('legend', { limit: 200, includeImageData: false });
+    const normalizedNom = normalizeLegendName(nom);
+
+    return posts.some(post => {
+      // Exclure la carte elle-même en cas de mise à jour
+      if (excludeSupabaseId && post.id === excludeSupabaseId) return false;
+      return normalizeLegendName(post.title) === normalizedNom;
+    });
+  } catch (error) {
+    console.error('[legendService] Erreur vérification doublon:', error);
+    // En cas d'erreur réseau, on laisse passer — la contrainte DB (idx_legend_unique_name)
+    // sera le dernier filet de sécurité.
+    return false;
+  }
+}
+
+// ----------------------------------------------------------------
 // CRUD
 // ----------------------------------------------------------------
 
@@ -145,30 +210,58 @@ export async function loadLegendCards(): Promise<WarriorCard[]> {
 
 /**
  * Sauvegarde une nouvelle carte dans Supabase.
- * Retourne le supabaseId attribue, ou null en cas d'echec.
+ * Lève DuplicateLegendError si une carte avec le même nom existe déjà.
+ * Retourne le supabaseId attribué, ou null en cas d'échec non-doublon.
  */
 export async function saveLegendCard(card: WarriorCard): Promise<string | null> {
+  // ── Guard anti-doublon (vérification backend avant INSERT) ──────────────
+  const exists = await checkLegendCardNameExists(card.nom, card.supabaseId);
+  if (exists) {
+    throw new DuplicateLegendError(card.nom);
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   try {
     const post = warriorCardToSavedPost(card);
     const saved = await savePost(post);
     return saved?.id ?? null;
   } catch (error) {
+    // Re-lever DuplicateLegendError telle quelle (peut arriver via contrainte DB 23505)
+    if (error instanceof DuplicateLegendError) throw error;
+    // Détecter l'erreur unique constraint Postgres (code 23505) comme filet de sécurité
+    const msg = (error as any)?.message ?? '';
+    if (msg.includes('23505') || msg.includes('idx_legend_unique_name') || msg.includes('unique')) {
+      throw new DuplicateLegendError(card.nom);
+    }
     console.error('[legendService] Erreur sauvegarde:', error);
     return null;
   }
 }
 
 /**
- * Met a jour une carte existante dans Supabase.
- * Retourne true si la mise a jour a reussi.
+ * Met à jour une carte existante dans Supabase.
+ * Lève DuplicateLegendError si le nouveau nom est déjà utilisé par une autre carte.
+ * Retourne true si la mise à jour a réussi.
  */
 export async function updateLegendCard(supabaseId: string, card: WarriorCard): Promise<boolean> {
+  // ── Guard anti-doublon (en excluant la carte elle-même) ─────────────────
+  const exists = await checkLegendCardNameExists(card.nom, supabaseId);
+  if (exists) {
+    throw new DuplicateLegendError(card.nom);
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   try {
     const post = warriorCardToSavedPost(card);
     const updated = await updatePost(supabaseId, post);
     return updated !== null;
   } catch (error) {
-    console.error('[legendService] Erreur mise a jour:', error);
+    if (error instanceof DuplicateLegendError) throw error;
+    const msg = (error as any)?.message ?? '';
+    if (msg.includes('23505') || msg.includes('idx_legend_unique_name') || msg.includes('unique')) {
+      throw new DuplicateLegendError(card.nom);
+    }
+    console.error('[legendService] Erreur mise à jour:', error);
     return false;
   }
 }

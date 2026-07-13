@@ -10,7 +10,7 @@ import penseurBackground from '../assets/fond_penseur.png';
 import dirigeantBackground from '../assets/fond_dirigeant.png';
 import athleteBackground from '../assets/fond_athlete.png';
 import { Anchor, Sparkles, Upload, Download, Plus, Trash2, Copy, Search, Image as ImageIcon, RotateCcw, Swords, Shield, Quote, Heart, Check, TriangleAlert as AlertTriangle, ListFilter as Filter, Eye, Settings, Circle as HelpCircle, FileImage, Crown, Skull, Crosshair, Axe, Flame, Zap, Wind, Target, Feather, Compass, FlaskConical, Palette, Film, BookOpen, Trophy, Loader2, CloudOff, CloudCheck, ClipboardPaste } from 'lucide-react';
-import { WarriorCard, loadLegendCards, saveLegendCard, updateLegendCard, deleteLegendCard } from '../lib/legendService';
+import { WarriorCard, loadLegendCards, saveLegendCard, updateLegendCard, deleteLegendCard, DuplicateLegendError, normalizeLegendName } from '../lib/legendService';
 
 // WarriorCard est importé depuis legendService (avec le champ supabaseId en plus)
 // cf. src/lib/legendService.ts
@@ -1547,6 +1547,10 @@ export default function LegendGenerator() {
   // liste des ids locaux modifiés (à sauvegarder manuellement)
   const [dirtyIds, setDirtyIds] = useState<number[]>([]);
 
+  // ─── Anti-doublons : avertissement en temps réel ──────────────────────────
+  // null = pas de doublon ; string = message d'avertissement
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+
   // cache des URLs de portrait pour éviter de charger toutes les images au démarrage
   const [portraitCache, setPortraitCache] = useState<Record<number, string>>({});
 
@@ -1672,6 +1676,28 @@ export default function LegendGenerator() {
           setPortraitCache(prev => ({ ...prev, [updatedCards[activeIdx].id]: updated.portraitUrl }));
         }
       }
+
+      // ─── Vérification doublon en temps réel (sur le champ « nom ») ───────────
+      if (name === 'nom') {
+        const trimmedValue = value.trim();
+        if (trimmedValue.length < 2) {
+          setDuplicateWarning(null);
+        } else {
+          const normalizedNew = normalizeLegendName(trimmedValue);
+          const duplicate = cards.find(
+            c => c.id !== prev.id && normalizeLegendName(c.nom) === normalizedNew
+          );
+          if (duplicate) {
+            setDuplicateWarning(
+              `⚠️ Une carte "${duplicate.nom}" existe déjà dans la collection. Choisissez un nom unique.`
+            );
+          } else {
+            setDuplicateWarning(null);
+          }
+        }
+      }
+      // ─────────────────────────────────────────────────────────────────────────
+
       return updated;
     });
   };
@@ -1869,32 +1895,81 @@ export default function LegendGenerator() {
 
   // ─── Sauvegarder toutes les cartes modifiées / non sauvegardées vers Supabase
   const handleSaveAll = async () => {
-    if (cards.length === 0) return;
+    if (cards.length === 0 || syncStatus === 'saving') return;
+
+    // ── Vérification anti-doublon locale AVANT de contacter Supabase ──────────
+    // Regrouper les noms normalisés des cartes à sauvegarder
+    const dirtyCards = cards.filter(c => dirtyIds.includes(c.id));
+    const normalizedDirtyNames = dirtyCards.map(c => normalizeLegendName(c.nom));
+
+    // Chercher si deux cartes dirty ont le même nom
+    const hasSelfDuplicate = normalizedDirtyNames.some(
+      (n, i) => normalizedDirtyNames.indexOf(n) !== i
+    );
+
+    // Chercher si une carte dirty entre en conflit avec une carte déjà sauvegardée
+    const savedCards = cards.filter(c => c.supabaseId && !dirtyIds.includes(c.id));
+    const conflictsWithSaved = dirtyCards.some(dirty =>
+      savedCards.some(
+        saved => normalizeLegendName(saved.nom) === normalizeLegendName(dirty.nom)
+      )
+    );
+
+    if (hasSelfDuplicate || conflictsWithSaved) {
+      const duplicates = dirtyCards.filter((dirty, idx, arr) =>
+        arr.findIndex(c => normalizeLegendName(c.nom) === normalizeLegendName(dirty.nom)) !== idx ||
+        savedCards.some(saved => normalizeLegendName(saved.nom) === normalizeLegendName(dirty.nom))
+      );
+      const names = [...new Set(duplicates.map(d => `"${d.nom}"`))];
+      setSyncStatus('error');
+      setSyncMessage(
+        `Doublon détecté : ${names.join(', ')}. Renommez la carte avant de sauvegarder.`
+      );
+      setDuplicateWarning(
+        `⚠️ Impossible de sauvegarder : une carte portant ce nom existe déjà. Choisissez un nom unique.`
+      );
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     setSyncStatus('saving');
     setSyncMessage('Sauvegarde des cartes en cours...');
     try {
       const updatedCollection: WarriorCard[] = [];
       for (const c of cards) {
-        if (c.supabaseId) {
-          // Mettre à jour
-          const ok = await updateLegendCard(c.supabaseId, c);
-          if (!ok) console.warn('Échec mise à jour carte', c.id);
-          updatedCollection.push(c);
+        if (dirtyIds.includes(c.id)) {
+          if (c.supabaseId) {
+            // Mettre à jour uniquement les cartes modifiées
+            const ok = await updateLegendCard(c.supabaseId, c);
+            if (!ok) console.warn('Échec mise à jour carte', c.id);
+            updatedCollection.push(c);
+          } else {
+            // Nouvel enregistrement
+            const supabaseId = await saveLegendCard(c);
+            updatedCollection.push({ ...c, supabaseId: supabaseId ?? undefined });
+          }
         } else {
-          // Nouvel enregistrement
-          const supabaseId = await saveLegendCard(c);
-          updatedCollection.push({ ...c, supabaseId: supabaseId ?? undefined });
+          // Conserver intactes les cartes non modifiées sans faire d'appels API superflus
+          updatedCollection.push(c);
         }
       }
       const renumbered = renumberCards(updatedCollection);
       setCards(renumbered);
       setDirtyIds([]);
+      setDuplicateWarning(null);
       setSyncStatus('synced');
       setSyncMessage('Toutes les cartes ont été sauvegardées');
     } catch (err) {
       console.error('Erreur sauvegarde globale', err);
-      setSyncStatus('error');
-      setSyncMessage('Erreur pendant la sauvegarde');
+      // ── Cas spécial : DuplicateLegendError levée par le service ─────────────
+      if (err instanceof DuplicateLegendError) {
+        setSyncStatus('error');
+        setSyncMessage(err.message);
+        setDuplicateWarning(`⚠️ ${err.message}`);
+      } else {
+        setSyncStatus('error');
+        setSyncMessage('Erreur pendant la sauvegarde');
+      }
     }
   };
 
@@ -2033,12 +2108,25 @@ const background = backgroundMap[mainClass] ?? cardBackground;
         </div>
 
         <div className="flex flex-wrap gap-3 items-center w-full md:w-auto">
-          <button onClick={handleSaveAll} disabled={dirtyIds.length === 0}
-            title={dirtyIds.length === 0 ? 'Aucune modification à sauvegarder' : `Sauvegarder ${dirtyIds.length} carte(s)`}
-            className={`flex items-center gap-2 text-xs ${dirtyIds.length === 0 ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-black'} border border-neutral-800 px-4 py-2 rounded-md font-bold transition`}>
-            <Upload className="w-4 h-4" />
+          <button onClick={handleSaveAll} disabled={dirtyIds.length === 0 || !!duplicateWarning || syncStatus === 'saving'}
+            title={
+              duplicateWarning ? 'Doublon détecté — renommez la carte avant de sauvegarder' :
+              syncStatus === 'saving' ? 'Sauvegarde en cours...' :
+              dirtyIds.length === 0 ? 'Aucune modification à sauvegarder' :
+              `Sauvegarder ${dirtyIds.length} carte(s)`
+            }
+            className={`flex items-center gap-2 text-xs border border-neutral-800 px-4 py-2 rounded-md font-bold transition ${
+              duplicateWarning
+                ? 'bg-orange-950/40 text-orange-400 border-orange-700/50 cursor-not-allowed'
+                : syncStatus === 'saving'
+                  ? 'bg-neutral-800 text-neutral-400 cursor-wait'
+                  : dirtyIds.length === 0
+                    ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                    : 'bg-emerald-600 hover:bg-emerald-500 text-black'
+            }`}>
+            {duplicateWarning ? <AlertTriangle className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
             <span>Sauvegarder les cartes</span>
-            {dirtyIds.length > 0 && <span className="ml-1 inline-block bg-black/60 text-[11px] px-2 py-0.5 rounded-full font-mono">{dirtyIds.length}</span>}
+            {dirtyIds.length > 0 && !duplicateWarning && <span className="ml-1 inline-block bg-black/60 text-[11px] px-2 py-0.5 rounded-full font-mono">{dirtyIds.length}</span>}
           </button>
           {/* Indicateur de synchronisation Supabase */}
           <div className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-2 rounded-md border transition-all ${
@@ -2175,7 +2263,18 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                 <div className="sm:col-span-2">
                   <label className="text-[10px] font-black uppercase text-neutral-500 tracking-widest block mb-1.5">Nom de la Légende</label>
                   <input type="text" name="nom" value={formData.nom} onChange={handleInputChange}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3.5 py-2.5 text-xs uppercase font-serif tracking-wider font-bold focus:border-amber-500 focus:outline-none transition-colors" required />
+                    className={`w-full bg-neutral-950 border rounded-lg px-3.5 py-2.5 text-xs uppercase font-serif tracking-wider font-bold focus:outline-none transition-colors ${
+                      duplicateWarning
+                        ? 'border-orange-500 focus:border-orange-400 text-orange-300'
+                        : 'border-neutral-800 focus:border-amber-500 text-neutral-200'
+                    }`} required />
+                  {/* Avertissement doublon */}
+                  {duplicateWarning && (
+                    <div className="mt-1.5 flex items-start gap-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <AlertTriangle className="w-3.5 h-3.5 text-orange-400 shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-orange-400 font-semibold leading-tight">{duplicateWarning}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -2456,12 +2555,25 @@ const background = backgroundMap[mainClass] ?? cardBackground;
           {/* EXPORT */}
           <div className="bg-neutral-900/40 p-5 rounded-2xl border border-neutral-800 shadow-lg backdrop-blur-sm w-full max-w-[430px] mb-6 space-y-4">
             <div className="flex justify-end">
-              <button onClick={handleSaveAll} disabled={dirtyIds.length === 0}
-                title={dirtyIds.length === 0 ? 'Aucune modification à sauvegarder' : `Sauvegarder ${dirtyIds.length} carte(s)`}
-                className={`flex items-center gap-2 text-xs ${dirtyIds.length === 0 ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-black'} border border-neutral-800 px-3 py-2 rounded-md font-bold transition`}>
-                <Upload className="w-4 h-4" />
+              <button onClick={handleSaveAll} disabled={dirtyIds.length === 0 || !!duplicateWarning || syncStatus === 'saving'}
+                title={
+                  duplicateWarning ? 'Doublon détecté — renommez la carte avant de sauvegarder' :
+                  syncStatus === 'saving' ? 'Sauvegarde en cours...' :
+                  dirtyIds.length === 0 ? 'Aucune modification à sauvegarder' :
+                  `Sauvegarder ${dirtyIds.length} carte(s)`
+                }
+                className={`flex items-center gap-2 text-xs border border-neutral-800 px-3 py-2 rounded-md font-bold transition ${
+                  duplicateWarning
+                    ? 'bg-orange-950/40 text-orange-400 border-orange-700/50 cursor-not-allowed'
+                    : syncStatus === 'saving'
+                      ? 'bg-neutral-800 text-neutral-400 cursor-wait'
+                      : dirtyIds.length === 0
+                        ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                        : 'bg-emerald-600 hover:bg-emerald-500 text-black'
+                }`}>
+                {duplicateWarning ? <AlertTriangle className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
                 <span>Sauvegarder les cartes</span>
-                {dirtyIds.length > 0 && <span className="ml-1 inline-block bg-black/60 text-[11px] px-2 py-0.5 rounded-full font-mono">{dirtyIds.length}</span>}
+                {dirtyIds.length > 0 && !duplicateWarning && <span className="ml-1 inline-block bg-black/60 text-[11px] px-2 py-0.5 rounded-full font-mono">{dirtyIds.length}</span>}
               </button>
             </div>
             <span className="block text-[10px] font-black uppercase text-neutral-500 tracking-widest mb-1">Options d'exportation d'image</span>
