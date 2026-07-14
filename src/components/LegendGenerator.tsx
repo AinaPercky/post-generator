@@ -817,13 +817,13 @@ case 'Fictionnel':
         portraitBorderStyle: "border-2 border-[#d97706]/60 shadow-[0_0_12px_rgba(217, 119, 6.45)]",
         classBadgeStyle: "border-2 border-[#d97706]/80 bg-gradient-to-r from-[#171413] via-[#2a2420] to-[#171413]",
         specBoxStyle: "border-2 border-[#525174]/60",
-        citationBoxStyle: "border border-[#A16207]/50 bg-[#171413]/55",
+        citationBoxStyle: "border border-[#A16207]/50 bg-[#171413]/20",
         iconContainerStyle: "border-[#FFFF82]/80 shadow-[0_0_8px_rgba(255, 255, 130,0.4)]",
         dividerStyle: "via-[#A16207]/30",
         failleColor: "text-[#FFFF82]",
         
-        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 255, 130, 0.02), rgba(23, 20, 19, 0.82)), url(${penseurBackground})`,
-        textBoxBgBlendMode: 'multiply',
+        textBoxBgImage: `linear-gradient(to bottom, rgba(255, 255, 130, 0.02), rgba(23, 20, 19, 0.2)), url(${penseurBackground})`,
+        textBoxBgBlendMode: 'normal',
         quoteIconStyle: "text-[#A16207] drop-shadow-[0_0_6px_rgba(255, 255, 130,0.6)]",
         
         cornerStyle: 'rivet',
@@ -834,7 +834,7 @@ case 'Fictionnel':
     <div className="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-[24px]">
       {/* ═══ COUCHE DE LISIBILITÉ : voile protecteur sous les zones de texte ═══ */}
       {/* Renforce le fond derrière les textes pour garantir la lisibilité */}
-      <div className="absolute bottom-0 inset-x-0 h-[42%] bg-gradient-to-t from-[#171413]/55 via-[#171413]/25 to-transparent" />
+      <div className="absolute bottom-0 inset-x-0 h-[42%] bg-gradient-to-t from-[#171413]/10 via-[#171413]/5 to-transparent" />
 
       {/* Teinte d'ambiance (réduite pour préserver la lisibilité) */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#FFFF82]/[0.02] via-transparent to-[#d97706]/[0.01] mix-blend-overlay" />
@@ -2715,7 +2715,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                       <h2 className={`text-lg sm:text-xl font-black tracking-wider text-neutral-100 uppercase truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] ${cardAmbiance.fontTitle}`}>
                         {formData.nom || "SANS NOM"}
                       </h2>
-                      <p className={`text-[8.5px] sm:text-[9.5px] font-bold italic tracking-wider mt-0.5 truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] ${cardAmbiance.accentColor} ${cardAmbiance.fontCitation}`}>
+                      <p className={`text-[11px] sm:text-[12px] font-bold italic tracking-wider mt-0.5 truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] ${cardAmbiance.accentColor} ${cardAmbiance.fontCitation}`}>
                         {formData.surnom || "Le Héros Mystique"}
                       </p>
                     </div>
