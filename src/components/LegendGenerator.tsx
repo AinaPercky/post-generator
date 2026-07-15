@@ -2777,10 +2777,14 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                     {cardAmbiance.cornerStyle === 'rivet' && (
                       <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.05)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0.05)_75%,transparent_75%,transparent)] bg-[length:4px_4px] opacity-15 pointer-events-none" />
                     )}
-                  <span className="relative z-10 flex items-center justify-center gap-2 px-2">
-                    <span className={`${cardAmbiance.accentColor} text-[10px] filter drop-shadow-md`}>●</span>
+                  <span className="relative z-10 flex items-center justify-center gap-2.5 px-2">
+                    <span className={`${cardAmbiance.accentColor} flex items-center justify-center filter drop-shadow-md`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_4px_currentColor]"></span>
+                    </span>
                     {formData.classe || "SANS CLASSE"}
-                    <span className={`${cardAmbiance.accentColor} text-[10px] filter drop-shadow-md`}>●</span>
+                    <span className={`${cardAmbiance.accentColor} flex items-center justify-center filter drop-shadow-md`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_4px_currentColor]"></span>
+                    </span>
                   </span>
                   </span>
                 </div>
