@@ -239,6 +239,9 @@ export async function savePost(post: SavedPost): Promise<SavedPost | null> {
 }
 
 // READ - Récupérer tous les posts d'un type spécifique
+// image_url is intentionally excluded from bulk queries to avoid statement timeouts
+// (base64 data-URLs stored in that column can be very large).
+// Pass includeImageData: true only when you genuinely need the URL for a small result set.
 export async function getPostsByType(
   postType: PostType,
   filters?: {
@@ -249,10 +252,14 @@ export async function getPostsByType(
   }
 ): Promise<SavedPost[]> {
   try {
-    // Select only the needed fields, including image_url only when requested.
-    const selectFields = filters?.includeImageData
-      ? 'id, type, title, description, image_url, metadata, created_at, updated_at, user_id, author_name'
-      : 'id, type, title, description, metadata, created_at, updated_at, user_id, author_name';
+    // Never include image_url in bulk fetches — it causes statement timeouts.
+    // Callers that need images should use getPostImageUrl() per-item.
+    let selectFields =
+      'id, type, title, description, metadata, created_at, updated_at, user_id, author_name';
+
+    if (filters?.includeImageData) {
+      selectFields += ', image_url';
+    }
 
     let query = supabase.from(TABLE_NAME).select(selectFields).eq('type', postType);
 
@@ -260,8 +267,8 @@ export async function getPostsByType(
       query = query.ilike('title', `%${filters.search}%`);
     }
 
-    const limit = filters?.limit || 20;
-    const offset = filters?.offset || 0;
+    const limit = filters?.limit ?? 20;
+    const offset = filters?.offset ?? 0;
     query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
 
     const { data, error } = await query;
@@ -274,6 +281,30 @@ export async function getPostsByType(
   } catch (error) {
     console.error('Fetch posts failed:', error);
     throw error;
+  }
+}
+
+/**
+ * Fetch the image_url for a single post.
+ * Separated from getPostsByType to avoid bulk-query timeouts caused by large
+ * base64 data-URLs stored in the image_url column.
+ */
+export async function getPostImageUrl(postId: string): Promise<string | undefined> {
+  try {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('image_url')
+      .eq('id', postId)
+      .single();
+
+    if (error) {
+      console.warn('[postService] getPostImageUrl error:', error.message);
+      return undefined;
+    }
+    return (data as any)?.image_url ?? undefined;
+  } catch (err) {
+    console.warn('[postService] getPostImageUrl failed:', err);
+    return undefined;
   }
 }
 
@@ -418,6 +449,110 @@ export async function shiftMagazineIssueNumbersFrom(startIssueNumber: number): P
     })
   );
 }
+
+// ---------------------------------------------------------------------------
+// Image Migration: base64 DB → Supabase Storage
+// ---------------------------------------------------------------------------
+
+export interface MigrationProgress {
+  total: number;
+  done: number;
+  skipped: number;
+  errors: number;
+}
+
+/**
+ * Migrates all magazine (or any PostType) rows whose image_url is stored as a
+ * base64 data-URL directly in the database to Supabase Storage.
+ *
+ * This permanently resolves the SELECT statement-timeout caused by large TOAST
+ * values in the image_url column.
+ *
+ * @param postType  - Type of posts to migrate (default: 'magazine')
+ * @param onProgress - Optional callback called after each processed row
+ * @returns Final progress counters
+ */
+export async function migrateImagesToStorage(
+  postType: PostType = 'magazine',
+  onProgress?: (progress: MigrationProgress) => void
+): Promise<MigrationProgress> {
+  const BATCH_SIZE = 5; // Keep batches small to avoid Supabase timeouts
+  let offset = 0;
+  let hasMore = true;
+
+  const progress: MigrationProgress = { total: 0, done: 0, skipped: 0, errors: 0 };
+
+  while (hasMore) {
+    // Fetch a small batch of posts WITH image_url for migration inspection
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('id, image_url, type')
+      .eq('type', postType)
+      .range(offset, offset + BATCH_SIZE - 1)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('[migrateImagesToStorage] Fetch batch error:', error.message);
+      break;
+    }
+
+    if (!data || data.length === 0) {
+      hasMore = false;
+      break;
+    }
+
+    progress.total += data.length;
+    offset += data.length;
+    if (data.length < BATCH_SIZE) hasMore = false;
+
+    for (const row of data) {
+      const rawUrl: string | undefined = (row as any).image_url;
+
+      // Skip rows that are already a proper URL or empty
+      if (!rawUrl || !isDataUrl(rawUrl)) {
+        progress.skipped++;
+        onProgress?.({ ...progress });
+        continue;
+      }
+
+      try {
+        const storageUrl = await uploadImageToStorage(rawUrl, (row as any).type || postType);
+
+        if (!storageUrl || storageUrl === rawUrl) {
+          // Upload returned the original base64 — Storage is misconfigured
+          console.warn('[migrateImagesToStorage] Upload returned original data-URL for post', row.id, '— check bucket config.');
+          progress.errors++;
+          onProgress?.({ ...progress });
+          continue;
+        }
+
+        // Update the DB row with the new Storage URL
+        const { error: updateError } = await supabase
+          .from(TABLE_NAME)
+          .update({ image_url: storageUrl, updated_at: new Date().toISOString() })
+          .eq('id', row.id);
+
+        if (updateError) {
+          console.error('[migrateImagesToStorage] Update error for post', row.id, updateError.message);
+          progress.errors++;
+        } else {
+          progress.done++;
+          console.info('[migrateImagesToStorage] ✓ Migrated post', row.id);
+        }
+      } catch (err) {
+        console.error('[migrateImagesToStorage] Error processing post', row.id, err);
+        progress.errors++;
+      }
+
+      onProgress?.({ ...progress });
+    }
+  }
+
+  console.info('[migrateImagesToStorage] Migration complete:', progress);
+  return progress;
+}
+
+
 
 // --- Custom Category Icons ---
 

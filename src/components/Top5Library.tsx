@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Trash2, Download, Loader2 } from 'lucide-react';
 import { SavedPost } from '../types';
-import { getPostsByType, deletePost, subscribeToPostChanges } from '../lib/postService';
+import { getPostsByType, deletePost, subscribeToPostChanges, getPostImageUrl } from '../lib/postService';
 
 interface Top5LibraryProps {
   onSelectTop5: (post: SavedPost) => void;
@@ -20,6 +20,10 @@ export function Top5Library({ onSelectTop5, currentUserId }: Top5LibraryProps) {
   const [top5s, setTop5s] = useState<SavedPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Lazy image states
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
   const sortedTop5s = useMemo(() => {
     return [...top5s].sort((a, b) => {
       return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
@@ -42,13 +46,29 @@ export function Top5Library({ onSelectTop5, currentUserId }: Top5LibraryProps) {
     try {
       setLoading(true);
       setError(null);
-      const posts = await getPostsByType('top5', { limit: 50, includeImageData: true });
+      const posts = await getPostsByType('top5', { limit: 50 });
       setTop5s(posts);
     } catch (err) {
       console.error('Error loading top 5s:', err);
       setError('Failed to load top 5s');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadImage = async (post: SavedPost) => {
+    if (!post.id) return;
+    if (imageUrls[post.id] !== undefined || loadingImages[post.id]) return;
+
+    setLoadingImages((prev) => ({ ...prev, [post.id!]: true }));
+    try {
+      const url = await getPostImageUrl(post.id);
+      setImageUrls((prev) => ({ ...prev, [post.id!]: url ?? '' }));
+    } catch (err) {
+      console.warn('Failed to load image', post.id, err);
+      setImageUrls((prev) => ({ ...prev, [post.id!]: '' }));
+    } finally {
+      setLoadingImages((prev) => ({ ...prev, [post.id!]: false }));
     }
   };
 
@@ -65,6 +85,11 @@ export function Top5Library({ onSelectTop5, currentUserId }: Top5LibraryProps) {
 
     try {
       await deletePost(id);
+      setImageUrls((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       await loadTop5s();
     } catch (err) {
       console.error('Error deleting top5:', err);
@@ -128,38 +153,77 @@ export function Top5Library({ onSelectTop5, currentUserId }: Top5LibraryProps) {
           Export TXT
         </button>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {sortedTop5s.map((top5) => (
-          <div key={top5.id} className="group relative flex flex-col gap-2">
-            <div
-              className="cursor-pointer transition-transform hover:scale-[1.02]"
-              onClick={() => onSelectTop5(top5)}
-            >
-              {top5.imageUrl && (
-                <img
-                  src={top5.imageUrl}
-                  alt={top5.title}
-                  className="w-full h-auto rounded-lg shadow-md object-cover"
-                />
-              )}
-            </div>
-            <div className="flex justify-between items-center px-1">
-              <div className="flex flex-col flex-1">
-                <span className="text-sm font-medium text-neutral-700 truncate">{top5.title}</span>
-                <span className="text-xs text-neutral-500">by {top5.authorName || 'Anonymous'}</span>
-              </div>
-              {canCurrentUserDeleteTop5(top5) && (
-                <button
-                  onClick={() => handleDelete(top5.id)}
-                  className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        ))}
+
+      {top5s.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {sortedTop5s.map((top5) => (
+            <Top5Item
+              key={top5.id}
+              top5={top5}
+              imageUrl={imageUrls[top5.id!]}
+              isLoadingImage={!!loadingImages[top5.id!]}
+              onLoadImage={() => loadImage(top5)}
+              onClick={() => onSelectTop5({ ...top5, imageUrl: imageUrls[top5.id!] || '' })}
+              onDelete={() => handleDelete(top5.id)}
+              canDelete={canCurrentUserDeleteTop5(top5)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Top5Item
+// ---------------------------------------------------------------------------
+
+interface Top5ItemProps {
+  top5: SavedPost;
+  imageUrl: string | undefined;
+  isLoadingImage: boolean;
+  onLoadImage: () => void;
+  onClick: () => void;
+  onDelete: () => void;
+  canDelete: boolean;
+}
+
+function Top5Item({ top5, imageUrl, isLoadingImage, onLoadImage, onClick, onDelete, canDelete }: Top5ItemProps) {
+  useEffect(() => {
+    onLoadImage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="group relative flex flex-col gap-2">
+      <div
+        className="cursor-pointer transition-transform hover:scale-[1.02] bg-neutral-100 rounded-lg overflow-hidden flex items-center justify-center min-h-[200px] border border-neutral-200"
+        onClick={onClick}
+      >
+        {isLoadingImage ? (
+          <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+        ) : (
+          <img
+            src={imageUrl || ''}
+            alt={top5.title}
+            className="w-full h-auto object-cover"
+          />
+        )}
+      </div>
+      <div className="flex justify-between items-center px-1">
+        <div className="flex flex-col flex-1">
+          <span className="text-sm font-medium text-neutral-700 truncate">{top5.title}</span>
+          <span className="text-xs text-neutral-500">by {top5.authorName || 'Anonymous'}</span>
+        </div>
+        {canDelete && (
+          <button
+            onClick={onDelete}
+            className="text-xs text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   );

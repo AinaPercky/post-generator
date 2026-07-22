@@ -5,7 +5,7 @@ import { GoogleGenAI } from '@google/genai';
 import { auth } from '../firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { SavedPost } from '../types';
-import { savePost, updatePost, getPostsByType, deletePost } from '../lib/postService';
+import { savePost, updatePost, getPostsByType, deletePost, getPostImageUrl } from '../lib/postService';
 import { RED_PILL_CATEGORIES, getCategoryById, getCategoryByTemplate } from '../lib/redpillCategories';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -56,6 +56,10 @@ export function RedPillGenerator() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+
+  // Lazy image states
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
 
   // Generator states
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -112,12 +116,28 @@ export function RedPillGenerator() {
   const loadSavedPosts = async () => {
     try {
       setLoadingSavedPosts(true);
-      const posts = await getPostsByType('redpill', { limit: 50, includeImageData: true });
+      const posts = await getPostsByType('redpill', { limit: 50 });
       setSavedPosts(posts);
     } catch (error) {
       console.error('Error loading saved posts:', error);
     } finally {
       setLoadingSavedPosts(false);
+    }
+  };
+
+  const loadImage = async (post: SavedPost) => {
+    if (!post.id) return;
+    if (imageUrls[post.id] !== undefined || loadingImages[post.id]) return;
+
+    setLoadingImages((prev) => ({ ...prev, [post.id!]: true }));
+    try {
+      const url = await getPostImageUrl(post.id);
+      setImageUrls((prev) => ({ ...prev, [post.id!]: url ?? '' }));
+    } catch (err) {
+      console.warn('Failed to load image', post.id, err);
+      setImageUrls((prev) => ({ ...prev, [post.id!]: '' }));
+    } finally {
+      setLoadingImages((prev) => ({ ...prev, [post.id!]: false }));
     }
   };
 
@@ -208,6 +228,11 @@ export function RedPillGenerator() {
 
     try {
       await deletePost(postId);
+      setImageUrls((prev) => {
+        const next = { ...prev };
+        delete next[postId];
+        return next;
+      });
       await loadSavedPosts();
     } catch (error) {
       console.error('Error deleting post:', error);
@@ -1524,7 +1549,7 @@ export function RedPillGenerator() {
             </button>
           )}
         </div>
-        
+
         {loadingSavedPosts && (
           <div className="text-center py-8">
             <Loader2 className="w-6 h-6 animate-spin mx-auto text-neutral-500" />
@@ -1540,37 +1565,78 @@ export function RedPillGenerator() {
         {!loadingSavedPosts && savedPosts.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {savedPosts.map((post) => (
-              <div key={post.id} className="group relative">
-                <div 
-                  className="relative bg-[#141414] rounded-lg overflow-hidden aspect-square cursor-pointer hover:opacity-75 transition-opacity border border-neutral-800"
-                  onClick={() => handleLoadPost(post)}
-                >
-                  <img 
-                    src={post.imageUrl} 
-                    alt={post.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                    <div className="text-white text-sm font-bold truncate">{post.title}</div>
-                  </div>
-                </div>
-                <div className="mt-2 flex justify-between items-start">
-                  <div className="flex-1">
-                    <p className="text-xs text-neutral-400 truncate">{post.authorName}</p>
-                  </div>
-                  {canCurrentUserDeletePost(post) && (
-                    <button
-                      onClick={() => handleDeleteSavedPost(post.id)}
-                      className="text-neutral-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
+              <RedPillItem
+                key={post.id}
+                post={post}
+                imageUrl={imageUrls[post.id!]}
+                isLoadingImage={!!loadingImages[post.id!]}
+                onLoadImage={() => loadImage(post)}
+                onClick={() => handleLoadPost({ ...post, imageUrl: imageUrls[post.id!] || '' })}
+                onDelete={() => handleDeleteSavedPost(post.id)}
+                canDelete={canCurrentUserDeletePost(post)}
+              />
             ))}
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// RedPillItem
+// ---------------------------------------------------------------------------
+
+interface RedPillItemProps {
+  key?: React.Key | null;
+  post: SavedPost;
+  imageUrl: string | undefined;
+  isLoadingImage: boolean;
+  onLoadImage: () => void;
+  onClick: () => void;
+  onDelete: () => void;
+  canDelete: boolean;
+}
+
+function RedPillItem({ post, imageUrl, isLoadingImage, onLoadImage, onClick, onDelete, canDelete }: RedPillItemProps) {
+  useEffect(() => {
+    onLoadImage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="group relative">
+      <div 
+        className="relative bg-[#141414] rounded-lg overflow-hidden aspect-square cursor-pointer hover:opacity-75 transition-opacity border border-neutral-800"
+        onClick={onClick}
+      >
+        {isLoadingImage ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-neutral-500" />
+          </div>
+        ) : (
+          <img 
+            src={imageUrl} 
+            alt={post.title}
+            className="w-full h-full object-cover"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+          <div className="text-white text-sm font-bold truncate">{post.title}</div>
+        </div>
+      </div>
+      <div className="mt-2 flex justify-between items-start">
+        <div className="flex-1">
+          <p className="text-xs text-neutral-400 truncate">{post.authorName}</p>
+        </div>
+        {canDelete && (
+          <button
+            onClick={onDelete}
+            className="text-neutral-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         )}
       </div>
     </div>

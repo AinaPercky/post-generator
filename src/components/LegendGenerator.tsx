@@ -2189,7 +2189,9 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                           isSelected ? 'border-amber-500 bg-amber-950/10 shadow-[0_0_12px_rgba(245,158,11,0.15)] ring-1 ring-amber-500/20' : 'border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900/50'
                         }`}>
                         <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-neutral-900 border border-neutral-800">
-                          <img src={c.portraitUrl} alt="" className="w-full h-full object-cover object-top" />
+                          {c.portraitUrl ? (
+                            <img src={c.portraitUrl} alt="" className="w-full h-full object-cover object-top" />
+                          ) : null}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 justify-between">
@@ -2418,7 +2420,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                       <div className="flex items-center gap-1.5">
                         <span className="text-[9px] text-neutral-400 uppercase font-black tracking-wider whitespace-nowrap">Emoji/Texte :</span>
                         <input type="text" placeholder="Ex: 🐉" maxLength={6}
-                          value={(!formData.iconSpecialite1?.startsWith('data:') && formData.iconSpecialite1 !== 'custom') ? formData.iconSpecialite1 : ''}
+                          value={(!formData.iconSpecialite1?.startsWith('data:') && formData.iconSpecialite1 !== 'custom') ? (formData.iconSpecialite1 || '') : ''}
                           onChange={(e) => setFormData(prev => ({ ...prev, iconSpecialite1: e.target.value || 'custom' }))}
                           className="flex-1 bg-neutral-950 border border-neutral-800 rounded px-2 py-0.5 text-xs text-neutral-100 focus:border-amber-500 focus:outline-none" />
                       </div>
@@ -2459,7 +2461,7 @@ const background = backgroundMap[mainClass] ?? cardBackground;
                       <div className="flex items-center gap-1.5">
                         <span className="text-[9px] text-neutral-400 uppercase font-black tracking-wider whitespace-nowrap">Emoji/Texte :</span>
                         <input type="text" placeholder="Ex: 💀" maxLength={6}
-                          value={(!formData.iconSpecialite2?.startsWith('data:') && formData.iconSpecialite2 !== 'custom') ? formData.iconSpecialite2 : ''}
+                          value={(!formData.iconSpecialite2?.startsWith('data:') && formData.iconSpecialite2 !== 'custom') ? (formData.iconSpecialite2 || '') : ''}
                           onChange={(e) => setFormData(prev => ({ ...prev, iconSpecialite2: e.target.value || 'custom' }))}
                           className="flex-1 bg-neutral-950 border border-neutral-800 rounded px-2 py-0.5 text-xs text-neutral-100 focus:border-amber-500 focus:outline-none" />
                       </div>
